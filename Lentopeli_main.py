@@ -1,15 +1,31 @@
 import mysql.connector
 import random
+from geopy import distance
 
 # ===  Constants ====
 
-# === Function: automatically defining stage criterias === 
+# === Function: automatically defining stage criteria ===
 def task_criteria():
-    # 0 = Max CO2 consumpition, 1= flights, 2= countries
-    stages_starter =  (1000, 5, 3) # Atleast 5 stages
+    # 0 = Max CO2 consumption, 1= flights, 2= countries
+    stages_starter =  (1000, 5, 3) # At least 5 stages
     return 
 
-# ==== Function: Distace counter ====
+# ==== Function: Get coordination ====
+def search_coordination(icao):
+    sql = f"SELECT latitude_deg, longitude_deg FROM airport where ident='{icao}'"
+    cursor = yhteys.cursor()   # yhteys is a connection function
+    cursor.execute(sql)
+    result = cursor.fetchall()
+
+    if cursor.rowcount >0 :
+        for line in result:
+            coord = [line[0], line[1]]
+    return coord
+
+# ==== Function: Distance counter ====
+def distance_counter(coord1, coord2):
+    dist = distance.distance(coord1, coord2).km
+    return dist
 
 # ==== Function: table creator ====
 
