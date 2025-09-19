@@ -5,7 +5,7 @@
 ## Projektin yleiskuvaus
 Tämä on Pythonilla toteutettava opiskeluprojekti, jossa peli yhdistää SQL-tietokannan. Pelaajan tavoitteena on suorittaa lentomatkoja pysyen annetun CO2-rajan sisällä. Onnistuneen kierroksen jälkeen pelaaja saa uuden tehtävän. Jokaisen kierroksen jälkeen pelaajalla on mahdollisuus jatkaa peliä tai poistua.
 
-![Project Logo](/Ohj1_ryhmaProj/images/flying.png)
+![Project Logo](/images/flying.png)
 
 ## Käytettävät teknologiat
 - **Python**: Pelilogiikka ja käyttäjän toiminnot
@@ -44,7 +44,7 @@ Tämä on Pythonilla toteutettava opiskeluprojekti, jossa peli yhdistää SQL-ti
 ## Project Overview
 This project is a Python-based educational game where the objective is to successfully complete flight challenges while managing a limited CO2 quota. The user attempts to “fly” different routes without exceeding the defined amount of CO2 emissions. On successful completion of a round, the user receives a new task; after each round, they may choose to continue or leave the game.
 
-![Project Logo](/Ohj1_ryhmaProj/images/flying.png)
+![Project Logo](/images/flying.png)
 
 ## Technologies
 - **Python**: Core game logic and user interaction
