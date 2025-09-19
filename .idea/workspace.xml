@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="729ca9d9-d01b-4def-a9cc-9828b0b37cd7" name="Changes" comment="Puted &quot;import&quot; to the code">
+    <list default="true" id="729ca9d9-d01b-4def-a9cc-9828b0b37cd7" name="Changes" comment="Added function search_coordination and distance_counter">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Lentopeli_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Lentopeli_main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,7 +75,7 @@
       <option name="presentableId" value="Default" />
       <updated>1758191534191</updated>
       <workItem from="1758191534914" duration="3320000" />
-      <workItem from="1758269111035" duration="657000" />
+      <workItem from="1758269111035" duration="1880000" />
     </task>
     <task id="LOCAL-00001" summary="Create GitHub-repositorio">
       <option name="closed" value="true" />
@@ -118,7 +117,15 @@
       <option name="project" value="LOCAL" />
       <updated>1758194713117</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Added function search_coordination and distance_counter">
+      <option name="closed" value="true" />
+      <created>1758269901517</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1758269901517</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -139,6 +146,7 @@
     <MESSAGE value="Create GitHub-repositorio" />
     <MESSAGE value="Create file for coding" />
     <MESSAGE value="Puted &quot;import&quot; to the code" />
-    <option name="LAST_COMMIT_MESSAGE" value="Puted &quot;import&quot; to the code" />
+    <MESSAGE value="Added function search_coordination and distance_counter" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added function search_coordination and distance_counter" />
   </component>
 </project>
