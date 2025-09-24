@@ -10,12 +10,12 @@ load_dotenv()
 # ===  Constants ====
 
 # ===  DB connection ====
-yhteys = mysql.connector.connect(
-    host= DB_HOST,
-    port= DB_PORT,
-    database= DB_LENTO_PELI,
-    user= DB_USER,
-    password= DB_PASSWORD,
+DB = mysql.connector.connect(
+    host=os.getenv("DB_HOST"),
+    port=os.getenv("DB_PORT"),
+    database=os.getenv("DB_LENTO_PELI"),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
     autocommit=True
 )
 
