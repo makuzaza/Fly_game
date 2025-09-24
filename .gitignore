@@ -1,0 +1,8 @@
+# === IDE / Editor Settings ===
+.vscode/
+
+# === Python Virtual Environment ===
+.venv/
+
+# === Secret Variables ===
+.env
