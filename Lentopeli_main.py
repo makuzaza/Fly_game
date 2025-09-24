@@ -1,10 +1,23 @@
 import mysql.connector
+import os
+from dotenv import load_dotenv
 import random
 from geopy import distance
 
+# Load environment variables
+load_dotenv()
+
 # ===  Constants ====
 
-# ===  DB connection and Queries ====
+# ===  DB connection ====
+yhteys = mysql.connector.connect(
+    host= DB_HOST,
+    port= DB_PORT,
+    database= DB_LENTO_PELI,
+    user= DB_USER,
+    password= DB_PASSWORD,
+    autocommit=True
+)
 
 # === Function: automatically defining stage criterias === 
 def task_criteria():
