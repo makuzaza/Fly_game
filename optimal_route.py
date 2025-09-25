@@ -5,6 +5,17 @@ import time
 from itertools import permutations
 import random
 from operator import itemgetter
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Load DB connection info from environment variables
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_USER = os.getenv('DB_USER')
+DB_LENTO_PELI = os.getenv('DB_LENTO_PELI')
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = int(os.getenv('DB_PORT', 3306))
 
 def get_all_airports_with_coords(connection):
     """Get all airports with coordinates from database"""
@@ -248,7 +259,7 @@ def simple_route_planner(connection):
         print("\n" + "=" * 50)
         
         # Get start airport
-        start_code = input("Enter departure airport code, for example, KJFK: ").strip().upper()
+        start_code = input("Enter departure airport code, for example, EFHK: ").strip().upper()
         if start_code.lower() == 'quit':
             break
         
@@ -258,7 +269,7 @@ def simple_route_planner(connection):
             continue
         
         # Get end airport
-        end_code = input("Enter destination airport code: ").strip().upper()
+        end_code = input("Enter destination airport code, for example, KJFK: ").strip().upper()
         end_airport = find_airport_by_ident(airports, end_code)
         if not end_airport:
             print(f"❌ Airport '{end_code}' not found!")
@@ -325,11 +336,11 @@ def simple_route_planner(connection):
             print(f"   Route efficiency: 100%")
 
 connection = mysql.connector.connect(
-    host='127.0.0.1',
-    port= 3306,
-    database='flight_game',
-    user='maria',
-    password='salasana',
+    host= DB_HOST,
+    port= DB_PORT,
+    database= DB_LENTO_PELI,
+    user= DB_USER,
+    password= DB_PASSWORD,
     autocommit=True
     )
 
