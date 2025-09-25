@@ -4,6 +4,7 @@ from geopy.distance import great_circle
 import time
 from itertools import permutations
 import random
+from operator import itemgetter
 
 def get_all_airports_with_coords(connection):
     """Get all airports with coordinates from database"""
@@ -63,7 +64,9 @@ def get_airports_along_route(start_airport, end_airport, all_airports, max_devia
             candidate_airports.append((airport, deviation))
     
     # Sort by deviation (least detour first)
-    candidate_airports.sort(key=lambda x: x[1])
+    # without lambda
+    candidate_airports.sort(key=itemgetter(1))
+    # candidate_airports.sort(key=lambda x: x[1])
     return [airport for airport, _ in candidate_airports]
 
 def find_best_stops_greedy(start_airport, end_airport, all_airports, num_stops):
@@ -82,7 +85,10 @@ def find_best_stops_greedy(start_airport, end_airport, all_airports, num_stops):
         # Still not enough, use closest airports
         distances = [(airport, calculate_distance(start_airport, airport) + calculate_distance(airport, end_airport)) 
                     for airport in all_airports if airport not in [start_airport, end_airport]]
-        distances.sort(key=lambda x: x[1])
+        # distances.sort(key=lambda x: x[1]) 
+        # Sort without lambda
+        distances.sort(key=itemgetter(1))
+
         candidates = [airport for airport, _ in distances]
     
     # Use greedy selection to build optimal route
@@ -151,7 +157,9 @@ def nearest_neighbor_order(start, end, stops):
     current = start
     
     while remaining:
-        nearest = min(remaining, key=lambda x: calculate_distance(current, x))
+        # without lambda
+        nearest = min(remaining, key=itemgetter(1))
+        # nearest = min(remaining, key=lambda x: calculate_distance(current, x))
         route.append(nearest)
         remaining.remove(nearest)
         current = nearest
