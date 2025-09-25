@@ -42,10 +42,10 @@ def task_criteria():
     while len(places) < 3:
         random_id = random.randint(1, max_id)
         sql = f"""
-            SELECT a.ident, c.name 
-            FROM airport a 
-            JOIN country c ON a.iso_country = c.iso_country 
-            WHERE a.id = {random_id} AND a.iso_country IS NOT NULL
+            SELECT airport.ident, country.name 
+            FROM airport
+            JOIN country ON airport.iso_country = country.iso_country 
+            WHERE airport.id = {random_id} AND airport.iso_country IS NOT NULL
         """
         cursor.execute(sql)
         result = cursor.fetchone()
