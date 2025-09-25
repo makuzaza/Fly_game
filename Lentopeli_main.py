@@ -36,7 +36,6 @@ def task_criteria():
     cursor.execute('SELECT MAX(id) FROM airport')
     max_id = cursor.fetchone()[0]
 
-    selected_airports = set()
     places = {}
 
     while len(places) < 3:
@@ -54,7 +53,6 @@ def task_criteria():
             icao, country_name = result
             if country_name not in places:
                 places[country_name] = icao
-                selected_airports.add(icao)
     
     session_state['places'] = places
     return
