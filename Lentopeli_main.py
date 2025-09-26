@@ -121,32 +121,31 @@ def find_route_with_stops(start_airport, end_airport, all_airports, num_stops):
     """Find optimal route with specified number of stops"""
     if num_stops == 0:
         return [start_airport, end_airport]
-    
+
     # Find candidate airports (not too far from direct route)
     direct_dist = calc_distance(start_airport, end_airport)
     candidates = []
-    
+
     for airport in all_airports:
         if airport['ident'] in [start_airport['ident'], end_airport['ident']]:
             continue
-        
         via_dist = calc_distance(start_airport, airport) + calc_distance(airport, end_airport)
         if via_dist - direct_dist <= 1000:  # Max 1000km detour
             candidates.append(airport)
-    
+
+    # If not enough candidates for the requested number of stops, return None
     if len(candidates) < num_stops:
-        # Not enough good candidates, use closest ones
-        candidates = sorted([a for a in all_airports 
-                           if a['ident'] not in [start_airport['ident'], end_airport['ident']]], 
-                          key=lambda x: calc_distance(start_airport, x))
-    
+        print(f"❌ Not enough candidate airports for {num_stops} stops. Only {len(candidates)} available.")
+        return None
+
     # Select best stops
     if num_stops <= 3 and len(candidates) <= 15:
         # Small numbers: try combinations
+        from itertools import combinations, permutations
         best_route = None
         best_distance = float('inf')
-        
-        for stop_combo in combinations(candidates[:15], min(num_stops, len(candidates))):
+
+        for stop_combo in combinations(candidates[:15], num_stops):
             # Try all orders
             for perm in permutations(stop_combo):
                 route = [start_airport] + list(perm) + [end_airport]
@@ -155,18 +154,20 @@ def find_route_with_stops(start_airport, end_airport, all_airports, num_stops):
                     best_distance = dist
                     best_route = route
         return best_route
-    
+
     else:
         # Greedy selection for larger numbers
         selected = []
         remaining = candidates[:20]  # Limit candidates
-        
-        for _ in range(min(num_stops, len(remaining))):
+
+        for _ in range(num_stops):
+            if not remaining:
+                break
             best_stop = min(remaining, 
                           key=lambda x: total_route_distance([start_airport] + selected + [x] + [end_airport]))
             selected.append(best_stop)
             remaining.remove(best_stop)
-        
+
         return [start_airport] + selected + [end_airport]
 
 # === Function: Display available countries ===
