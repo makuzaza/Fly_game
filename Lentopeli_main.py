@@ -26,9 +26,12 @@ yhteys = mysql.connector.connect(
 
 # === Function: automatically defining stage criterias === 
 def task_criteria():
-    # 0 = Max CO2 consumption, 1= flights, 2= countries
-    stages_starter =  (1000, 5, 3) # At least 5 stages
-    return stages_starter
+    """Define task criteria for the game stage"""
+    # Randomly choose criteria within ranges
+    co2_target = random.randint(100, 500)  # kg
+    max_flights = random.randint(1, 5)    # number of flights
+    min_countries = random.randint(1, 5)   # number of countries to visit
+    return (co2_target, max_flights, min_countries)
 
 # ==== Function: Get all airports ====
 def get_all_airports():
@@ -169,15 +172,15 @@ def find_route_with_stops(start_airport, end_airport, all_airports, num_stops):
 # === Function: Display available countries ===
 def show_countries():
     """Show available countries with airports"""
-    sql = "SELECT DISTINCT iso_country, name FROM airport WHERE type IN ('large_airport') ORDER BY iso_country;"
+    sql = "SELECT DISTINCT country.iso_country, country.name FROM airport, country WHERE airport.iso_country = country.iso_country AND airport.type IN ('large_airport') ORDER BY country.name;"
     cursor = yhteys.cursor()
     cursor.execute(sql)
     countries = cursor.fetchall()
     
     print("\n🌍 Available countries:")
-    for i, (code, name) in enumerate(countries, 1):
-        print(f"   {i:2}. {name} ({code})")
-    
+    for i, (country_code, country_name) in enumerate(countries, 1):
+        print(f"   {i:2}. {country_name}")
+
     return countries
 
 # ==== Function: table creator ====
@@ -239,22 +242,26 @@ Plan your flights wisely to stay within CO2 and flight limits!
         print(f"Flight #{total_flights + 1} | CO2: {total_co2:.1f}/{co2_target}kg | Countries: {len(visited_countries)}")
         
         # Show countries
-        countries = show_countries()
-        
+        show = user_input("Show available countries? (y): ").strip().lower()
+        while show not in ['y']:
+            show = user_input("Please enter 'y': ").strip().lower()
+        if show == "y":
+            countries = show_countries()
+
         # Choose country
-        try:
-            country_choice = int(user_input('\nChoose country number: ')) - 1
-            if not 0 <= country_choice < len(countries):
-                print("❌ Invalid choice!")
+        while True:
+            try:
+                country_choice = int(user_input('\nChoose country number: ')) - 1
+                if not 0 <= country_choice < len(countries):
+                    print("❌ Invalid choice!")
+                    continue
+                selected_country = countries[country_choice]
+                country_code, country_name = selected_country
+                print(f"Selected: {country_code}")
+                break
+            except ValueError:
+                print("❌ Please enter a valid number!")
                 continue
-            
-            selected_country = countries[country_choice]
-            country_code, country_name = selected_country
-            print(f"Selected: {country_code}")
-            
-        except ValueError:
-            print("❌ Please enter a valid number!")
-            continue
         
         # Show airports in country
         country_airports = get_airports_by_country(country_code)
@@ -262,23 +269,23 @@ Plan your flights wisely to stay within CO2 and flight limits!
             print("❌ No large airports found in this country!")
             continue
         
-        print(f"\n🛬 Airports in {country_code}:")
+        print(f"\n🛬 Airports in {country_name}:")
         for i, airport in enumerate(country_airports, 1):
             print(f"   {i:2}. {airport['ident']} - {airport['name']} ({airport['city']})")
         
         # Choose destination
-        try:
-            airport_choice = int(user_input('\nChoose airport number: ')) - 1
-            if not 0 <= airport_choice < len(country_airports):
-                print("❌ Invalid choice!")
-                continue
-            
-            destination_code = country_airports[airport_choice]['ident']
-            destination_name = country_airports[airport_choice]['name']
-            
-        except ValueError:
-            print("❌ Please enter a valid number!")
-            continue
+        while True:
+            try:
+                airport_choice = int(user_input('\nChoose airport number: ')) - 1
+                if not 0 <= airport_choice < len(country_airports):
+                    print("❌ Invalid choice!")
+                    continue
+                destination_code = country_airports[airport_choice]['ident']
+                destination_name = country_airports[airport_choice]['name']
+                break
+            except ValueError:
+                print("❌ Please enter a valid number!")
+                continue         
         
         # Find full airport details
         start_airport = find_airport(all_airports, current_location)
@@ -289,14 +296,16 @@ Plan your flights wisely to stay within CO2 and flight limits!
             continue
         
         # Ask for stops
-        try:
-            num_stops = int(user_input('Number of stops (0-3): ') or "0")
-            if not 0 <= num_stops <= 3:
-                print("❌ Please enter 0-3 stops")
+        while True:
+            try:
+                num_stops = int(user_input('Number of stops (0-5): ') or "0")
+                if not 0 <= num_stops <= 5:
+                    print("❌ Please enter 0-5 stops")
+                    continue
+                break
+            except ValueError:
+                print("❌ Please enter a valid number")
                 continue
-        except ValueError:
-            print("❌ Please enter a valid number")
-            continue
         
         # Plan route
         print(f"\n🔍 Planning route from {start_airport['name']} to {destination_name}...")
@@ -309,6 +318,8 @@ Plan your flights wisely to stay within CO2 and flight limits!
         
         # Show route
         print(f"\n✈️  Planned route:")
+        print(f"   Direct distance: {calc_distance(start_airport, end_airport):.0f} km")
+        print(f"   More than direct: {route_distance - calc_distance(start_airport, end_airport):.0f} km extra")
         print(f"📏 Total distance: {route_distance:.0f} km")
         print(f"💨 CO2 emissions: {route_co2:.1f} kg")
         
@@ -325,15 +336,16 @@ Plan your flights wisely to stay within CO2 and flight limits!
         projected_flights = total_flights + len(route) - 1
         
         print(f"\n📊 Impact:")
-        print(f"   CO2 after trip: {projected_co2:.1f}/{co2_target}kg")
-        print(f"   Flights after trip: {projected_flights}/{max_flights}")
+        print(f"   CO2: {projected_co2:.1f}/{co2_target}kg")
+        print(f"   Flights: {projected_flights}/{max_flights}")
         
         if projected_co2 > co2_target or projected_flights > max_flights:
             print("⚠️  This trip would exceed your limits!")
             continue_choice = user_input("Continue anyway? (y/n): ").lower()
-            if continue_choice != 'y':
+            if continue_choice != 'y' and continue_choice != 'n':
+                print("Please choose 'y' to continue with this trip or 'n' to select another destination.")
                 continue
-        
+
         # Confirm trip
         confirm = user_input("Take this trip? (y/n): ").lower()
         if confirm != 'y':
