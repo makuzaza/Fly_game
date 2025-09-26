@@ -36,304 +36,214 @@ def get_all_airports_with_coords(connection):
     
     return airports
 
-def calculate_distance(airport1, airport2):
+def distance(airport1, airport2):
     """Calculate distance between two airports in kilometers"""
     coords1 = (airport1['latitude_deg'], airport1['longitude_deg'])
     coords2 = (airport2['latitude_deg'], airport2['longitude_deg'])
     return great_circle(coords1, coords2).kilometers
 
-def find_airport_by_ident(airports, ident_code):
-    """Find airport by ident code"""
+def find_airport(airports, code):
+    """Find airport by code"""
     for airport in airports:
-        if airport['ident'].lower() == ident_code.lower():
+        if airport['ident'].lower() == code.lower():
             return airport
     return None
 
-def calculate_total_distance(route_airports):
+def total_distance(route):
     """Calculate total distance for a route"""
     total = 0
-    for i in range(len(route_airports) - 1):
-        total += calculate_distance(route_airports[i], route_airports[i + 1])
+    for i in range(len(route) - 1):
+        total += distance(route[i], route[i + 1])
     return total
 
-def get_airports_along_route(start_airport, end_airport, all_airports, max_deviation=500):
-    """Get airports that are reasonably close to the direct route"""
-    direct_distance = calculate_distance(start_airport, end_airport)
-    candidate_airports = []
+def find_candidate_stops(start, end, all_airports, max_detour=800):
+    """Find airports that could be good stops (not too far from direct route)"""
+    direct_dist = distance(start, end)
+    candidates = []
     
     for airport in all_airports:
-        if airport == start_airport or airport == end_airport:
+        if airport in [start, end]:
             continue
         
-        # Calculate detour distance (start -> airport -> end)
-        detour_distance = (calculate_distance(start_airport, airport) + 
-                          calculate_distance(airport, end_airport))
+        # Distance if we go via this airport
+        via_dist = distance(start, airport) + distance(airport, end)
+        detour = via_dist - direct_dist
         
-        # Only consider airports that don't add too much distance
-        if detour_distance - direct_distance <= max_deviation:
-            deviation = detour_distance - direct_distance
-            candidate_airports.append((airport, deviation))
+        # Only consider if detour isn't too big
+        if detour <= max_detour:
+            candidates.append(airport)
     
-    # Sort by deviation (least detour first)
-    # without lambda
-    candidate_airports.sort(key=itemgetter(1))
-    # candidate_airports.sort(key=lambda x: x[1])
-    return [airport for airport, _ in candidate_airports]
+    return candidates
 
-def find_best_stops_greedy(start_airport, end_airport, all_airports, num_stops):
-    """Find best stops using greedy approach with geographical awareness"""
+def find_best_stops(start, end, all_airports, num_stops):
+    """Find the best stops automatically"""
     if num_stops == 0:
         return []
     
-    # Get candidate airports along the route
-    candidates = get_airports_along_route(start_airport, end_airport, all_airports)
+    # Get candidate airports
+    candidates = find_candidate_stops(start, end, all_airports)
     
-    if len(candidates) < num_stops:
-        # If not enough candidates, expand search
-        candidates = get_airports_along_route(start_airport, end_airport, all_airports, max_deviation=1000)
+    # If not enough candidates, expand search
+    if len(candidates) < num_stops * 2:
+        candidates = find_candidate_stops(start, end, all_airports, max_detour=1500)
     
-    if len(candidates) < num_stops:
-        # Still not enough, use closest airports
-        distances = [(airport, calculate_distance(start_airport, airport) + calculate_distance(airport, end_airport)) 
-                    for airport in all_airports if airport not in [start_airport, end_airport]]
-        # distances.sort(key=lambda x: x[1]) 
-        # Sort without lambda
-        distances.sort(key=itemgetter(1))
-
-        candidates = [airport for airport, _ in distances]
-    
-    # Use greedy selection to build optimal route
-    selected_stops = []
-    current_start = start_airport
-    
-    for i in range(num_stops):
-        best_stop = None
-        best_total_distance = float('inf')
+    # Try different combinations and pick the best
+    if num_stops <= 3 and len(candidates) <= 20:
+        # Small numbers: try best combinations
+        from itertools import combinations
+        best_stops = None
+        best_dist = float('inf')
         
-        for candidate in candidates:
-            if candidate in selected_stops:
-                continue
+        for stop_combo in combinations(candidates, num_stops):
+            # Find best order for these stops
+            route = optimize_route([start] + list(stop_combo) + [end])
+            dist = total_distance(route)
             
-            # Calculate total distance if we add this candidate
-            temp_route = [current_start, candidate, end_airport]
-            if selected_stops:
-                # Insert optimally among existing stops
-                temp_stops = selected_stops + [candidate]
-                temp_route = find_optimal_order([current_start] + temp_stops + [end_airport])
-            
-            total_dist = calculate_total_distance(temp_route)
-            
-            if total_dist < best_total_distance:
-                best_total_distance = total_dist
-                best_stop = candidate
+            if dist < best_dist:
+                best_dist = dist
+                best_stops = list(stop_combo)
         
-        if best_stop:
-            selected_stops.append(best_stop)
+        return best_stops or candidates[:num_stops]
     
-    return selected_stops
-
-def find_optimal_order(airports_to_order):
-    """Find optimal order for a list of airports (keeping first and last fixed)"""
-    if len(airports_to_order) <= 2:
-        return airports_to_order
-    
-    start = airports_to_order[0]
-    end = airports_to_order[-1]
-    middle_airports = airports_to_order[1:-1]
-    
-    if len(middle_airports) <= 4:
-        # Brute force for small numbers
-        best_route = None
-        best_distance = float('inf')
-        
-        for perm in permutations(middle_airports):
-            route = [start] + list(perm) + [end]
-            distance = calculate_total_distance(route)
-            if distance < best_distance:
-                best_distance = distance
-                best_route = route
-        
-        return best_route
     else:
-        # Use nearest neighbor for larger numbers
-        return nearest_neighbor_order(start, end, middle_airports)
-
-def nearest_neighbor_order(start, end, stops):
-    """Order stops using nearest neighbor heuristic"""
-    if not stops:
-        return [start, end]
-    
-    route = [start]
-    remaining = stops.copy()
-    current = start
-    
-    while remaining:
-        # without lambda
-        nearest = min(remaining, key=itemgetter(1))
-        # nearest = min(remaining, key=lambda x: calculate_distance(current, x))
-        route.append(nearest)
-        remaining.remove(nearest)
-        current = nearest
-    
-    route.append(end)
-    return route
-
-def improve_route_2opt(route):
-    """Improve route using 2-opt local search"""
-    if len(route) <= 3:
-        return route, calculate_total_distance(route)
-    
-    best_route = route.copy()
-    best_distance = calculate_total_distance(best_route)
-    improved = True
-    max_iterations = 100
-    iteration = 0
-    
-    while improved and iteration < max_iterations:
-        improved = False
-        iteration += 1
+        # Large numbers: use greedy approach
+        selected = []
+        remaining = candidates.copy()
         
-        for i in range(1, len(route) - 2):
-            for j in range(i + 1, len(route) - 1):
-                # Try reversing the segment between i and j
-                new_route = route.copy()
-                new_route[i:j+1] = reversed(new_route[i:j+1])
+        for _ in range(min(num_stops, len(candidates))):
+            best_airport = None
+            best_dist = float('inf')
+            
+            for candidate in remaining:
+                test_route = [start] + selected + [candidate] + [end]
+                test_route = optimize_route(test_route)
+                dist = total_distance(test_route)
                 
-                new_distance = calculate_total_distance(new_route)
-                if new_distance < best_distance:
-                    best_route = new_route
-                    best_distance = new_distance
-                    route = new_route
-                    improved = True
-                    break
-            if improved:
-                break
-    
-    return best_route, best_distance
+                if dist < best_dist:
+                    best_dist = dist
+                    best_airport = candidate
+            
+            if best_airport:
+                selected.append(best_airport)
+                remaining.remove(best_airport)
+        
+        return selected
 
-def find_optimal_route_with_auto_stops(start_airport, end_airport, all_airports, num_stops):
-    """Main function to find optimal route with automatically selected stops"""
+def optimize_route(airports):
+    """Find best order for airports (keep start and end fixed)"""
+    if len(airports) <= 2:
+        return airports
+    
+    start, end = airports[0], airports[-1]
+    middle = airports[1:-1]
+    
+    if len(middle) <= 4:
+        # Small: try all orders
+        best_route = None
+        best_dist = float('inf')
+        
+        for perm in permutations(middle):
+            route = [start] + list(perm) + [end]
+            dist = total_distance(route)
+            if dist < best_dist:
+                best_dist = dist
+                best_route = route
+        return best_route
+    
+    else:
+        # Large: use nearest neighbor
+        route = [start]
+        remaining = middle.copy()
+        current = start
+        
+        while remaining:
+            nearest = min(remaining, key=lambda x: distance(current, x))
+            route.append(nearest)
+            remaining.remove(nearest)
+            current = nearest
+        
+        route.append(end)
+        return route
+
+def plan_route(start, end, all_airports, num_stops):
+    """Main route planning function"""
     start_time = time.time()
     
-    if num_stops == 0:
-        route = [start_airport, end_airport]
-        distance = calculate_distance(start_airport, end_airport)
-        calc_time = time.time() - start_time
-        return route, distance, calc_time
-    
-    # Strategy 1: Greedy selection of stops
-    print(f"   🔍 Finding {num_stops} optimal stops...")
-    selected_stops = find_best_stops_greedy(start_airport, end_airport, all_airports, num_stops)
-    
-    if len(selected_stops) < num_stops:
-        print(f"   ⚠️  Only found {len(selected_stops)} suitable stops")
-    
-    # Strategy 2: Optimize the order
-    print(f"   🔄 Optimizing route order...")
-    all_route_airports = [start_airport] + selected_stops + [end_airport]
-    optimal_route = find_optimal_order(all_route_airports)
-    
-    # Strategy 3: Improve with 2-opt if we have time
-    if len(optimal_route) > 3:
-        print(f"   ⚡ Applying 2-opt improvements...")
-        optimal_route, optimal_distance = improve_route_2opt(optimal_route)
+    # Find best stops
+    if num_stops > 0:
+        stops = find_best_stops(start, end, all_airports, num_stops)
+        route = optimize_route([start] + stops + [end])
     else:
-        optimal_distance = calculate_total_distance(optimal_route)
+        route = [start, end]
     
     calc_time = time.time() - start_time
-    return optimal_route, optimal_distance, calc_time
+    return route, total_distance(route), calc_time
 
-def simple_route_planner(connection):
-    """Main route planning function"""
-    print("\n🛩️  Automatic Airport Route Planner")
-    print("=" * 50)
+def main():
+    """Main program"""
+    print("🛩️  Simple Airport Route Planner")
+    print("=" * 40)
     
     # Load airports
     print("Loading airports...")
-    start_time = time.time()
     airports = get_all_airports_with_coords(connection)
-    load_time = time.time() - start_time
-    print(f"✅ Loaded {len(airports)} airports in {load_time:.2f} seconds")
+    print(f"✅ Loaded {len(airports)} airports")
     
     while True:
-        print("\n" + "=" * 50)
+        print("\n" + "-" * 40)
         
-        # Get start airport
-        start_code = input("Enter departure airport code, for example, EFHK: ").strip().upper()
+        # Get input
+        start_code = input("Departure airport (or 'quit'): ").strip()
         if start_code.lower() == 'quit':
             break
         
-        start_airport = find_airport_by_ident(airports, start_code)
-        if not start_airport:
-            print(f"❌ Airport '{start_code}' not found!")
+        end_code = input("Destination airport: ").strip()
+        
+        try:
+            num_stops = int(input("Number of stops (0-5): ") or "0")
+            if not 0 <= num_stops <= 5:
+                print("❌ Please enter 0-5 stops")
+                continue
+        except ValueError:
+            print("❌ Please enter a valid number")
             continue
         
-        # Get end airport
-        end_code = input("Enter destination airport code, for example, KJFK: ").strip().upper()
-        end_airport = find_airport_by_ident(airports, end_code)
-        if not end_airport:
-            print(f"❌ Airport '{end_code}' not found!")
+        # Find airports
+        start = find_airport(airports, start_code)
+        end = find_airport(airports, end_code)
+        
+        if not start:
+            print(f"❌ Airport '{start_code}' not found")
+            continue
+        if not end:
+            print(f"❌ Airport '{end_code}' not found")
             continue
         
-        # Get number of stops
-        while True:
-            try:
-                num_stops = input("Enter number of stops (0-8): ").strip()
-                if not num_stops:
-                    num_stops = 0
-                else:
-                    num_stops = int(num_stops)
-                
-                if 0 <= num_stops <= 8:
-                    break
-                else:
-                    print("❌ Please enter a number between 0 and 8")
-            except ValueError:
-                print("❌ Please enter a valid number")
+        # Plan route
+        print(f"\n🔍 Planning route with {num_stops} stops...")
+        route, dist, calc_time = plan_route(start, end, airports, num_stops)
         
-        # Calculate direct route first
-        direct_distance = calculate_distance(start_airport, end_airport)
+        # Show results
+        print(f"\n✅ Route found in {calc_time:.2f}s")
+        print(f"📏 Total distance: {dist:.0f} km")
+        print("🛣️  Route:")
         
-        # Calculate optimal route with stops
-        print(f"\n🔍 Planning route from {start_airport['name']} to {end_airport['name']}")
-        if num_stops > 0:
-            print(f"   automatically finding {num_stops} optimal stops...")
-        
-        optimal_route, optimal_distance, calc_time = find_optimal_route_with_auto_stops(
-            start_airport, end_airport, airports, num_stops
-        )
-        
-        # Display results
-        print(f"\n✅ Route calculated in {calc_time:.3f} seconds")
-        print(f"📏 Total distance: {optimal_distance:.0f} km")
-        print(f"🛣️  Optimal route:")
-        
-        for i, airport in enumerate(optimal_route):
+        for i, airport in enumerate(route):
             if i == 0:
-                print(f"   🛫 START: {airport['ident']} - {airport['name']} ({airport['municipality']})")
-            elif i == len(optimal_route) - 1:
-                print(f"   🛬 END:   {airport['ident']} - {airport['name']} ({airport['municipality']})")
+                prefix = "🛫 START"
+            elif i == len(route) - 1:
+                prefix = "🛬 END  "
             else:
-                print(f"   🔄 STOP {i}: {airport['ident']} - {airport['name']} ({airport['municipality']})")
+                prefix = f"🔄 STOP{i}"
+            
+            print(f"   {prefix}: {airport['ident']} - {airport['name']}")
         
-        # Show segment distances
-        print(f"\n📊 Segment distances:")
-        for i in range(len(optimal_route) - 1):
-            segment_dist = calculate_distance(optimal_route[i], optimal_route[i + 1])
-            print(f"   {optimal_route[i]['ident']} → {optimal_route[i + 1]['ident']}: {segment_dist:.0f} km")
-        
-        # Compare with direct route
-        print(f"\n📈 Route comparison:")
-        print(f"   Direct route: {direct_distance:.0f} km")
-        print(f"   With stops:   {optimal_distance:.0f} km")
-        
+        # Compare with direct flight
         if num_stops > 0:
-            extra_distance = optimal_distance - direct_distance
-            efficiency = (direct_distance / optimal_distance) * 100
-            print(f"   Extra distance: {extra_distance:.0f} km ({(extra_distance/direct_distance)*100:.1f}% longer)")
-            print(f"   Route efficiency: {efficiency:.1f}%")
-        else:
-            print(f"   Route efficiency: 100%")
+            direct_dist = distance(start, end)
+            extra = dist - direct_dist
+            print(f"\n📊 Direct: {direct_dist:.0f}km | With stops: {dist:.0f}km | Extra: {extra:.0f}km")
+    
 
 connection = mysql.connector.connect(
     host= DB_HOST,
@@ -346,6 +256,6 @@ connection = mysql.connector.connect(
 
 if connection.is_connected():
     print("✅ Successfully connected to database!")
-    simple_route_planner(connection)
+    main()
 else:
     print("❌ Failed to connect to database!")
