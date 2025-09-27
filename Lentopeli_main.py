@@ -78,14 +78,35 @@ def search_coordination(icao):
             coord = [line[0], line[1]]
     return coord
 
-# ==== Function: Distance counter ====
+# === Function: Distance counter ===
 def distance_counter(coord1, coord2):
     dist = distance.distance(coord1, coord2).km
     return dist
 
-# ==== Function: table creator ====
+# === Function: Database table creator ===
+def db_table_creator():
+    sql = f"""
+        CREATE TABLE IF NOT EXISTS results (
+            ID NOT NULL AUTO_INCREMENT,
+            name VARCHAR(40),
+            levels INT,
+            cities INT,
+            km_amount FLOAT,
+            co2_amount FLOAT,
+            PRIMARY KEY (ID)
+        );
+    """
+    cursor = yhteys.cursor()  # yhteys is a connection function
+    cursor.execute(sql)
+    yhteys.commit()   # save changes
+    return
 
-# === Function: ask user input ====
+# === Function: Fill the database table 'results' ===
+
+
+# === Function: table creator ===
+
+# === Function: ask user input ===
 def user_input (question):
     return input(question)
 
