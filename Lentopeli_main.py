@@ -102,7 +102,15 @@ def db_table_creator():
     return
 
 # === Function: Fill the database table 'results' ===
-
+def results_to_db(name, level, city, km, co2):
+    sql = f"""
+        INSERT INTO results (name, levels, cities, km_amount, co2_amount)
+        VALUES (%s, %s, %s, %s, %s);
+    """
+    cursor = yhteys.cursor()  # yhteys is a connection function
+    cursor.execute(sql, (name, level, city, km, co2))
+    yhteys.commit()   # save changes
+    return
 
 # === Function: table creator ===
 

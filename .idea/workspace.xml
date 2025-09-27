@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="729ca9d9-d01b-4def-a9cc-9828b0b37cd7" name="Changes" comment="Added function search_coordination and distance_counter">
+    <list default="true" id="729ca9d9-d01b-4def-a9cc-9828b0b37cd7" name="Changes" comment="Added function db_table_creator">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Lentopeli_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Lentopeli_main.py" afterDir="false" />
     </list>
@@ -54,6 +54,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.Lentopeli_main.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -132,7 +133,15 @@
       <option name="project" value="LOCAL" />
       <updated>1758269901517</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Added function db_table_creator">
+      <option name="closed" value="true" />
+      <created>1758966267915</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1758966267915</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -154,9 +163,10 @@
     <MESSAGE value="Create file for coding" />
     <MESSAGE value="Puted &quot;import&quot; to the code" />
     <MESSAGE value="Added function search_coordination and distance_counter" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added function search_coordination and distance_counter" />
+    <MESSAGE value="Added function db_table_creator" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added function db_table_creator" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Ohj1_ryhmaProj$Lentopeli_main.coverage" NAME="Lentopeli_main Coverage Results" MODIFIED="1758962880531" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Ohj1_ryhmaProj$Lentopeli_main.coverage" NAME="Lentopeli_main Coverage Results" MODIFIED="1758967572034" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
