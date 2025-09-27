@@ -1,0 +1,8 @@
+=== ENV file EXAMPLE ===
+- Use the same varialbes and change the values
+
+DB_PASSWORD =12345678-example
+DB_USER =your_user_name
+DB_LENTO_PELI =flight_game
+DB_HOST =127.0.0.1
+DB_PORT =3306
