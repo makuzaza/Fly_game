@@ -6,3 +6,5 @@
 
 # === Secret Variables ===
 .env
+
+optimal_route.py
