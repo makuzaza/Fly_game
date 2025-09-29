@@ -14,15 +14,6 @@ DB_LENTO_PELI = os.getenv('DB_LENTO_PELI')
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
 
-# # ===  States ====
-# session_state = {
-#     "origen": 'Finland',
-#     "destination": '',
-#     "current_stage": 0,
-#     "co2_available": 0,
-#     "places": {}
-# }
-
 # ===  DB connection ====
 yhteys = mysql.connector.connect(
     host=os.getenv("DB_HOST"),
@@ -32,15 +23,6 @@ yhteys = mysql.connector.connect(
     password=os.getenv("DB_PASSWORD"),
     autocommit=True
 )
-
-# === Function: automatically defining stage criterias (destination and CO₂ limit) === 
-def task_criteria():
-    """Define task criteria for the game stage"""
-    # Randomly choose criteria within ranges
-    co2_target = random.randint(100, 500)  # kg
-    max_flights = random.randint(1, 5)    # number of flights
-    min_countries = random.randint(1, 5)   # number of countries to visit
-    return (co2_target, max_flights, min_countries)
 
 # ==== Function: Get all airports ====
 def get_all_airports():
@@ -87,44 +69,6 @@ def find_airport(airports, code):
             return airport
     return None
 
-#     session_state['current_stage'] += 1
-#     co2_base = 3000
-#     session_state['co2_available'] = co2_base * session_state['current_stage'] * 0.6
-
-#     cursor = yhteys.cursor()
-#     cursor.execute('SELECT MAX(id) FROM airport')
-#     max_id = cursor.fetchone()[0]
-
-#     places = {}
-
-#     while len(places) < 3:
-#         random_id = random.randint(1, max_id)
-#         sql = f"""
-#             SELECT airport.ident, country.name 
-#             FROM airport
-#             JOIN country ON airport.iso_country = country.iso_country 
-#             WHERE airport.id = {random_id} AND airport.iso_country IS NOT NULL
-#         """
-#         cursor.execute(sql)
-#         result = cursor.fetchone()
-
-#         if result:
-#             icao, country_name = result
-#             if country_name not in places:
-#                 places[country_name] = icao
-    
-#     session_state['places'] = places
-#     return
-
-# # === Function: CO2 Emmission ===
-# def calc_co2_emmission(distance_km, aircraft_type='small_plane'):
-#     emission_factors = {
-#         'small_plane': 0.15,
-#         'regional_jet': 0.25,
-#         'passenger_jet': 0.3
-#     }
-#     return distance_km * emission_factors.get(aircraft_type, 0.3)
-
 # ==== Function: Get coordination ====
 def search_coordination(icao):
     """Get coordinates for airport"""
@@ -138,12 +82,6 @@ def search_coordination(icao):
             coord = [line[0], line[1]]
         return coord
     return None
-
-# === Function: Distance counter ===
-# def distance_counter(coord1, coord2):
-#     """Calculate distance between two coordinates"""
-#     dist = distance.distance(coord1, coord2).km
-#     return dist
 
 # ==== Function: Calculate CO2 emissions ====
 def calculate_co2(distance_km):
@@ -231,7 +169,6 @@ def show_countries():
 
     return countries
 
-# ==== Function: table creator ====
 # === Function: Database table creator ===
 def db_table_creator():
     sql = f"""
@@ -261,27 +198,9 @@ def results_to_db(name, level, city, km, co2):
     yhteys.commit()   # save changes
     return
 
-# === Function: table creator ===
-
 # === Function: ask user input ===
 def user_input (question):
     return input(question)
-
-# === Function: Allow user to pass next or keep same if fail task ====
-def pass_stage(co2_used, co2_target, flights_used, max_flights):
-    """Check if user passes the stage"""
-    if co2_used <= co2_target and flights_used <= max_flights:
-        print(f"🎉 Congratulations! You passed the stage!")
-        print(f"   CO2 used: {co2_used:.1f}kg (limit: {co2_target}kg)")
-        print(f"   Flights used: {flights_used} (limit: {max_flights})")
-        return True
-    else:
-        print(f"❌ Stage failed!")
-        if co2_used > co2_target:
-            print(f"   CO2 exceeded: {co2_used:.1f}kg > {co2_target}kg")
-        if flights_used > max_flights:
-            print(f"   Too many flights: {flights_used} > {max_flights}")
-        return False
 
 # === Main program ===
 def main():
@@ -299,25 +218,15 @@ Plan your flights wisely to stay within CO2 and flight limits!
     user_name = user_input('Give your name: ')
     print(f"Welcome {user_name}! 🎮")
     
-    # Get task criteria
-    (co2_target, max_flights, min_countries) = task_criteria()
-    print(f"\n📋 Your mission:")
-    print(f"   • Max CO2: {co2_target}kg")
-    print(f"   • Max flights: {max_flights}")
-    print(f"   • Visit at least {min_countries} countries")
-    
     # Game variables
     current_location = "EFHK"  # Helsinki
     total_co2 = 0
     total_flights = 0
-    visited_countries = set()
     flight_history = []
     
     print(f"\n📍 Starting location: Helsinki, Finland (EFHK)")
     
-    while total_flights < max_flights and total_co2 < co2_target:
-        print(f"\n" + "="*50)
-        print(f"Flight #{total_flights + 1} | CO2: {total_co2:.1f}/{co2_target}kg | Countries: {len(visited_countries)}")
+    while True:
         
         # Show countries
         show = user_input("Show available countries? (y): ").strip().lower()
@@ -414,25 +323,12 @@ Plan your flights wisely to stay within CO2 and flight limits!
         projected_flights = total_flights + len(route) - 1
         
         print(f"\n📊 Impact:")
-        print(f"   CO2: {projected_co2:.1f}/{co2_target}kg")
-        print(f"   Flights: {projected_flights}/{max_flights}")
-        
-        if projected_co2 > co2_target or projected_flights > max_flights:
-            print("⚠️  This trip would exceed your limits!")
-            continue_choice = user_input("Continue anyway? (y/n): ").lower()
-            if continue_choice != 'y' and continue_choice != 'n':
-                print("Please choose 'y' to continue with this trip or 'n' to select another destination.")
-                continue
+        print(f"   CO2: {projected_co2:.1f}kg")
+        print(f"   Flights: {projected_flights}")
 
-        # Confirm trip
-        confirm = user_input("Take this trip? (y/n): ").lower()
-        if confirm != 'y':
-            continue
-        
         # Execute trip
         total_co2 += route_co2
         total_flights += len(route) - 1  # Number of flight segments
-        visited_countries.add(country_code)
         current_location = destination_code
         
         flight_history.append({
@@ -443,18 +339,7 @@ Plan your flights wisely to stay within CO2 and flight limits!
         
         print(f"\n🎯 Trip completed!")
         print(f"   New location: {destination_name}")
-        print(f"   Countries visited: {len(visited_countries)}")
-        
-        # Check game end conditions
-        if len(visited_countries) >= min_countries:
-            if pass_stage(total_co2, co2_target, total_flights, max_flights):
-                break
-        
-        # Continue or quit
-        if total_flights >= max_flights or total_co2 >= co2_target:
-            print("❌ Limits reached!")
-            break
-        
+
         continue_game = user_input("\nContinue to next destination? (y/n): ").lower()
         if continue_game != 'y':
             break
@@ -462,8 +347,6 @@ Plan your flights wisely to stay within CO2 and flight limits!
     # Game summary
     print(f"\n🏁 GAME OVER!")
     print(f"   Final CO2: {total_co2:.1f}kg")
-    print(f"   Total flights: {total_flights}")
-    print(f"   Countries visited: {len(visited_countries)}")
 
 if yhteys.is_connected():
     print("✅ Successfully connected to database!")
