@@ -173,6 +173,7 @@ Plan your flights wisely to stay within CO2 and flight limits!
         
         print(f"\n📊 Impact:")
         print(f"   CO2: {projected_co2:.1f}kg")
+        print(f"   Flights: {total_flights}")
         print(f"   Flights: {projected_flights}")
 
         # Execute trip
@@ -196,6 +197,10 @@ Plan your flights wisely to stay within CO2 and flight limits!
     # Game summary
     print(f"\n🏁 GAME OVER!")
     print(f"   Final CO2: {total_co2:.1f}kg")
+    db_table_creator()
+    print(f"   table created")
+    results_to_db(user_name, 1, total_flights, sum(f['distance'] for f in flight_history), total_co2)
+    print(f"   results saved to database")
 
 if yhteys.is_connected():
     print("✅ Successfully connected to database!")
