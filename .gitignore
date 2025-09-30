@@ -3,6 +3,9 @@
 
 # === Python Virtual Environment ===
 .venv/
+.idea/
+*.log
+__pycache__/
 
 # === Secret Variables ===
 .env
