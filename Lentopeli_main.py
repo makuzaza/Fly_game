@@ -348,6 +348,13 @@ Plan your flights wisely to stay within CO2 and flight limits!
     print(f"\n🏁 GAME OVER!")
     print(f"   Final CO2: {total_co2:.1f}kg")
 
+#=== Checking of the functions, related to the new table in the database ===
+#=== If it doesn't works, read instructions from the notes ===
+    db_table_creator()
+    results_to_db(user_name, 3, 5, 10000, 5000)   # fake data for test
+    print("Data added successfully!")     # You can see results table in DB now
+
+
 if yhteys.is_connected():
     print("✅ Successfully connected to database!")
     main()
