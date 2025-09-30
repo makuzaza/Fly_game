@@ -22,7 +22,7 @@ yhteys = mysql.connector.connect(
 def db_table_creator():
     sql = f"""
         CREATE TABLE IF NOT EXISTS results (
-            ID NOT NULL AUTO_INCREMENT,
+            ID INT NOT NULL AUTO_INCREMENT,
             name VARCHAR(40),
             levels INT,
             cities INT,

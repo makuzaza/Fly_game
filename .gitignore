@@ -1,8 +1,13 @@
 # === IDE / Editor Settings ===
 .vscode/
+.idea/
 
 # === Python Virtual Environment ===
 .venv/
+
+# === Logs and cache ===
+*.log
+__pycache__/
 
 # === Secret Variables ===
 .env
