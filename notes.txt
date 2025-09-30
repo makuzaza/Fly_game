@@ -6,3 +6,16 @@ DB_USER =your_user_name
 DB_LENTO_PELI =flight_game
 DB_HOST =127.0.0.1
 DB_PORT =3306
+
+
+=== Instructions for database table creation ===
+- You need to add rights for creating in MariaDB
+
+- From root write with your username to check rights
+SHOW GRANTS FOR 'username'@'localhost';
+
+- To give all rights
+GRANT ALL PRIVILEGES ON flight_game.* TO 'username'@'localhost';
+
+- To save changes
+FLUSH PRIVILEGES;
