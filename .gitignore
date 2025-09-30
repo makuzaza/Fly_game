@@ -1,9 +1,11 @@
 # === IDE / Editor Settings ===
 .vscode/
+.idea/
 
 # === Python Virtual Environment ===
 .venv/
-.idea/
+
+# === Logs and cache ===
 *.log
 __pycache__/
 
