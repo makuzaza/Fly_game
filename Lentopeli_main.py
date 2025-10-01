@@ -4,7 +4,9 @@ from dotenv import load_dotenv
 import random
 from geopy import distance
 from route_count import *
+from save_to_db import *
 import folium
+from tips import *
 
 # Load environment variables
 load_dotenv()
@@ -18,35 +20,6 @@ yhteys = mysql.connector.connect(
     password=os.getenv("DB_PASSWORD"),
     autocommit=True
 )
-
-# === Function: Database table creator ===
-def db_table_creator():
-    sql = f"""
-        CREATE TABLE IF NOT EXISTS results (
-            ID INT NOT NULL AUTO_INCREMENT,
-            name VARCHAR(40),
-            levels INT,
-            cities INT,
-            km_amount FLOAT,
-            co2_amount FLOAT,
-            PRIMARY KEY (ID)
-        );
-    """
-    cursor = yhteys.cursor()  # yhteys is a connection function
-    cursor.execute(sql)
-    yhteys.commit()   # save changes
-    return
-
-# === Function: Fill the database table 'results' ===
-def results_to_db(name, level, city, km, co2):
-    sql = f"""
-        INSERT INTO results (name, levels, cities, km_amount, co2_amount)
-        VALUES (%s, %s, %s, %s, %s);
-    """
-    cursor = yhteys.cursor()  # yhteys is a connection function
-    cursor.execute(sql, (name, level, city, km, co2))
-    yhteys.commit()   # save changes
-    return
 
 # === Function: ask user input ===
 def user_input (question):
@@ -78,28 +51,55 @@ Plan your flights wisely to stay within CO2 and flight limits!
     print(f"\n📍 Starting location: Helsinki, Finland (EFHK)")
     
     while True:
-        
-        # Show countries
-        show = user_input("Show available countries? (y): ").strip().lower()
-        while show not in ['y']:
-            show = user_input("Please enter 'y': ").strip().lower()
-        if show == "y":
-            countries = show_countries(yhteys)
+        countries = show_countries(yhteys)
+        countries_with_tips = [c for c in countries if c[0] in country_tips]
 
-        # Choose country
-        while True:
-            try:
-                country_choice = int(user_input('\nChoose country number: ')) - 1
-                if not 0 <= country_choice < len(countries):
-                    print("❌ Invalid choice!")
-                    continue
-                selected_country = countries[country_choice]
-                country_code, country_name = selected_country
-                print(f"Selected: {country_code}")
-                break
-            except ValueError:
-                print("❌ Please enter a valid number!")
-                continue
+        if not countries_with_tips:
+            print("No countries with tips available.")
+            # Optionally, handle this case (exit or fallback)
+        else:
+            random_country = random.choice(countries_with_tips)
+            random_code, random_name = random_country
+            tip = country_tips[random_code]
+            print(f"\n🌍 Country tip: {tip}")
+        user_guess = user_input("Guess the country code (or press 'h' for all list of countries): ").strip().upper()
+
+        if user_guess == 'H':
+            print("\nAvailable countries:")
+            for i, (code, name) in enumerate(countries, 1):
+                print(f"   {i:2}. {code} - {name}")
+            user_guess = user_input("Now enter the country code: ").strip().upper()
+
+        if user_guess == random_code:
+            print("✅ Your answer is correct! Proceeding...")
+            country_code, country_name = random_code, random_name
+        else:
+            print(f"❌ Incorrect. The country was {random_name} ({random_code}).")
+            # Optionally, let the user try again or proceed with the random country
+            country_code, country_name = random_code, random_name
+            continue
+
+        # # Show countries
+        # show = user_input("Show available countries? (y): ").strip().lower()
+        # while show not in ['y']:
+        #     show = user_input("Please enter 'y': ").strip().lower()
+        # if show == "y":
+        #     countries = show_countries(yhteys)
+
+        # # Choose country
+        # while True:
+        #     try:
+        #         country_choice = int(user_input('\nChoose country number: ')) - 1
+        #         if not 0 <= country_choice < len(countries):
+        #             print("❌ Invalid choice!")
+        #             continue
+        #         selected_country = countries[country_choice]
+        #         country_code, country_name = selected_country
+        #         print(f"Selected: {country_code}")
+        #         break
+        #     except ValueError:
+        #         print("❌ Please enter a valid number!")
+        #         continue
         
         # Show airports in country
         country_airports = get_airports_by_country(yhteys, country_code)
@@ -114,7 +114,7 @@ Plan your flights wisely to stay within CO2 and flight limits!
         # Choose destination
         while True:
             try:
-                airport_choice = int(user_input('\nChoose airport number: ')) - 1
+                airport_choice = int(user_input('\nChoose airport number to fly to: ')) - 1
                 if not 0 <= airport_choice < len(country_airports):
                     print("❌ Invalid choice!")
                     continue
@@ -132,7 +132,10 @@ Plan your flights wisely to stay within CO2 and flight limits!
         if not start_airport or not end_airport:
             print("❌ Airport not found!")
             continue
-        
+        if start_airport['ident'] == end_airport['ident']:
+            print("❌ Start and destination airports must be different. Please start again.")
+            continue
+
         # Ask for stops
         while True:
             try:
@@ -151,6 +154,9 @@ Plan your flights wisely to stay within CO2 and flight limits!
             print(f"   Finding {num_stops} optimal stops...")
         
         route = find_route_with_stops(start_airport, end_airport, all_airports, num_stops)
+        if route is None:
+            print("❌ Could not find a valid route. Please try again.")
+            continue 
         route_distance = total_route_distance(route)
         route_co2 = calculate_co2(route_distance)
         
@@ -175,8 +181,8 @@ Plan your flights wisely to stay within CO2 and flight limits!
         
         print(f"\n📊 Impact:")
         print(f"   CO2: {projected_co2:.1f}kg")
-        print(f"   Flights: {total_flights}")
-        print(f"   Flights: {projected_flights}")
+        print(f"   Flights in this trip: {len(route) - 1}")
+        print(f"   Total flights: {projected_flights}")
 
         # Execute trip
         total_co2 += route_co2
@@ -199,9 +205,8 @@ Plan your flights wisely to stay within CO2 and flight limits!
     # Game summary
     print(f"\n🏁 GAME OVER!")
     print(f"   Final CO2: {total_co2:.1f}kg")
-    db_table_creator()
-    print(f"   table created")
-    results_to_db(user_name, 1, total_flights, sum(f['distance'] for f in flight_history), total_co2)
+    db_table_creator(yhteys)
+    results_to_db(yhteys, user_name, 1, total_flights, sum(f['distance'] for f in flight_history), total_co2)
     print(f"   results saved to database")
 
 if yhteys.is_connected():

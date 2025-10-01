@@ -141,10 +141,6 @@ def show_countries(yhteys):
     cursor.execute(sql)
     countries = cursor.fetchall()
     
-    print("\n🌍 Available countries:")
-    for i, (country_code, country_name) in enumerate(countries, 1):
-        print(f"   {i:2}. {country_name}")
-
     return countries
 
 def showMap(coordinates, output_file='map.html'):
