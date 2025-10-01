@@ -1,4 +1,6 @@
 from geopy import distance
+import folium
+import os
 
 # ==== Function: Get all airports ====
 def get_all_airports(yhteys):
@@ -144,3 +146,33 @@ def show_countries(yhteys):
         print(f"   {i:2}. {country_name}")
 
     return countries
+
+def showMap(coordinates, output_file='map.html'):
+    if os.path.exists(output_file):
+        print(f"Map '{output_file}' already exists. Skipping creation.")
+        return
+    map = folium.Map(location=[coordinates[0]['lat'], coordinates[0]['lng']], zoom_start=5)
+    folium.Marker(
+        location=[coordinates[0]['lat'], coordinates[0]['lng']],
+        popup=coordinates[0]['name'],
+        icon=folium.Icon(color='green', icon='info-sign')
+    ).add_to(map)
+    print(f"Adding {len(coordinates)} markers to the map...")
+
+    for i in range(1, len(coordinates)):
+        folium.Marker(
+            location=[coordinates[i]['lat'], coordinates[i]['lng']],
+            popup=f"{coordinates[i]['name']}<br><b>{coordinates[i]['ident']}</b><br>{coordinates[i]['city']}, {coordinates[i]['country']}",
+        ).add_to(map)
+
+    # folium.PolyLine(
+    #     locations=[
+    #         [coordinates[0]['lat'], coordinates[0]['lng']],
+    #         [coordinates[-1]['lat'], coordinates[-1]['lng']]
+    #     ],
+    #     color='blue',
+    #     weight=2,
+    #     opacity=0.7
+    # ).add_to(map)
+
+    map.save('map.html')

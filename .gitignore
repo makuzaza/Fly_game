@@ -13,3 +13,4 @@ __pycache__/
 .env
 
 optimal_route.py
+map.html
