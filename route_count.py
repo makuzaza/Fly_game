@@ -140,7 +140,7 @@ def show_countries(yhteys):
     cursor = yhteys.cursor()
     cursor.execute(sql)
     countries = cursor.fetchall()
-    
+
     return countries
 
 def showMap(coordinates, output_file='map.html'):
@@ -160,15 +160,5 @@ def showMap(coordinates, output_file='map.html'):
             location=[coordinates[i]['lat'], coordinates[i]['lng']],
             popup=f"{coordinates[i]['name']}<br><b>{coordinates[i]['ident']}</b><br>{coordinates[i]['city']}, {coordinates[i]['country']}",
         ).add_to(map)
-
-    # folium.PolyLine(
-    #     locations=[
-    #         [coordinates[0]['lat'], coordinates[0]['lng']],
-    #         [coordinates[-1]['lat'], coordinates[-1]['lng']]
-    #     ],
-    #     color='blue',
-    #     weight=2,
-    #     opacity=0.7
-    # ).add_to(map)
 
     map.save('map.html')

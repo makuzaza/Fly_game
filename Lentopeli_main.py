@@ -7,6 +7,7 @@ from route_count import *
 from save_to_db import *
 import folium
 from tips import *
+import story
 
 # Load environment variables
 load_dotenv()
@@ -32,7 +33,14 @@ def main():
 Plan your flights wisely to stay within CO2 and flight limits!
     """
     print(welcome_message)
-    
+    # game starts
+    # ask to show the story
+    storyDialog = input('Do you want to read the background story? (Y/N): ')
+    if storyDialog.strip().upper() == 'Y':
+        # print wrapped string line by line
+        for line in story.getStory():
+            print(line)
+
     # Load airports
     print("Loading airports...")
     all_airports = get_all_airports(yhteys)
@@ -53,31 +61,26 @@ Plan your flights wisely to stay within CO2 and flight limits!
     while True:
         countries = show_countries(yhteys)
         countries_with_tips = [c for c in countries if c[0] in country_tips]
+        
+        random_country = random.choice(countries_with_tips)
+        random_code, random_name = random_country
+        tip = country_tips[random_code]
+        print(f"\n🌍 Country tip: {tip}")
 
-        if not countries_with_tips:
-            print("No countries with tips available.")
-            # Optionally, handle this case (exit or fallback)
-        else:
-            random_country = random.choice(countries_with_tips)
-            random_code, random_name = random_country
-            tip = country_tips[random_code]
-            print(f"\n🌍 Country tip: {tip}")
-        user_guess = user_input("Guess the country code (or press 'h' for all list of countries): ").strip().upper()
-
-        if user_guess == 'H':
-            print("\nAvailable countries:")
-            for i, (code, name) in enumerate(countries, 1):
-                print(f"   {i:2}. {code} - {name}")
-            user_guess = user_input("Now enter the country code: ").strip().upper()
-
-        if user_guess == random_code:
-            print("✅ Your answer is correct! Proceeding...")
-            country_code, country_name = random_code, random_name
-        else:
-            print(f"❌ Incorrect. The country was {random_name} ({random_code}).")
-            # Optionally, let the user try again or proceed with the random country
-            country_code, country_name = random_code, random_name
-            continue
+        # Loop until user guesses correctly
+        while True:
+            user_guess = user_input("Guess the country code (or press 'h' for all list of countries): ").strip().upper()
+            if user_guess == 'H':
+                print("\nAvailable countries:")
+                for i, (code, name) in enumerate(countries_with_tips, 1):
+                    print(f"   {i:2}. {code} - {name}")
+                continue  # Ask again after showing the list
+            if user_guess == random_code:
+                print("✅ Your answer is correct! Proceeding...")
+                country_code, country_name = random_code, random_name
+                break
+            else:
+                print("❌ Incorrect. Try again!")
 
         # # Show countries
         # show = user_input("Show available countries? (y): ").strip().lower()
