@@ -72,7 +72,7 @@ Plan your flights wisely to stay within CO2 and flight limits!
             user_guess = user_input("Guess the country code (or press 'h' for all list of countries): ").strip().upper()
             if user_guess == 'H':
                 print("\nAvailable countries:")
-                for i, (code, name) in enumerate(countries_with_tips, 1):
+                for i, (code, name) in enumerate(countries, 1): # could replace with countries_with_tips to limit the list
                     print(f"   {i:2}. {code} - {name}")
                 continue  # Ask again after showing the list
             if user_guess == random_code:
