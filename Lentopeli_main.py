@@ -26,6 +26,39 @@ yhteys = mysql.connector.connect(
 def user_input (question):
     return input(question)
 
+def create_stages():
+# simple ordered list of 5 stages; extend details as needed
+    return [
+        {'id': 1, 'type': 'guess_country'},
+        {'id': 2, 'type': 'route_with_stop', 'stops': 1},
+        {'id': 3, 'type': 'info_stage'},
+        {'id': 4, 'type': 'challenge_stage'},
+        {'id': 5, 'type': 'final_stage'}
+    ]
+
+def stage_guess_country(yhteys, country_tips, user_input, get_country_airports):
+    countries = show_countries(yhteys)
+    countries_with_tips = [c for c in countries if c[0] in country_tips]
+        
+    random_country = random.choice(countries_with_tips)
+    random_code, random_name = random_country
+    tip = country_tips[random_code]
+    print(f"\n🌍 Country tip: {tip}")
+
+        # Loop until user guesses correctly
+    while True:
+        user_guess = user_input("Guess the country code (or press 'h' for all list of countries): ").strip().upper()
+        if user_guess == 'H':
+            print("\nAvailable countries:")
+            for i, (code, name) in enumerate(countries_with_tips, 1): # could replace with countries to limit the list
+                print(f"   {i:2}. {code} - {name}")
+            continue  # Ask again after showing the list
+        if user_guess == random_code:
+            print("✅ Correct! Proceeding...")
+            country_airports = get_country_airports(yhteys, random_code)
+            return random_code, random_name, country_airports
+        print("❌ Incorrect. Try again!")
+
 # === Main program ===
 def main():
     welcome_message = """
@@ -58,61 +91,18 @@ Plan your flights wisely to stay within CO2 and flight limits!
     
     print(f"\n📍 Starting location: Helsinki, Finland (EFHK)")
     
-    while True:
-        countries = show_countries(yhteys)
-        countries_with_tips = [c for c in countries if c[0] in country_tips]
-        
-        random_country = random.choice(countries_with_tips)
-        random_code, random_name = random_country
-        tip = country_tips[random_code]
-        print(f"\n🌍 Country tip: {tip}")
-
-        # Loop until user guesses correctly
-        while True:
-            user_guess = user_input("Guess the country code (or press 'h' for all list of countries): ").strip().upper()
-            if user_guess == 'H':
-                print("\nAvailable countries:")
-                for i, (code, name) in enumerate(countries, 1): # could replace with countries_with_tips to limit the list
-                    print(f"   {i:2}. {code} - {name}")
-                continue  # Ask again after showing the list
-            if user_guess == random_code:
-                print("✅ Your answer is correct! Proceeding...")
-                country_code, country_name = random_code, random_name
-                break
-            else:
-                print("❌ Incorrect. Try again!")
-
-        # # Show countries
-        # show = user_input("Show available countries? (y): ").strip().lower()
-        # while show not in ['y']:
-        #     show = user_input("Please enter 'y': ").strip().lower()
-        # if show == "y":
-        #     countries = show_countries(yhteys)
-
-        # # Choose country
-        # while True:
-        #     try:
-        #         country_choice = int(user_input('\nChoose country number: ')) - 1
-        #         if not 0 <= country_choice < len(countries):
-        #             print("❌ Invalid choice!")
-        #             continue
-        #         selected_country = countries[country_choice]
-        #         country_code, country_name = selected_country
-        #         print(f"Selected: {country_code}")
-        #         break
-        #     except ValueError:
-        #         print("❌ Please enter a valid number!")
-        #         continue
-        
-        # Show airports in country
-        country_airports = get_airports_by_country(yhteys, country_code)
-        if not country_airports:
-            print("❌ No large airports found in this country!")
-            continue
-        
-        print(f"\n🛬 Airports in {country_name}:")
-        for i, airport in enumerate(country_airports, 1):
-            print(f"   {i:2}. {airport['ident']} - {airport['name']} ({airport['city']})")
+    stages = create_stages()
+    for stage in stages:
+        if stage['type'] == 'guess_country':
+            country_code, country_name, country_airports = stage_guess_country(yhteys, country_tips, user_input, get_airports_by_country)
+            print(f"\n🛬 Airports in {country_name}:")
+            for i, airport in enumerate(country_airports, 1):
+                print(f"   {i:2}. {airport['ident']} - {airport['name']} ({airport['city']})")
+        elif stage['type'] == 'route_with_stop':
+            num_stops = stage.get('stops', 0)
+            # Handle route planning with stops
+        else:
+            print(f"Unknown stage type: {stage['type']}")
         
         # Choose destination
         while True:
@@ -132,9 +122,9 @@ Plan your flights wisely to stay within CO2 and flight limits!
         start_airport = find_airport(all_airports, current_location)
         end_airport = find_airport(all_airports, destination_code)
         
-        if not start_airport or not end_airport:
-            print("❌ Airport not found!")
-            continue
+        # if not start_airport or not end_airport:
+        #     print("❌ Airport not found!")
+        #     continue
         if start_airport['ident'] == end_airport['ident']:
             print("❌ Start and destination airports must be different. Please start again.")
             continue
