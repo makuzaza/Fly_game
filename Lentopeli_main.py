@@ -20,7 +20,9 @@ def create_stages():
     return [
         {'id': 1, 'type': 'guess_country'},
         {'id': 2, 'type': 'route_with_stop', 'stops': 1},
-        {'id': 3, 'type': 'route_with_stop', 'stops': 2}
+        {'id': 3, 'type': 'route_with_stop', 'stops': 2},
+        {'id': 4, 'type': 'route_with_stop', 'stops': 3},
+        {'id': 5, 'type': 'route_with_stop', 'stops': 4}
     ]
 
 def ask_with_attempts(prompt, correct_answer, on_help=None, answer_text=None):
@@ -73,7 +75,7 @@ def show_country_list():
     print("\nAvailable countries:")
     for i, (code, name) in enumerate(countries_with_tips, 1):
         print(f"   {i:2}. {code} - {name}")
-
+    
 # === Main program ===
 def main():
     welcome_message = """
@@ -107,19 +109,16 @@ Plan your flights wisely to stay within CO2 and flight limits!
     stages = create_stages()
     for stage_index, stage in enumerate(stages, 1):
         print(f"\n--- Stage {stage_index}/{len(stages)} ---")
+        country_code, country_name, country_airports = stage_guess_country(country_tips, user_input, get_airports_by_country)
+        print(f"\n🛬 Airports in {country_name}:")
+        for i, airport in enumerate(country_airports, 1):
+            print(f"   {i:2}. {airport['ident']} - {airport['name']} ({airport['city']})")
+
         if stage['type'] == 'guess_country':
-            country_code, country_name, country_airports = stage_guess_country(country_tips, user_input, get_airports_by_country)
-            print(f"\n🛬 Airports in {country_name}:")
-            for i, airport in enumerate(country_airports, 1):
-                print(f"   {i:2}. {airport['ident']} - {airport['name']} ({airport['city']})")
-            num_stops = 0  # No stops in this stage
+            num_stops = 0
         elif stage['type'] == 'route_with_stop':
             num_stops = stage.get('stops', stage_index)
             print(f"\n✈️  Stage: Plan a route with {num_stops} stop(s).")
-            country_code, country_name, country_airports = stage_guess_country(country_tips, user_input, get_airports_by_country)
-            print(f"\n🛬 Airports in {country_name}:")
-            for i, airport in enumerate(country_airports, 1):
-                print(f"   {i:2}. {airport['ident']} - {airport['name']} ({airport['city']})")
         
         # Choose destination
         while True:
@@ -224,9 +223,8 @@ Plan your flights wisely to stay within CO2 and flight limits!
     print(f"   Final CO2: {total_co2:.1f}kg")
     db_table_creator()
     date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"Results for {user_name} on {date}:")
-    results_to_db(user_name, date, stage, total_flights, sum(f['distance'] for f in flight_history), total_co2, "Completed")
-    print(f"results_to_db({user_name}, {date}, {stage}, {total_flights}, {sum(f['distance'] for f in flight_history)}, {total_co2}, 'Completed')")
+    results_to_db(user_name, date, stage_index, total_flights, sum(f['distance'] for f in flight_history), total_co2, "Completed")
+    print(f"results_to_db({user_name}, {date}, {stage_index}, {total_flights}, {sum(f['distance'] for f in flight_history)}, {total_co2}, 'Completed')")
     print(f"Results saved to database")
 
 if yhteys.is_connected():
