@@ -2,9 +2,12 @@ from geopy import distance
 import folium
 import os
 from folium.plugins import Search
+from db import get_connection
+
+yhteys = get_connection()
 
 # ==== Function: Get all airports ====
-def get_all_airports(yhteys):
+def get_all_airports():
     """Get all large airports with coordinates"""
     sql = "SELECT ident, name, latitude_deg, longitude_deg, municipality, iso_country FROM airport WHERE type IN ('large_airport') ORDER BY name;"
     cursor = yhteys.cursor()
@@ -24,7 +27,7 @@ def get_all_airports(yhteys):
     return airports
 
 # ==== Function: Get airports by country ====
-def get_airports_by_country(yhteys, country_code):
+def get_airports_by_country(country_code):
     """Get airports in a specific country"""
     sql = f"SELECT ident, name, municipality FROM airport WHERE iso_country='{country_code}' AND type IN ('large_airport') ORDER BY name;"
     cursor = yhteys.cursor()
@@ -48,20 +51,6 @@ def find_airport(airports, code):
             return airport
     return None
 
-# ==== Function: Get coordination ====
-def search_coordination(icao):
-    """Get coordinates for airport"""
-    sql = f"SELECT latitude_deg, longitude_deg FROM airport WHERE ident='{icao}'"
-    cursor = yhteys.cursor()
-    cursor.execute(sql)
-    result = cursor.fetchall()
-
-    if cursor.rowcount > 0:
-        for line in result:
-            coord = [line[0], line[1]]
-        return coord
-    return None
-
 # ==== Function: Calculate CO2 emissions ====
 def calculate_co2(distance_km):
     """Calculate CO2 emissions for flight distance (simplified)"""
@@ -82,7 +71,6 @@ def total_route_distance(route):
     return total
 
 def find_route_with_stops(start_airport, end_airport, all_airports, num_stops):
-    """Find optimal route with specified number of stops"""
     if num_stops == 0:
         return [start_airport, end_airport]
 
@@ -134,8 +122,7 @@ def find_route_with_stops(start_airport, end_airport, all_airports, num_stops):
 
         return [start_airport] + selected + [end_airport]
 
-# === Function: Display available countries ===
-def show_countries(yhteys):
+def show_countries():
     """Show available countries with airports"""
     sql = "SELECT DISTINCT country.iso_country, country.name FROM airport, country WHERE airport.iso_country = country.iso_country AND airport.type IN ('large_airport') ORDER BY country.name;"
     cursor = yhteys.cursor()

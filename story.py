@@ -1,25 +1,13 @@
 import textwrap
-
-story = '''You are an adventurous traveler, who has always wanted to explore the world. One day, you decide you are going to take on the ultimate challenge and try to find the elusive and mysterious diamond of the sky.
-
-You set off on your journey, traveling to the first airport on your list. When you arrived, you were greeted with a message on the airport's display board that said "Welcome to X Airport! You have X$ and Xkm of range left."
-
-You are determined to find the diamond, and you know you need money and range to do so. You decide to try your luck and open a lootbox at the airport. Much to your surprise, you win a great reward- money! You are ecstatic and now have the funds to continue on your journey.
-
-With your newfound wealth, you are able to continue on your journey, but you have to be careful with your money and range. You are able to purchase fuel at each airport, and you eventually make it to the airport where the diamond is rumored to be.
-
-Much to your surprise, when you arrive, you see the diamond shining in the sunlight. You have finally found the diamond!
-
-You are elated, but you know you have to be careful as you make your way back to the starting airport. You have heard rumors that robbers are prowling around the airports, hoping to steal money and valuable items. As you make your way back, you are careful to not fall victim to any of their schemes.
-
-When you finally arrive back at the starting airport, you are relieved to find that you still have the diamond and all the money you won along the way. You have won the challenge!
-
-You are overjoyed with your success and the money you have won. You have finally found the diamond of the sky and were able to keep all of your hard-earned money.
-
+# edit the story to set correct lines
+story = '''
+Hello, my friend! 
+Welcome to the exciting world of global travel! In this game, you will embark on flights to distant countries, solve intriguing puzzles, and experience unforgettable adventures. Of course, it is important to keep the environment in mind — so plan your route carefully to reduce CO₂ emissions. You’ll start Level 1 from Helsinki, and always progress from previous destination. Your task is to visit 3 countries by guessing their names. Don’t worry—plenty of hints will guide you along the way. We recommend using the map to choose the most optimal route. Each country may have several airports, so choose wisely, always considering the environmental impact. If you don’t succeed, each level can be replayed up to 3 times. You can also exit the game at any time by typing “quit” or “X” on your keyboard. At the end of the game, you’ll see your results, which will also be automatically saved to the database for future viewing. 
+Good luck! 🌍✈️
 '''
 
-# Set column width to 80 characters
-wrapper = textwrap.TextWrapper(width=80, break_long_words=False, replace_whitespace=False)
+# Set column width to 100 characters
+wrapper = textwrap.TextWrapper(width=70, break_long_words=False, replace_whitespace=False)
 # Wrap text
 word_list = wrapper.wrap(text=story)
 
