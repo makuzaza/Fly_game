@@ -9,7 +9,7 @@ def db_table_creator():
             name VARCHAR(40),
             date VARCHAR(40),
             levels INT,
-            cities INT,
+            flights INT,
             km_amount FLOAT,
             co2_amount FLOAT,
             status VARCHAR(40),
@@ -21,14 +21,14 @@ def db_table_creator():
     yhteys.commit() 
     return
 
-def results_to_db(name, date, level, city, km, co2, status):
+def results_to_db(name, date, level, flights, km, co2, status):
     sql = f"""
-        INSERT INTO results (name, date, levels, cities, km_amount, co2_amount, status)
+        INSERT INTO results (name, date, levels, flights, km_amount, co2_amount, status)
         VALUES (%s, %s, %s, %s, %s, %s, %s);
     """
     try:
         cursor = yhteys.cursor()
-        cursor.execute(sql, (name, date, level, city, km, co2, status))
+        cursor.execute(sql, (name, date, level, flights, km, co2, status))
         yhteys.commit()
         return True
     except Exception as e:

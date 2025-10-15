@@ -36,7 +36,7 @@ country_tips = {
     "PH": "Discover thousands of islands with crystal-clear waters.",
     "ID": "Relax in Bali and explore the world's largest archipelago.",
     "MY": "Climb Petronas Towers and enjoy delicious street food.",
-    "SG": "A clean and modern city-state with world-class attractions.",
+    "SG": "A clean and modern city-state with high fines.",
     "IL": "Walk through Jerusalem and float in the Dead Sea.",
     "IR": "Discover ancient Persian architecture and poetic heritage.",
     "PK": "Admire the mighty Karakoram mountains.",

@@ -12,6 +12,7 @@ from db import get_connection
 from datetime import datetime
 
 yhteys = get_connection()
+countries = show_countries()
 
 def user_input (question):
     return input(question)
@@ -50,7 +51,6 @@ def ask_with_attempts(prompt, correct_answer, on_help=None, answer_text=None):
     return False
 
 def get_countries_with_tips(country_tips):
-    countries = show_countries() or []
     return [c for c in countries if c[0] in country_tips] or countries
 
 def stage_guess_country(country_tips, user_input, get_country_airports):
@@ -74,8 +74,41 @@ def show_country_list():
     countries_with_tips = get_countries_with_tips(country_tips)
     print("\nAvailable countries:")
     for i, (code, name) in enumerate(countries_with_tips, 1):
+  # for i, (code, name) in enumerate(countries, 1):
         print(f"   {i:2}. {code} - {name}")
-    
+
+def results_output(stage_index, total_flights, distance, co2):
+    # === A list with output values, it is easy to add new rows ===
+    results = [
+        ("Level passed", stage_index),
+        ("Total flights", total_flights),
+        ("Total distance, km", round(distance)),
+        ("Total CO2, kg", round(co2)),
+    ]
+
+    print("Your game results:")
+    print("-" * 42)
+    for label, value in results:
+        print(f"| {label:<25} | {value:>10} |")
+        print("-" * 42)
+    return
+
+def end_game(user_name, date, stage_index, total_flights, total_co2, game_status, flight_history):
+    print(f"\n🏁 GAME OVER!")
+    print(f"   Status: {game_status}")
+    print(f"   Final CO2: {total_co2:.1f}kg")
+    print(f"   Total flights: {total_flights}")
+    stages = create_stages()
+    results_output(stage_index, total_flights, sum(f['distance'] for f in flight_history), total_co2)
+    db_table_creator()
+    results_to_db(user_name, date, stage_index, total_flights, sum(f['distance'] for f in flight_history), total_co2, game_status)
+    print(f"results_to_db({user_name}, {date}, {stage_index}, {total_flights}, {sum(f['distance'] for f in flight_history)}, {total_co2}, {game_status})")
+    print(f"Results saved to database")
+    return
+
+date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+MAX_CO2 = 10000
+
 # === Main program ===
 def main():
     welcome_message = """
@@ -86,7 +119,6 @@ Plan your flights wisely to stay within CO2 and flight limits!
 
     storyDialog = input('Do you want to read the background story? (Y/N): ')
     if storyDialog.strip().upper() == 'Y':
-        # print wrapped string line by line
         for line in story.getStory():
             print(line)
 
@@ -102,13 +134,13 @@ Plan your flights wisely to stay within CO2 and flight limits!
     total_co2 = 0
     total_flights = 0
     flight_history = []
-    
-    starting_airport = find_airport(all_airports, current_location)
-    print(f"\n📍 Starting location: {starting_airport['name']} ({starting_airport['country']})")
+    game_status = None
 
     stages = create_stages()
     for stage_index, stage in enumerate(stages, 1):
         print(f"\n--- Stage {stage_index}/{len(stages)} ---")
+        starting_airport = find_airport(all_airports, current_location)
+        print(f"\n📍 Current location: {starting_airport['name']} ({starting_airport['country']})")
         country_code, country_name, country_airports = stage_guess_country(country_tips, user_input, get_airports_by_country)
         print(f"\n🛬 Airports in {country_name}:")
         for i, airport in enumerate(country_airports, 1):
@@ -153,10 +185,12 @@ Plan your flights wisely to stay within CO2 and flight limits!
             all_correct = True
             for i in range(1, len(route) - 1):
                 stop_number = i
-                if ask_with_attempts(f"Guess the country code for stop {stop_number}: ", route[i]['country'], on_help=show_country_list):
-                    print(f"✅ Correct  {route[i]['country']}! Proceeding...")
+                stop_country_code = route[i]['country']
+                stop_country_name = show_countries(stop_country_code)
+                if ask_with_attempts(f"Guess the country code for stop {stop_number} (city name {route[i]['city']}): ", stop_country_code, on_help=show_country_list):
+                    print(f"✅ Correct  {stop_country_code} - {stop_country_name} ({route[i]['name']})! Proceeding...")
                 else:
-                    print(f"❌ Wrong! The correct answer was: {route[i]['country']}")
+                    print(f"❌ Wrong! The correct answer was: {stop_country_code} - {stop_country_name} ({route[i]['name']})")
                     all_correct = False
                     continue
             if not all_correct:
@@ -190,14 +224,18 @@ Plan your flights wisely to stay within CO2 and flight limits!
         projected_flights = total_flights + len(route) - 1
         
         print(f"\n📊 Impact:")
-        print(f"   CO2: {projected_co2:.1f}kg")
+        print(f"   CO2: {projected_co2:.1f}kg / {MAX_CO2}kg max")
         print(f"   Flights in this trip: {len(route) - 1}")
         print(f"   Total flights: {projected_flights}")
+
+        if projected_co2 > MAX_CO2:
+            print(f"\n❌ GAME OVER - limits exceeded!")
+            game_status = "Lose"
+            break
 
         # Execute trip
         total_co2 += route_co2
         total_flights += len(route) - 1  # Number of flight segments
-        current_location = destination_code
         
         flight_history.append({
             'route': route,
@@ -206,26 +244,22 @@ Plan your flights wisely to stay within CO2 and flight limits!
         })
         
         print(f"\n🎯 Trip completed!")
-        print(f"   New location: {destination_name}")
+        current_location = destination_code
+
+        if stage_index >= len(stages):
+            game_status = "Win"
+            print("\n🎉 CONGRATULATIONS - YOU WON THE GAME!")
+            break
+
+        print(f"\n📍 New location updated to: {destination_name} ({current_location})")
 
         continue_game = user_input("\nContinue to next destination? (y/n): ").lower()
-        if continue_game != 'y':
+        if continue_game == 'n':
+            game_status = "Quit"
             break
-        # continue game loop with the next stage where the current location is the new start location
-        current_location = destination_code
-        starting_airport = find_airport(all_airports, current_location)
-        print(f"\n📍 Current location: {starting_airport['name']} ({starting_airport['country']})")
-        
-        stage = stages[min(stage_index, len(stages)-1)]  # Move to next stage or stay at last
 
     # Game summary
-    print(f"\n🏁 GAME OVER!")
-    print(f"   Final CO2: {total_co2:.1f}kg")
-    db_table_creator()
-    date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    results_to_db(user_name, date, stage_index, total_flights, sum(f['distance'] for f in flight_history), total_co2, "Completed")
-    print(f"results_to_db({user_name}, {date}, {stage_index}, {total_flights}, {sum(f['distance'] for f in flight_history)}, {total_co2}, 'Completed')")
-    print(f"Results saved to database")
+    end_game(user_name, date, stage_index, total_flights, total_co2, game_status, flight_history)
 
 if yhteys.is_connected():
     print("✅ Successfully connected to database!")

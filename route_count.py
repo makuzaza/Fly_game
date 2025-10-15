@@ -9,7 +9,7 @@ yhteys = get_connection()
 # ==== Function: Get all airports ====
 def get_all_airports():
     """Get all large airports with coordinates"""
-    sql = "SELECT ident, name, latitude_deg, longitude_deg, municipality, iso_country FROM airport WHERE type IN ('large_airport') ORDER BY name;"
+    sql = "SELECT ident, name, latitude_deg, longitude_deg, municipality, iso_country FROM airport WHERE type IN ('large_airport') AND name NOT LIKE '%CLICK HERE%' ORDER BY name;"
     cursor = yhteys.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -29,7 +29,7 @@ def get_all_airports():
 # ==== Function: Get airports by country ====
 def get_airports_by_country(country_code):
     """Get airports in a specific country"""
-    sql = f"SELECT ident, name, municipality FROM airport WHERE iso_country='{country_code}' AND type IN ('large_airport') ORDER BY name;"
+    sql = f"SELECT ident, name, municipality FROM airport WHERE iso_country='{country_code}' AND type IN ('large_airport') AND name NOT LIKE '%CLICK HERE%' ORDER BY name;"
     cursor = yhteys.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -122,14 +122,19 @@ def find_route_with_stops(start_airport, end_airport, all_airports, num_stops):
 
         return [start_airport] + selected + [end_airport]
 
-def show_countries():
-    """Show available countries with airports"""
-    sql = "SELECT DISTINCT country.iso_country, country.name FROM airport, country WHERE airport.iso_country = country.iso_country AND airport.type IN ('large_airport') ORDER BY country.name;"
-    cursor = yhteys.cursor()
-    cursor.execute(sql)
-    countries = cursor.fetchall()
-
-    return countries
+def show_countries(country_code=None):
+    if country_code:
+        sql = "SELECT country.iso_country, country.name FROM country WHERE country.iso_country = %s;"
+        cursor = yhteys.cursor()
+        cursor.execute(sql, (country_code,))
+        result = cursor.fetchone()
+        return result[1] if result else country_code
+    else:
+        sql = "SELECT DISTINCT country.iso_country, country.name FROM airport, country WHERE airport.iso_country = country.iso_country AND airport.type IN ('large_airport') ORDER BY country.name;"
+        cursor = yhteys.cursor()
+        cursor.execute(sql)
+        countries = cursor.fetchall()
+        return countries
 
 def showMap(coordinates, output_file='map.html'):
     if os.path.exists(output_file):
