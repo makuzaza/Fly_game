@@ -53,10 +53,56 @@ def ask_with_attempts(prompt, correct_answer, on_help=None, answer_text=None):
 def get_countries_with_tips(country_tips):
     return [c for c in countries if c[0] in country_tips] or countries
 
-def stage_guess_country(country_tips, user_input, get_country_airports):
+def generate_mission(all_airports, country_tips):
+    """Select 5 random countries and calculate CO2 budget"""
+    stages = create_stages()
     countries_with_tips = get_countries_with_tips(country_tips)
-    random_country = random.choice(countries_with_tips)
-    random_code, random_name = random_country
+    mission_countries = random.sample(countries_with_tips, min(5, len(countries_with_tips)))
+    
+    # Calculate CO2 budget based on selected countries
+    current_pos = "EFHK"
+    total_mission_co2 = 0
+    
+    for i, (country_code, country_name) in enumerate(mission_countries):
+        country_airports = get_airports_by_country(country_code)
+        if not country_airports:
+            continue
+        target_airport = random.choice(country_airports)
+        start_airport = find_airport(all_airports, current_pos)
+        end_airport = find_airport(all_airports, target_airport['ident'])
+        
+        stage = stages[i]
+        num_stops = stage.get('stops', 0) if stage['type'] == 'route_with_stop' else 0
+        
+        if num_stops > 0:
+            route = find_route_with_stops(start_airport, end_airport, all_airports, num_stops)
+            distance = total_route_distance(route)
+        else:
+            distance = calc_distance(start_airport, end_airport)
+        
+        total_mission_co2 += calculate_co2(distance)
+        current_pos = target_airport['ident']
+    
+    MAX_CO2 = round(total_mission_co2 * 1.2) 
+    
+    print(f"\n📋 YOUR MISSION:")
+    print(f"   You must visit {len(mission_countries)} countries")
+    print(f"   CO2 Budget: {MAX_CO2} kg")
+    print(f"\n🗺️  Your destination tips:")
+    for i, (code, name) in enumerate(mission_countries, 1):
+        tip = country_tips[code]
+        print(f"   Stage {i}: {tip}")
+    
+    confirm = user_input("\n✈️  Ready to start your mission? (Y/N): ")
+    if confirm.strip().upper() == 'N':
+        print("Mission aborted.")
+        return None, None
+    
+    return mission_countries, MAX_CO2
+    
+def stage_guess_country(country_tips, user_input, get_country_airports, selected_country=None):
+    countries_with_tips = get_countries_with_tips(country_tips)
+    random_code, random_name = selected_country
     tip = country_tips[random_code]
     print(f"\n🌍 Country tip: {tip}")
 
@@ -74,7 +120,6 @@ def show_country_list():
     countries_with_tips = get_countries_with_tips(country_tips)
     print("\nAvailable countries:")
     for i, (code, name) in enumerate(countries_with_tips, 1):
-  # for i, (code, name) in enumerate(countries, 1):
         print(f"   {i:2}. {code} - {name}")
     return
         
@@ -114,7 +159,6 @@ def end_game(user_name, date, stage_index, total_flights, total_co2, game_status
     return
 
 date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-MAX_CO2 = 10000
 
 # === Main program ===
 def main():
@@ -137,18 +181,20 @@ Plan your flights wisely to stay within CO2 and flight limits!
     user_name = user_input('Give your name: ')
     print(f"Welcome {user_name}! 🎮")
     
+    stages = create_stages()
+    mission_countries, MAX_CO2 = generate_mission(all_airports, country_tips)
+    
     current_location = "EFHK"  # Helsinki
     total_co2 = 0
     total_flights = 0
     flight_history = []
     game_status = None
 
-    stages = create_stages()
     for stage_index, stage in enumerate(stages, 1):
         print(f"\n--- Stage {stage_index}/{len(stages)} ---")
         starting_airport = find_airport(all_airports, current_location)
         print(f"\n📍 Current location: {starting_airport['name']} ({starting_airport['country']})")
-        country_code, country_name, country_airports = stage_guess_country(country_tips, user_input, get_airports_by_country)
+        country_code, country_name, country_airports = stage_guess_country(country_tips, user_input, get_airports_by_country, mission_countries[stage_index - 1])
         print(f"\n🛬 Airports in {country_name}:")
         for i, airport in enumerate(country_airports, 1):
             print(f"   {i:2}. {airport['ident']} - {airport['name']} ({airport['city']})")
@@ -189,18 +235,14 @@ Plan your flights wisely to stay within CO2 and flight limits!
             route_countries = " - ".join([airport['country'] for airport in route])
             print(f"{route_countries}")
 
-            all_correct = True
             for i in range(1, len(route) - 1):
                 stop_number = i
                 stop_country_code = route[i]['country']
                 stop_country_name = show_countries(stop_country_code)
-                if ask_with_attempts(f"Guess the country code for stop {stop_number} (city name {route[i]['city']}): ", stop_country_code, on_help=show_country_list):
+                if ask_with_attempts(f"Guess the country code for stop {stop_number} (city name {route[i]['city']}): ", stop_country_code, on_help=show_full_country_list):
                     print(f"✅ Correct  {stop_country_code} - {stop_country_name} ({route[i]['name']})! Proceeding...")
                 else:
                     print(f"❌ Wrong! The correct answer was: {stop_country_code} - {stop_country_name} ({route[i]['name']})")
-                    all_correct = False
-                    continue
-            if not all_correct:
                 continue
 
         # Calculate route distance and CO2
