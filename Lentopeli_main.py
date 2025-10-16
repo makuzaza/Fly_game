@@ -76,6 +76,13 @@ def show_country_list():
     for i, (code, name) in enumerate(countries_with_tips, 1):
   # for i, (code, name) in enumerate(countries, 1):
         print(f"   {i:2}. {code} - {name}")
+    return
+        
+def show_full_country_list():
+    print("\nAvailable countries:")
+    for i, (code, name) in enumerate(countries, 1):
+        print(f"   {i:2}. {code} - {name}")
+    return
 
 def results_output(stage_index, total_flights, distance, co2):
     # === A list with output values, it is easy to add new rows ===
