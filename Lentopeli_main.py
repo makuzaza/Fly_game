@@ -15,8 +15,11 @@ yhteys = get_connection()
 countries = show_countries()
 MAX_CO2 = None
 
-def user_input (question):
-    return input(question)
+def user_input(question):
+    response = input(question).strip()
+    if response.upper() in ['QUIT', 'X']:
+        return 'quit_game'
+    return response
 
 def create_stages():
     return [
@@ -27,10 +30,15 @@ def create_stages():
         {'id': 5, 'type': 'route_with_stop', 'stops': 4}
     ]
 
-def ask_with_attempts(prompt, correct_answer, on_help=None, answer_text=None):
+def ask_with_attempts(prompt, correct_answer, on_help=None):
     attempts = 0
     while attempts < 3:
         user_guess = user_input(prompt).strip().upper()
+
+        if user_guess == 'quit_game':
+            game_status = "Quit"
+            end_game(user_name, date, stage_index, total_flights, total_co2, game_status, flight_history)
+            return
 
         if on_help and user_guess == 'H':
             on_help()
@@ -42,10 +50,7 @@ def ask_with_attempts(prompt, correct_answer, on_help=None, answer_text=None):
         attempts += 1
         remaining = 3 - attempts
         if remaining > 0:
-            print(f"❌ Incorrect. Try again! ({remaining} attempts left)")
-
-    if answer_text:
-        print(f"❌ Wrong! The correct answer was: {answer_text}")
+            print(f"🔴 Incorrect. Try again! ({remaining} attempts left)")
     return False
 
 def get_countries_with_tips(country_tips):
@@ -54,7 +59,7 @@ def get_countries_with_tips(country_tips):
 def generate_mission(all_airports, country_tips):
     stages = create_stages()
     countries_with_tips = get_countries_with_tips(country_tips)
-    mission_countries = random.sample(countries_with_tips, min(5, len(countries_with_tips)))
+    mission_countries = random.sample(countries_with_tips, 5)
     
     current_pos = "EFHK"
     total_mission_co2 = 0
@@ -99,16 +104,13 @@ def stage_guess_country(country_tips, user_input, get_country_airports, selected
 
     if ask_with_attempts("Guess the country code (or press 'H' for all list of countries): ", random_code, on_help=show_country_list):
         print(f"✅ Correct {random_code} - {random_name}! Proceeding...")
-        country_airports = get_country_airports(random_code)
-        return random_code, random_name, country_airports
-
     else:
         print(f"❌ Wrong! The correct answer was: {random_code} - {random_name}")
         global MAX_CO2
         MAX_CO2 *= 0.95
         print(f"   ❗ Penalty applied! New CO2 budget: {MAX_CO2:.1f} kg")
-        country_airports = get_country_airports(random_code)
-        return random_code, random_name, country_airports
+    country_airports = get_country_airports(random_code)
+    return random_code, random_name, country_airports
 
 def show_country_list():
     countries_with_tips = get_countries_with_tips(country_tips)
@@ -143,11 +145,11 @@ def end_game(user_name, date, stage_index, total_flights, total_co2, game_status
     print(f"   Status: {game_status}")
     print(f"   Final CO2: {total_co2:.1f}kg")
     print(f"   Total flights: {total_flights}")
-    stages = create_stages()
-    results_output(stage_index, total_flights, sum(f['distance'] for f in flight_history), total_co2)
+    levels_passed = stage_index or 0
+    results_output(levels_passed, total_flights, sum(f['distance'] for f in flight_history), total_co2)
     db_table_creator()
-    results_to_db(user_name, date, stage_index, total_flights, sum(f['distance'] for f in flight_history), total_co2, game_status)
-    print(f"results_to_db({user_name}, {date}, {stage_index}, {total_flights}, {sum(f['distance'] for f in flight_history)}, {total_co2}, {game_status})")
+    results_to_db(user_name, date, levels_passed, total_flights, sum(f['distance'] for f in flight_history), total_co2, game_status)
+    print(f"results_to_db({user_name}, {date}, {levels_passed}, {total_flights}, {sum(f['distance'] for f in flight_history)}, {total_co2}, {game_status})")
     print(f"Results saved to database")
     return
 
@@ -169,9 +171,13 @@ Plan your flights wisely to stay within CO2 and flight limits!
     print("Loading airports...")
     all_airports = get_all_airports()
     print(f"✅ Loaded {len(all_airports)} airports")
-    showMap(all_airports)
+    show_map(all_airports)
     
     user_name = user_input('Give your name: ')
+    if user_name == 'quit_game':
+        game_status = "Quit"
+        end_game(user_name, date, 0, 0, 0, game_status, [])
+        return
     print(f"Welcome {user_name}! 🎮")
     
     stages = create_stages()
@@ -202,7 +208,12 @@ Plan your flights wisely to stay within CO2 and flight limits!
         # Choose destination
         while True:
             try:
-                airport_choice = int(user_input('\nChoose airport number to fly to: ')) - 1
+                airport_choice = user_input('\nChoose airport number to fly to: ')
+                if airport_choice == 'quit_game':
+                    game_status = "Quit"
+                    end_game(user_name, date, stage_index, total_flights, total_co2, game_status, flight_history)
+                    return
+                airport_choice = int(airport_choice) - 1
                 if not 0 <= airport_choice < len(country_airports):
                     print("❌ Invalid choice!")
                     continue
@@ -213,7 +224,6 @@ Plan your flights wisely to stay within CO2 and flight limits!
                 print("❌ Please enter a valid number!")
                 continue         
         
-        # Find full airport details
         start_airport = find_airport(all_airports, current_location)
         end_airport = find_airport(all_airports, destination_code)
         
@@ -241,7 +251,6 @@ Plan your flights wisely to stay within CO2 and flight limits!
                     print(f"   ❗ Penalty applied! New CO2 budget: {MAX_CO2:.1f} kg")
                 continue
 
-        # Calculate route distance and CO2
             route_distance = total_route_distance(route)
             route_co2 = calculate_co2(route_distance)
         else:
@@ -297,7 +306,7 @@ Plan your flights wisely to stay within CO2 and flight limits!
         print(f"\n📍 New location updated to: {destination_name} ({current_location})")
 
         continue_game = user_input("\nContinue to next destination? (y/n): ").lower()
-        if continue_game == 'n':
+        if continue_game == 'quit_game' or continue_game == 'n':
             game_status = "Quit"
             break
 

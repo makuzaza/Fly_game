@@ -124,7 +124,7 @@ def show_countries(country_code=None):
         countries = cursor.fetchall()
         return countries
 
-def showMap(coordinates, output_file='map.html'):
+def show_map(coordinates, output_file='map.html'):
     if os.path.exists(output_file):
         print(f"Map '{output_file}' already exists. Skipping creation.")
         return

@@ -10,11 +10,11 @@ Tervetuloa maailmanlaajuisen matkailun jännittävään maailmaan!
 Tässä pelissä lähdet lennoille kaukaisiin maihin, ratkaiset kiehtovia pulmia ja koet unohtumattomia seikkailuja.
 On tietysti tärkeää pitää ympäristö mielessä – suunnittele siis reittisi huolellisesti vähentääksesi hiilidioksidipäästöjä.
 Aloitat tason 1 Helsingistä ja etenet aina edellisestä määränpäästä.
-Tehtäväsi on vierailla kolmessa maassa arvaamalla niiden nimet.
+Tehtäväsi on vierailla 5 maassa arvaamalla niiden nimet.
 Älä huoli – runsaasti vinkkejä opastaa sinua matkan varrella.
 Suosittelemme kartan käyttöä optimaalisen reitin valitsemiseen.
 Jokaisella maalla voi olla useita lentokenttiä, joten valitse viisaasti ja ota aina huomioon ympäristövaikutukset.
-Jos et onnistu, kutakin tasoa voidaan pelata uudelleen jopa 3 kertaa.
+Sinun täytyy määrittää oikeat pysähdyspaikat kullekin reitille. Vaikeusaste kasvaa tason myötä.
 Voit myös poistua pelistä milloin tahansa kirjoittamalla "quit" tai "X" näppäimistölläsi.
 Pelin lopussa näet tuloksesi,
 jotka tallennetaan myös automaattisesti tietokantaan myöhempää tarkastelua varten.
@@ -77,11 +77,11 @@ Welcome to the exciting world of global travel!
 In this game, you will embark on flights to distant countries, solve intriguing puzzles, and experience unforgettable adventures.
 Of course, it is important to keep the environment in mind — so plan your route carefully to reduce CO₂ emissions.
 You’ll start Level 1 from Helsinki, and always progress from previous destination.
-Your task is to visit 3 countries by guessing their names.
+Your task is to visit 5 countries by guessing their names.
 Don’t worry — plenty of hints will guide you along the way.
 We recommend using the map to choose the most optimal route.
 Each country may have several airports, so choose wisely, always considering the environmental impact.
-If you don’t succeed, each level can be replayed up to 3 times.
+You need to determine the correct stops for each route. The difficulty increases with each level.
 You can also exit the game at any time by typing “quit” or “X” on your keyboard.
 At the end of the game, you’ll see your results,
 which will also be automatically saved to the database for future viewing.
