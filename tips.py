@@ -11,7 +11,7 @@ country_tips = {
     "IN": "The Taj Mahal is a must see!",
     "AE": "See the mesmerizing Burj Khalifa!",
     "TR": "The Hagia Sophia",
-    "EG": " The Pyramids of Giza",
+    "EG": "The Pyramids of Giza",
     "MA": "Go visit Casablanca",
     "ZA": "Go Visit Nelson mandela's home country!",
     "KE": "Go see the safaris just outside Nairobi",

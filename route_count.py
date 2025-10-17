@@ -6,9 +6,7 @@ from db import get_connection
 
 yhteys = get_connection()
 
-# ==== Function: Get all airports ====
 def get_all_airports():
-    """Get all large airports with coordinates"""
     sql = "SELECT ident, name, latitude_deg, longitude_deg, municipality, iso_country FROM airport WHERE type IN ('large_airport') AND name NOT LIKE '%CLICK HERE%' ORDER BY name;"
     cursor = yhteys.cursor()
     cursor.execute(sql)
@@ -26,9 +24,7 @@ def get_all_airports():
         })
     return airports
 
-# ==== Function: Get airports by country ====
 def get_airports_by_country(country_code):
-    """Get airports in a specific country"""
     sql = f"SELECT ident, name, municipality FROM airport WHERE iso_country='{country_code}' AND type IN ('large_airport') AND name NOT LIKE '%CLICK HERE%' ORDER BY name;"
     cursor = yhteys.cursor()
     cursor.execute(sql)
@@ -43,28 +39,20 @@ def get_airports_by_country(country_code):
         })
     return airports
 
-# ==== Function: Find airport by code ====
 def find_airport(airports, code):
-    """Find airport by ICAO code"""
     for airport in airports:
         if airport['ident'].upper() == code.upper():
             return airport
     return None
 
-# ==== Function: Calculate CO2 emissions ====
 def calculate_co2(distance_km):
-    """Calculate CO2 emissions for flight distance (simplified)"""
-    # Rough estimate: 0.25 kg CO2 per km per passenger
     return distance_km * 0.25
 
-# ==== Route Planning Functions ====
 def calc_distance(airport1, airport2):
-    """Calculate distance between airports"""
     return distance.distance((airport1['lat'], airport1['lng']), 
                            (airport2['lat'], airport2['lng'])).kilometers
 
 def total_route_distance(route):
-    """Calculate total distance for route"""
     total = 0
     for i in range(len(route) - 1):
         total += calc_distance(route[i], route[i + 1])
@@ -147,10 +135,9 @@ def showMap(coordinates, output_file='map.html'):
         marker = folium.Marker(
             location=[airport['lat'], airport['lng']],
             popup=f"{airport['name']}<br><b>{airport['ident']}</b><br>{airport['city']}, {airport['country']}",
-            tooltip=airport['ident'],  # search by name or ICAO code
+            tooltip=airport['ident'],
             icon=folium.Icon(color='blue', icon='plane', prefix='fa')
         )
-
         marker.options['name'] = f"{airport['ident']} - {airport['name']} - {airport['city']}"
         marker.add_to(marker_group)
 

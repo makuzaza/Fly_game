@@ -13,6 +13,7 @@ from datetime import datetime
 
 yhteys = get_connection()
 countries = show_countries()
+MAX_CO2 = None
 
 def user_input (question):
     return input(question)
@@ -31,16 +32,13 @@ def ask_with_attempts(prompt, correct_answer, on_help=None, answer_text=None):
     while attempts < 3:
         user_guess = user_input(prompt).strip().upper()
 
-        # Optional help handler (e.g. press 'H' to show country list)
         if on_help and user_guess == 'H':
             on_help()
             continue
 
-        # Check correctness
         if user_guess == correct_answer:
             return True
 
-        # Increment attempts
         attempts += 1
         remaining = 3 - attempts
         if remaining > 0:
@@ -54,12 +52,10 @@ def get_countries_with_tips(country_tips):
     return [c for c in countries if c[0] in country_tips] or countries
 
 def generate_mission(all_airports, country_tips):
-    """Select 5 random countries and calculate CO2 budget"""
     stages = create_stages()
     countries_with_tips = get_countries_with_tips(country_tips)
     mission_countries = random.sample(countries_with_tips, min(5, len(countries_with_tips)))
     
-    # Calculate CO2 budget based on selected countries
     current_pos = "EFHK"
     total_mission_co2 = 0
     
@@ -93,11 +89,6 @@ def generate_mission(all_airports, country_tips):
         tip = country_tips[code]
         print(f"   Stage {i}: {tip}")
     
-    confirm = user_input("\n✈️  Ready to start your mission? (Y/N): ")
-    if confirm.strip().upper() == 'N':
-        print("Mission aborted.")
-        return None, None
-    
     return mission_countries, MAX_CO2
     
 def stage_guess_country(country_tips, user_input, get_country_airports, selected_country=None):
@@ -113,6 +104,9 @@ def stage_guess_country(country_tips, user_input, get_country_airports, selected
 
     else:
         print(f"❌ Wrong! The correct answer was: {random_code} - {random_name}")
+        global MAX_CO2
+        MAX_CO2 *= 0.95
+        print(f"   ❗ Penalty applied! New CO2 budget: {MAX_CO2:.1f} kg")
         country_airports = get_country_airports(random_code)
         return random_code, random_name, country_airports
 
@@ -130,7 +124,6 @@ def show_full_country_list():
     return
 
 def results_output(stage_index, total_flights, distance, co2):
-    # === A list with output values, it is easy to add new rows ===
     results = [
         ("Level passed", stage_index),
         ("Total flights", total_flights),
@@ -182,6 +175,7 @@ Plan your flights wisely to stay within CO2 and flight limits!
     print(f"Welcome {user_name}! 🎮")
     
     stages = create_stages()
+    global MAX_CO2
     mission_countries, MAX_CO2 = generate_mission(all_airports, country_tips)
     
     current_location = "EFHK"  # Helsinki
@@ -243,6 +237,8 @@ Plan your flights wisely to stay within CO2 and flight limits!
                     print(f"✅ Correct  {stop_country_code} - {stop_country_name} ({route[i]['name']})! Proceeding...")
                 else:
                     print(f"❌ Wrong! The correct answer was: {stop_country_code} - {stop_country_name} ({route[i]['name']})")
+                    MAX_CO2 *= 0.95
+                    print(f"   ❗ Penalty applied! New CO2 budget: {MAX_CO2:.1f} kg")
                 continue
 
         # Calculate route distance and CO2
@@ -253,7 +249,6 @@ Plan your flights wisely to stay within CO2 and flight limits!
             route_distance = calc_distance(start_airport, end_airport)
             route_co2 = calculate_co2(route_distance)
         
-        # Show route
         print(f"\n✈️  Planned route:")
         print(f"   Direct distance: {calc_distance(start_airport, end_airport):.0f} km")
         print(f"   More than direct distance: {route_distance - calc_distance(start_airport, end_airport):.0f} km extra")
@@ -273,19 +268,18 @@ Plan your flights wisely to stay within CO2 and flight limits!
         projected_flights = total_flights + len(route) - 1
         
         print(f"\n📊 Impact:")
-        print(f"   CO2: {projected_co2:.1f}kg / {MAX_CO2}kg max")
+        print(f"   CO2: {projected_co2:.1f}kg / {round(MAX_CO2)}kg max")
         print(f"   Flights in this trip: {len(route) - 1}")
         print(f"   Total flights: {projected_flights}")
+
+        total_co2 += route_co2
+        total_flights += len(route) - 1 
 
         if projected_co2 > MAX_CO2:
             print(f"\n❌ GAME OVER - limits exceeded!")
             game_status = "Lose"
             break
-
-        # Execute trip
-        total_co2 += route_co2
-        total_flights += len(route) - 1  # Number of flight segments
-        
+            
         flight_history.append({
             'route': route,
             'distance': route_distance,
