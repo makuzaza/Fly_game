@@ -33,13 +33,11 @@ def create_stages():
 def ask_with_attempts(prompt, correct_answer, on_help=None):
     attempts = 0
     while attempts < 3:
-        user_guess = user_input(prompt).strip().upper()
-
+        user_guess = user_input(prompt)
         if user_guess == 'quit_game':
-            game_status = "Quit"
-            end_game(user_name, date, stage_index, total_flights, total_co2, game_status, flight_history)
-            return
+            return 'quit_game'
 
+        user_guess = user_guess.strip().upper()
         if on_help and user_guess == 'H':
             on_help()
             continue
@@ -102,7 +100,10 @@ def stage_guess_country(country_tips, user_input, get_country_airports, selected
     tip = country_tips[random_code]
     print(f"\n🌍 Country tip: {tip}")
 
-    if ask_with_attempts("Guess the country code (or press 'H' for all list of countries): ", random_code, on_help=show_country_list):
+    result = ask_with_attempts("Guess the country code (or press 'H' for all list of countries): ", random_code, on_help=show_country_list)
+    if result == 'quit_game':
+        return 'quit_game'
+    if result:
         print(f"✅ Correct {random_code} - {random_name}! Proceeding...")
     else:
         print(f"❌ Wrong! The correct answer was: {random_code} - {random_name}")
@@ -194,7 +195,12 @@ Plan your flights wisely to stay within CO2 and flight limits!
         print(f"\n--- Stage {stage_index}/{len(stages)} ---")
         starting_airport = find_airport(all_airports, current_location)
         print(f"\n📍 Current location: {starting_airport['name']} ({starting_airport['country']})")
-        country_code, country_name, country_airports = stage_guess_country(country_tips, user_input, get_airports_by_country, mission_countries[stage_index - 1])
+        res = stage_guess_country(country_tips, user_input, get_airports_by_country, mission_countries[stage_index - 1])
+        if res == 'quit_game':
+            game_status = "Quit"
+            end_game(user_name, date, stage_index, total_flights, total_co2, game_status, flight_history)
+            return
+        country_code, country_name, country_airports = res
         print(f"\n🛬 Airports in {country_name}:")
         for i, airport in enumerate(country_airports, 1):
             print(f"   {i:2}. {airport['ident']} - {airport['name']} ({airport['city']})")
