@@ -62,7 +62,6 @@ def find_route_with_stops(start_airport, end_airport, all_airports, num_stops):
     if num_stops == 0:
         return [start_airport, end_airport]
 
-    # Find candidate airports (not too far from direct route)
     direct_dist = calc_distance(start_airport, end_airport)
     candidates = []
 
@@ -86,7 +85,6 @@ def find_route_with_stops(start_airport, end_airport, all_airports, num_stops):
         best_distance = float('inf')
 
         for stop_combo in combinations(candidates[:15], num_stops):
-            # Try all orders
             for perm in permutations(stop_combo):
                 route = [start_airport] + list(perm) + [end_airport]
                 dist = total_route_distance(route)
@@ -98,15 +96,24 @@ def find_route_with_stops(start_airport, end_airport, all_airports, num_stops):
     else:
         # Greedy selection for larger numbers
         selected = []
-        remaining = candidates[:20]  # Limit candidates
+        current_pos = start_airport
+        remaining = candidates[:30]  # Limit candidates
 
-        for _ in range(num_stops):
+        for i in range(num_stops):
             if not remaining:
                 break
-            best_stop = min(remaining, 
-                          key=lambda x: total_route_distance([start_airport] + selected + [x] + [end_airport]))
+
+            progress_candidates = [
+                a for a in remaining 
+                if calc_distance(a, end_airport) < calc_distance(current_pos, end_airport)
+            ]
+            if not progress_candidates:
+                progress_candidates = remaining
+
+            best_stop = min(progress_candidates, key=lambda x: calc_distance(current_pos, x))
             selected.append(best_stop)
             remaining.remove(best_stop)
+            current_pos = best_stop
 
         return [start_airport] + selected + [end_airport]
 
