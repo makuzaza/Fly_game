@@ -12,7 +12,17 @@ from db import get_connection
 from datetime import datetime
 
 yhteys = get_connection()
-countries = show_countries()
+
+class Countries:
+    def __init__(self, country_code, country_name):
+        self.country_code = country_code
+        self.country_name = country_name
+
+def get_all_countries():
+    raw_countries = show_countries()
+    return [Countries(code, name) for code, name in raw_countries]
+
+countries = get_all_countries()
 MAX_CO2 = None
 
 def user_input(question):
@@ -52,7 +62,7 @@ def ask_with_attempts(prompt, correct_answer, on_help=None):
     return False
 
 def get_countries_with_tips(country_tips):
-    return [c for c in countries if c[0] in country_tips] or countries
+    return [c for c in countries if c.country_code in country_tips] or countries
 
 def generate_mission(all_airports, country_tips):
     stages = create_stages()
@@ -62,7 +72,8 @@ def generate_mission(all_airports, country_tips):
     current_pos = "EFHK"
     total_mission_co2 = 0
     
-    for i, (country_code, country_name) in enumerate(mission_countries):
+    for i, country in enumerate(mission_countries):
+        country_code = country.country_code
         country_airports = get_airports_by_country(country_code)
         if not country_airports:
             continue
@@ -88,15 +99,16 @@ def generate_mission(all_airports, country_tips):
     print(f"   You must visit {len(mission_countries)} countries")
     print(f"   CO2 Budget: {MAX_CO2} kg")
     print(f"\n🗺️  Your destination tips:")
-    for i, (code, name) in enumerate(mission_countries, 1):
-        tip = country_tips[code]
+    for i, country in enumerate(mission_countries, 1):
+        tip = country_tips[country.country_code]
         print(f"   Stage {i}: {tip}")
     
     return mission_countries, MAX_CO2
     
 def stage_guess_country(country_tips, user_input, get_country_airports, selected_country=None):
     countries_with_tips = get_countries_with_tips(country_tips)
-    random_code, random_name = selected_country
+    random_code = selected_country.country_code
+    random_name = selected_country.country_name
     tip = country_tips[random_code]
     print(f"\n🌍 Country tip: {tip}")
 
@@ -116,22 +128,23 @@ def stage_guess_country(country_tips, user_input, get_country_airports, selected
 def show_country_list():
     countries_with_tips = get_countries_with_tips(country_tips)
     print("\nAvailable countries:")
-    for i, (code, name) in enumerate(countries_with_tips, 1):
-        print(f"   {i:2}. {code} - {name}")
+    for i, country in enumerate(countries_with_tips, 1):
+        print(f"   {i:2}. {country.country_code} - {country.country_name}")
     return
         
 def show_full_country_list():
     print("\nAvailable countries:")
-    for i, (code, name) in enumerate(countries, 1):
-        print(f"   {i:2}. {code} - {name}")
+    for i, country in enumerate(countries, 1):
+        print(f"   {i:2}. {country.country_code} - {country.country_name}")
     return
 
-def results_output(stage_index, total_flights, distance, co2):
+def results_output(stage_index, total_flights, distance, co2, co2_percent):
     results = [
         ("Level passed", stage_index),
         ("Total flights", total_flights),
         ("Total distance, km", round(distance)),
         ("Total CO2, kg", round(co2)),
+        ("CO2 used, %", f"{co2_percent:.1f}%"),
     ]
 
     print("Your game results:")
@@ -141,15 +154,18 @@ def results_output(stage_index, total_flights, distance, co2):
         print("-" * 42)
     return
 
-def end_game(user_name, date, stage_index, total_flights, total_co2, game_status, flight_history):
+def count_co2_percent(total_co2, max_co2):
+    return (total_co2 / max_co2 * 100) if max_co2 > 0 else 0
+
+def end_game(user_name, date, stage_index, total_flights, total_co2, game_status, flight_history, max_co2, co2_percent):
     print(f"\n🏁 GAME OVER!")
     print(f"   Status: {game_status}")
-    print(f"   Final CO2: {total_co2:.1f}kg")
+    print(f"   Final CO2: {total_co2:.1f}kg / {round(max_co2)}kg max ({co2_percent:.1f}%)")
     print(f"   Total flights: {total_flights}")
     levels_passed = stage_index or 0
-    results_output(levels_passed, total_flights, sum(f['distance'] for f in flight_history), total_co2)
+    results_output(levels_passed, total_flights, sum(f['distance'] for f in flight_history), total_co2, co2_percent)
     db_table_creator()
-    results_to_db(user_name, date, levels_passed, total_flights, sum(f['distance'] for f in flight_history), total_co2, game_status)
+    results_to_db(user_name, date, levels_passed, total_flights, sum(f['distance'] for f in flight_history), total_co2, game_status, co2_percent)
     print(f"results_to_db({user_name}, {date}, {levels_passed}, {total_flights}, {sum(f['distance'] for f in flight_history)}, {total_co2}, {game_status})")
     print(f"Results saved to database")
     return
@@ -173,11 +189,13 @@ Plan your flights wisely to stay within CO2 and flight limits!
     all_airports = get_all_airports()
     print(f"✅ Loaded {len(all_airports)} airports")
     show_map(all_airports)
+
     
+
     user_name = user_input('Give your name: ')
     if user_name == 'quit_game':
         game_status = "Quit"
-        end_game(user_name, date, 0, 0, 0, game_status, [])
+        end_game(user_name, date, 0, 0, 0, game_status, [], 0)
         return
     print(f"Welcome {user_name}! 🎮")
     
@@ -198,7 +216,8 @@ Plan your flights wisely to stay within CO2 and flight limits!
         res = stage_guess_country(country_tips, user_input, get_airports_by_country, mission_countries[stage_index - 1])
         if res == 'quit_game':
             game_status = "Quit"
-            end_game(user_name, date, stage_index, total_flights, total_co2, game_status, flight_history)
+            co2_percent = count_co2_percent(total_co2, MAX_CO2)
+            end_game(user_name, date, stage_index, total_flights, total_co2, game_status, flight_history, MAX_CO2, co2_percent)
             return
         country_code, country_name, country_airports = res
         print(f"\n🛬 Airports in {country_name}:")
@@ -217,7 +236,8 @@ Plan your flights wisely to stay within CO2 and flight limits!
                 airport_choice = user_input('\nChoose airport number to fly to: ')
                 if airport_choice == 'quit_game':
                     game_status = "Quit"
-                    end_game(user_name, date, stage_index, total_flights, total_co2, game_status, flight_history)
+                    co2_percent = count_co2_percent(total_co2, MAX_CO2)
+                    end_game(user_name, date, stage_index, total_flights, total_co2, game_status, flight_history, MAX_CO2, co2_percent)
                     return
                 airport_choice = int(airport_choice) - 1
                 if not 0 <= airport_choice < len(country_airports):
@@ -317,7 +337,8 @@ Plan your flights wisely to stay within CO2 and flight limits!
             break
 
     # Game summary
-    end_game(user_name, date, stage_index, total_flights, total_co2, game_status, flight_history)
+    co2_percent = count_co2_percent(total_co2, MAX_CO2)
+    end_game(user_name, date, stage_index, total_flights, total_co2, game_status, flight_history, MAX_CO2, co2_percent)
 
 if yhteys.is_connected():
     print("✅ Successfully connected to database!")
