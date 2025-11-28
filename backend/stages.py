@@ -2,12 +2,11 @@ import random
 from itertools import permutations
 from db import get_connection
 from tips_countries import tips_countries
-from routes import total_route_distance, find_airport
 
 yhteys = get_connection()
 
 # === Define stage and randomly choose countries with one airport each ===
-def task_criteria(session_state, all_airports):
+def task_criteria(session_state, airport_manager):
     session_state['current_stage'] += 1
 
     selected_countries = random.sample(list(tips_countries.keys()), 3)
@@ -33,7 +32,7 @@ def task_criteria(session_state, all_airports):
     session_state['places'] = places
 
     # === Set CO2 allowance dynamically based on best route + margin ===
-    best_order = get_shortest_rout(session_state, all_airports)
+    best_order = get_shortest_rout(session_state, airport_manager)
     session_state['co2_available'] = best_order['co2_with_margin']
 
     return session_state
@@ -43,7 +42,7 @@ def calc_co2_emmission(distance_km):
     return distance_km * 0.15
 
 # === Find best order between the 3 countries set as the level mission === 
-def get_shortest_rout(session_state, all_airports, margin=1.2):
+def get_shortest_rout(session_state, airport_manager, margin=1.2):
     places = session_state.get('places', {})
     if not places or len(places) < 2:
         print("⚠️ Not enough places to calculate best route.")
@@ -51,12 +50,12 @@ def get_shortest_rout(session_state, all_airports, margin=1.2):
 
     # === Starting airport from session state ===
     start_icao = session_state.get('origin')
-    start_airport = find_airport(all_airports, start_icao)
+    start_airport = airport_manager.find_airport(start_icao)
 
     # === Get airport objects for destinations ===
     dest_airports = []
     for country, icao in places.items():
-        airport = find_airport(all_airports, icao)
+        airport = airport_manager.find_airport(icao)
         if airport:
             dest_airports.append((country, airport))
         else:
@@ -70,7 +69,7 @@ def get_shortest_rout(session_state, all_airports, margin=1.2):
     # === Test all permutations of destinations to find minimal total distance ===
     for perm in permutations(dest_airports):
         route = [start_airport] + [airport for _, airport in perm]
-        dist = total_route_distance(route)
+        dist = airport_manager.total_route_distance(route)
         if dist < best_distance:
             best_distance = dist
             best_route = route

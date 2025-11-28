@@ -7,9 +7,11 @@ import rules
 import copy
 from show_map import showMap
 from datetime import datetime
+from airport import Airport
 
 yhteys = get_connection()
-all_airports = get_all_airports()
+airport_manager = Airport()
+all_airports = airport_manager.get_all_airports()
 
 # === Ask user input ===
 def user_input(question: str, session_state: dict):
@@ -38,7 +40,7 @@ def results_output(levels, countries_visited, dist, co2):
         print("-" * 42)
     return
 
-def stage_guess_country(yhteys, matched_country, get_country_airports):
+def stage_guess_country(yhteys, matched_country, airport_manager):
     if not matched_country:
         return None, None, []
 
@@ -55,9 +57,8 @@ def stage_guess_country(yhteys, matched_country, get_country_airports):
         icao = name_to_code.get(cand.lower(), cand.upper())
 
     display_name = code_to_name.get(icao, icao)
-
-    # === Get airports ===
-    country_airports = get_country_airports(icao)
+    
+    country_airports = airport_manager.get_airports_by_country(icao) 
 
     if not country_airports:
         print(f"❌ No airports found for {display_name}")
@@ -140,12 +141,12 @@ def main():
         backup_state = copy.deepcopy(session_state)
         backup_total = copy.deepcopy(total_state)
 
-        starting_airport = find_airport(all_airports, session_state['origin'])
+        starting_airport = airport_manager.find_airport(session_state['origin'])
 
         print(f"\n📍 Starting location: {starting_airport['name']} ({starting_airport['country']})")
 
         # === Generate task and update session_state ===
-        task_criteria(session_state, all_airports)
+        task_criteria(session_state, airport_manager)
 
         print(f"🗺️  This is your {session_state['current_stage']} mission: ")
         print(f"💨 You have {session_state['co2_available']:.2f} kg of CO2 available")
@@ -194,7 +195,7 @@ def main():
 
             destination_code = session_state['places'][matched_country]
 
-            country_code, country_name, country_airports = stage_guess_country(yhteys, matched_country, get_airports_by_country)
+            country_code, country_name, country_airports = stage_guess_country(yhteys, matched_country, airport_manager)
             if not country_airports:
                 print(f"❌ No airports found for {matched_country}. Try another country.")
                 continue  # Ask again
@@ -217,8 +218,8 @@ def main():
                     print("❌ Please enter a valid number!")
                 continue      
 
-            destination_airport = find_airport(all_airports, destination_code)
-            origin_airport = find_airport(all_airports, session_state['origin'])
+            destination_airport = airport_manager.find_airport(destination_code)
+            origin_airport = airport_manager.find_airport(session_state['origin'])
             
             if not destination_airport or not origin_airport:
                 print("❌ Could not find airport details.")
@@ -226,13 +227,13 @@ def main():
 
             # === Find optimal route with specified number of stops ===
             print(f"\n🛫 Planning route from {origin_airport['name']} to {destination_airport['name']}...")
-            route = find_route_with_stops(origin_airport, destination_airport, 2) # # Hardcoded 2 stops for now in the future will the the value set by a function that automatically set the stops based on the distance.
+            route = airport_manager.find_route_with_stops(origin_airport, destination_airport, 2) # # Hardcoded 2 stops for now in the future will the the value set by a function that automatically set the stops based on the distance.
 
             if not route:
                 print("❌ Could not find a valid route.")
                 continue
 
-            route_distance = total_route_distance(route)
+            route_distance = airport_manager.total_route_distance(route)
             route_co2 = calc_co2_emmission(route_distance)
 
             # === ROUTE SUMMARY ===
