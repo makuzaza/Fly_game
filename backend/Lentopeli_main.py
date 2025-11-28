@@ -40,22 +40,15 @@ def results_output(levels, countries_visited, dist, co2):
         print("-" * 42)
     return
 
-def stage_guess_country(yhteys, matched_country, airport_manager):
-    if not matched_country:
+def stage_guess_country(yhteys, country_code, airport_manager):
+    if not country_code:
         return None, None, []
 
     # === Get mapping from DB once ===
     countries = show_countries(yhteys) or []
-    name_to_code = {name.lower(): code for code, name in countries}
     code_to_name = {code.upper(): name for code, name in countries}
 
-    cand = str(matched_country).strip()
-    # === Resolve icao code ===
-    if len(cand) <= 3 and cand.upper() in code_to_name:
-        icao = cand.upper()
-    else:
-        icao = name_to_code.get(cand.lower(), cand.upper())
-
+    icao = country_code.upper()
     display_name = code_to_name.get(icao, icao)
     
     country_airports = airport_manager.get_airports_by_country(icao) 
@@ -91,7 +84,7 @@ def main():
         print("❌ Failed to connect to database, or to download the airports!")
         return
 
-    showMap(all_airports)
+    showMap(airport_manager.all_airports)
     print("✅ Successfully connected to database and downloaded the airports for routes!")
 
     # === Game session states ===
@@ -161,18 +154,18 @@ def main():
                 clue = tips_countries.get(country, "No clue available.")
                 print(f"{i}. {clue}")
 
-                # === Guessing system with 3 wrong attempts ===
+            # === Guessing system with 3 wrong attempts ===
             attempts = 0
             matched_country = None
 
             while True:
-                destination = user_input('\nGuess a country (You may choose any clue): ',session_state).strip().lower()
+                country_code_guess = user_input('\nGuess the country code: ', session_state).strip().upper()
                 if session_state["game_status"] == "Quit":
                     break
 
                     # Check if the guessed country matches one of the targets
                 for country in countries_to_visit:
-                    if destination == country.lower():
+                    if country_code_guess == country.upper():
                         matched_country = country
                         print("✅ Correct!")
                         break
@@ -183,8 +176,13 @@ def main():
                 attempts += 1
                 if attempts >= 3:
                     # Reveal the correct country after 3 wrong guesses (but do NOT auto-select it)
-                    correct_country = countries_to_visit[0]
-                    print(f"🤖 Tip unlocked! The correct country is: {correct_country}")
+                    correct_country_code = countries_to_visit[0]
+                    countries = show_countries(yhteys) or []
+
+                    code_to_name = {code.upper(): name for code, name in countries}
+
+                    correct_country_name = code_to_name.get(correct_country_code, correct_country_code)
+                    print(f"🤖 Tip unlocked! The correct country is: {correct_country_name} ({correct_country_code})")
                     print("You can now type it to continue.")
                     attempts = 0  # optional: reset attempts so they can keep guessing
                 else:
@@ -192,8 +190,6 @@ def main():
 
             if matched_country is None:
                 break
-
-            destination_code = session_state['places'][matched_country]
 
             country_code, country_name, country_airports = stage_guess_country(yhteys, matched_country, airport_manager)
             if not country_airports:

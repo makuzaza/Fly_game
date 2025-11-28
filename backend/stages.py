@@ -13,22 +13,21 @@ def task_criteria(session_state, airport_manager):
 
     places = {}
     cursor = yhteys.cursor()
-    for country_name in selected_countries:
+    for country_code  in selected_countries:
         sql = """
             SELECT airport.ident 
             FROM airport
-            JOIN country ON airport.iso_country = country.iso_country 
-            WHERE country.name = %s AND airport.type = 'large_airport'
+            WHERE airport.iso_country = %s AND airport.type = 'large_airport'
             ORDER BY RAND()
             LIMIT 1;
         """
-        cursor.execute(sql, (country_name,))
+        cursor.execute(sql, (country_code,))
         result = cursor.fetchone()
         if result:
             icao = result[0]
-            places[country_name] = icao
+            places[country_code] = icao
         else:
-            print(f"⚠️ No large airport found for {country_name}. Skipping.")
+            print(f"⚠️ No large airport found for {country_code}. Skipping.")
     session_state['places'] = places
 
     # === Set CO2 allowance dynamically based on best route + margin ===
