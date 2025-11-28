@@ -32,7 +32,7 @@ def task_criteria(session_state, airport_manager):
     session_state['places'] = places
 
     # === Set CO2 allowance dynamically based on best route + margin ===
-    best_order = get_shortest_rout(session_state, airport_manager)
+    best_order = get_shortest_route(session_state, airport_manager)
     session_state['co2_available'] = best_order['co2_with_margin']
 
     return session_state
@@ -42,7 +42,7 @@ def calc_co2_emmission(distance_km):
     return distance_km * 0.15
 
 # === Find best order between the 3 countries set as the level mission === 
-def get_shortest_rout(session_state, airport_manager, margin=1.2):
+def get_shortest_route(session_state, airport_manager, margin=1.2):
     places = session_state.get('places', {})
     if not places or len(places) < 2:
         print("⚠️ Not enough places to calculate best route.")
