@@ -1,5 +1,4 @@
 from db import *
-from routes import *
 from stages import *
 from db_updating import *
 from tips_countries import tips_countries
@@ -7,10 +6,10 @@ import rules
 import copy
 from show_map import showMap
 from datetime import datetime
-from airport import Airport
+from airport import AirportManager
 
 yhteys = get_connection()
-airport_manager = Airport()
+airport_manager = AirportManager()
 all_airports = airport_manager.get_all_airports()
 
 # === Ask user input ===
@@ -22,6 +21,12 @@ def user_input(question: str, session_state: dict):
 
 def quit_input(u_input: str):
     return u_input.lower() in ('x', 'quit')
+
+def get_country_name(code):
+    for c, name in airport_manager.show_countries() or []:
+        if c.upper() == code.upper():
+            return name
+    return code.upper()
 
 # === Print the table of user's results to the screen ===
 def results_output(levels, countries_visited, dist, co2):
@@ -45,12 +50,9 @@ def stage_guess_country(yhteys, country_code, airport_manager):
         return None, None, []
 
     # === Get mapping from DB once ===
-    countries = show_countries(yhteys) or []
-    code_to_name = {code.upper(): name for code, name in countries}
-
     icao = country_code.upper()
-    display_name = code_to_name.get(icao, icao)
-    
+    display_name = get_country_name(icao)
+
     country_airports = airport_manager.get_airports_by_country(icao) 
 
     if not country_airports:
@@ -136,7 +138,7 @@ def main():
 
         starting_airport = airport_manager.find_airport(session_state['origin'])
 
-        print(f"\n📍 Starting location: {starting_airport['name']} ({starting_airport['country']})")
+        print(f"\n📍 Starting location: {starting_airport.name} ({starting_airport.country})")
 
         # === Generate task and update session_state ===
         task_criteria(session_state, airport_manager)
@@ -177,11 +179,7 @@ def main():
                 if attempts >= 3:
                     # Reveal the correct country after 3 wrong guesses (but do NOT auto-select it)
                     correct_country_code = countries_to_visit[0]
-                    countries = show_countries(yhteys) or []
-
-                    code_to_name = {code.upper(): name for code, name in countries}
-
-                    correct_country_name = code_to_name.get(correct_country_code, correct_country_code)
+                    correct_country_name = get_country_name(correct_country_code)
                     print(f"🤖 Tip unlocked! The correct country is: {correct_country_name} ({correct_country_code})")
                     print("You can now type it to continue.")
                     attempts = 0  # optional: reset attempts so they can keep guessing
@@ -198,7 +196,7 @@ def main():
 
             print(f"\n🛬 Airports in {country_name} ({country_code}):")
             for i, airport in enumerate(country_airports, 1):
-                print(f"   {i:2}. {airport['ident']} - {airport['name']} ({airport['city']})")
+                print(f"   {i:2}. {airport.ident} - {airport.name} ({airport.city})")
 
         # === Choose destination ===
             while True:
@@ -207,8 +205,8 @@ def main():
                     if not 0 <= airport_choice < len(country_airports):
                         print("❌ Invalid choice!")
                         continue
-                    destination_code = country_airports[airport_choice]['ident']
-                    destination_name = country_airports[airport_choice]['name']
+                    destination_code = country_airports[airport_choice].ident
+                    destination_name = country_airports[airport_choice].name
                     break
                 except ValueError:
                     print("❌ Please enter a valid number!")
@@ -222,7 +220,7 @@ def main():
                 continue
 
             # === Find optimal route with specified number of stops ===
-            print(f"\n🛫 Planning route from {origin_airport['name']} to {destination_airport['name']}...")
+            print(f"\n🛫 Planning route from {origin_airport.name} to {destination_airport.name}...")
             route = airport_manager.find_route_with_stops(origin_airport, destination_airport, 2) # # Hardcoded 2 stops for now in the future will the the value set by a function that automatically set the stops based on the distance.
 
             if not route:
@@ -241,12 +239,11 @@ def main():
 
             for i, airport in enumerate(route):
                 if i == 0:
-                    print(f"   🛫 START: {airport['ident']} - {airport['name']}")
+                    print(f"   🛫 START: {airport.ident} - {airport.name}")
                 elif i == len(route) - 1:
-                    print(f"   🛬 END:   {airport['ident']} - {airport['name']}")
+                    print(f"   🛬 END:   {airport.ident} - {airport.name}")
                 else:
-                    print(f"   🔄 STOP:  {airport['ident']} - {airport['name']}")
-
+                    print(f"   🔄 STOP:  {airport.ident} - {airport.name}")
             # === Update game session state after completing a route ===
             # === These needed for a results table ===
             session_state['co2_available'] -= route_co2
