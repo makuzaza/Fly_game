@@ -31,7 +31,6 @@ def airports():
     ]
     return json.dumps(data, indent=4)
 
-
 # -----------------------------
 # 2. Plan route
 # Example: /route?from=EFHK&to=KJFK

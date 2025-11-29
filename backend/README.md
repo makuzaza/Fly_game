@@ -4,7 +4,7 @@ python Lentopeli_main.py
 
 ```
 
-To start the backend:
+To start the backend, run:
 ```bash
 python app.py
 
