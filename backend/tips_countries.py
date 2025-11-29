@@ -3,7 +3,7 @@ tips_countries = {
     "ES": "Go watch a Real Madrid game!",
     "IT": "All roads lead to rome!",
     "PT": "Don't miss Porto's wine!",
-    "UK": "Go see Big Ben!",
+    "GB": "Go see Big Ben!",
     "FR": "Enjoy the Eiffel Tower!",
     "GR": "Home of Greek mythology",
     "JP": "The home of Anime",
