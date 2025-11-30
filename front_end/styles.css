@@ -1,5 +1,33 @@
 /* === Global styles === */
+html {
+    font-family: Verdana, Tahoma, sans-serif;
+    height: auto;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
 
+header {
+    display: flex;
+    justify-content: space-between;
+    padding: 0;
+    position: fixed;
+    z-index: 1000;
+    width: 100%;
+    align-items: flex-start;
+    top: 0;
+    left: 0;
+}
+
+.logo {
+    width: auto;
+    height: 3rem;
+    padding: 0 0 0 1rem;
+}
+
+body {
+    margin: 0;
+}
 /* === Start page === */
 
 /* === Welcome page === */
@@ -11,5 +39,98 @@
 /* === Main game page === */
 
 /* === Results page === */
+body .result_container {
+    width: 100%;
+    display: grid;
+    background: url("img/background.jfif") no-repeat center center fixed;
+    background-size: cover;
+    backdrop-filter: blur(6px);
+    place-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
 
+#result_status {
+    margin: 1rem;
+}
+
+#result_table {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    border: black solid 1px;
+    width: 80%;
+    margin: 0.5rem 0 0.5rem 0;
+    background-color: aliceblue;
+}
+
+#result_table table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+    word-wrap: break-word;
+}
+#result_table tr td {
+    border: black solid 1px;
+    padding: 1rem;
+}
+
+#result_table tr td:first-child {
+    width: 70%;
+}
+
+#result_table tr td:last-child {
+    width: 30%;
+    text-align: right;
+}
+
+.result_buttons {
+    display: flex;
+    gap: 1rem;
+    flex-direction: column;
+    justify-content: center;
+    width: 50%;
+    margin: 0;
+}
+
+.result_buttons button {
+    padding: 1rem;
+    border-radius: 1.5rem;
+    background-color: midnightblue;
+    color: whitesmoke;
+    width: 100%;
+    margin: 0.5rem;
+}
+
+.result_buttons button:hover {
+    background-color: aliceblue;
+    color: black;
+}
+
+@media screen and (min-width: 769px) {
+    #result_status {
+        margin: 0;
+    }
+
+    #result_table {
+        width: 50%;
+        margin: 0;
+    }
+
+    #result_table tr td {
+        min-width: 80px;
+    }
+
+    .result_buttons {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-evenly;
+    }
+
+    .result_buttons button {
+        width: 10rem;
+    }
+}
 /* === Final page === */
