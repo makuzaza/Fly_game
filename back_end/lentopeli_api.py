@@ -2,8 +2,16 @@ import logging
 from flask import Flask, jsonify
 from flask_cors import CORS
 
+# --- Game Logic ---
+from game_logic import airport
+
 def create_app():
     app = Flask(__name__)
+
+    # --- Game Logic Initialization ---
+    airport_manager = airport.AirportManager()
+
+    # --- Headers ---
     CORS(app) 
 
     # --- Logging ---
@@ -25,13 +33,40 @@ def create_app():
         return jsonify({
             "api": "Flight Game API",
             "version": "1.0",
-            "description": "REST API for airports, routing, and game stages.",
+            "description": "REST API for lento peli game.",
             "available_endpoints": {
-                "GET /api/all_airports": "Returns all airports",
+                "GET /api/airports": "Returns all airports",
                 "GET /api/route/<from>/<to>": "Calculates a route between two airports",
                 "GET /api/results": "retun the results of the game"
             }
         }), 200
+    
+    # -----------------------------
+    # Get all airports
+    # -----------------------------
+    @app.route("/api/airports", methods=["GET"])
+    def get_airports():
+        """
+        Returns a list of all airports with their basic information.
+        """
+        
+        try:
+            data = [
+                {
+                    "ident": a.ident,
+                    "name": a.name,
+                    "lat": a.lat,
+                    "lng": a.lng,
+                    "city": a.city,
+                    "country": a.country
+                }
+                for a in airport_manager.all_airports
+            ]
+            return jsonify(data), 200
+        except Exception as e:
+            logger.error(f"Error fetching airports: {e}")
+            return jsonify({"error": "Failed to fetch airports"}), 500
+
 
     # -----------------------------
     # Error handling
