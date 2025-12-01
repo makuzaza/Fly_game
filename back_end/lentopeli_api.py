@@ -3,13 +3,15 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 
 # --- Game Logic ---
-from game_logic import airport
+from game_logic.airport import AirportManager
+from game_logic.game import Game
 
 def create_app():
     app = Flask(__name__)
 
     # --- Game Logic Initialization ---
-    airport_manager = airport.AirportManager()
+    airport_manager = AirportManager()
+    game_manager = Game(player_name="Example test")
 
     # --- Headers ---
     CORS(app) 
@@ -37,7 +39,7 @@ def create_app():
             "available_endpoints": {
                 "GET /api/airports": "Returns all airports",
                 "GET /api/layover_route/<origin_code>/<dest_code>": "Return intermidiate aerport stops (layover) between two countries",
-                "GET /api/result": "Retun a single game result"
+                "GET /api/result": "Retun a single game result",
             }
         }), 200
     
@@ -75,7 +77,7 @@ def create_app():
     @app.route("/api/layover_route/<origin_code>/<dest_code>", methods=["GET"])
     def get_layover_route(origin_code, dest_code):
         """
-            Flight connection (For cases when not usign direct flight between two countries).
+            Flight connection (For cases when not using direct flight between two countries).
             Calculates a layover (multi-stop) flight route between two airports.
             Returns:
                 - total distance in kilometers
@@ -129,6 +131,43 @@ def create_app():
             logger.error(f"Error calculating layover route: {e}")
             return jsonify({"error": "Failed to calculate route"}), 500
     
+    # -----------------------------
+    # GET Result - /api/result     
+    # -----------------------------
+    @app.route("/api/result", methods=["GET"])
+    def get_results():
+        """
+            Retrieve the current game results for a player.
+        """
+        
+        try:
+            total = game_manager.total
+            session = game_manager.session
+            if not game_manager.total or game_manager.session["game_status"] is None:
+                #return jsonify({"error": "No game played yet"}), 404
+                # Example static data for now
+                data = {
+                    "levels_passed": 5,
+                    "total_distance_km": 20000,
+                    "countries_visited": 15,
+                    "total_co2_kg": 2500,
+                    "game_status": "Win"
+                }
+                return jsonify(data), 200
+        
+            data = {
+                "levels_passed": session.get("current_stage", 0),
+                "total_distance_km": total.get("total_distance", 0.0),
+                "countries_visited": len(session.get("places", {})),
+                "total_co2_kg": total.get("total_co2", 0.0),
+                "game_status": session.get("game_status", "Not started")
+            }
+            return jsonify(data), 200
+
+        except Exception as e:
+            logger.error(f"Error fetching game results: {e}")
+            return jsonify({"error": "Failed to fetch game results"}), 500
+
     # -----------------------------
     # Error handling
     # -----------------------------
