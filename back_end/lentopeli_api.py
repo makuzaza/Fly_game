@@ -3,8 +3,8 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 
 # --- Game Logic ---
-from game_logic.airport import AirportManager
-from game_logic.game import Game
+from airport import AirportManager
+from game import Game
 
 def create_app():
     app = Flask(__name__)
