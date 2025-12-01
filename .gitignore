@@ -11,7 +11,3 @@ __pycache__/
 
 # === Secret Variables ===
 .env
-
-api.js
-task.js
-notes.txt
