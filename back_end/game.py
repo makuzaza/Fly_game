@@ -1,6 +1,6 @@
 from airport import AirportManager
-from stages import task_criteria, calc_co2_emmission
 from tips_countries import tips_countries
+from stage import *
 from db_updating import db_table_creator, results_to_db
 from datetime import datetime
 from db import get_connection
@@ -53,6 +53,8 @@ class Game:
         while self.session["current_stage"] < 5:
             if self.session["game_status"] in ("Lose", "Quit"):
                 break
+
+            stage = Stage(self.session["current_stage"] + 1)
 
             backup_session = copy.deepcopy(self.session)
             backup_total = copy.deepcopy(self.total)
@@ -130,7 +132,7 @@ class Game:
                     continue
 
                 dist = self.airport_manager.total_route_distance(route)
-                co2 = calc_co2_emmission(dist)
+                co2 = stage.calc_co2_emmission(dist)
 
                 print(f"\n📍 Route Summary:")
                 print(f"   Distance: {dist:.0f} km")
