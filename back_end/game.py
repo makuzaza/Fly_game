@@ -161,10 +161,12 @@ class Game:
                             stage_failed = True
                             break
                         else:
+                            self.session['current_stage'] -= 1
                             self.session["game_status"] = "Lose"
                             stage_failed = True
                             break
                     else:
+                        self.session['current_stage'] -= 1
                         print("Next time might be your chance!")
                         self.session["game_status"] = "Lose"
                         stage_failed = True
@@ -186,7 +188,6 @@ class Game:
                 print(f"🎯 Arrived at {matched_country}! CO2 left: {self.session['co2_available']:.2f}")
                 self.session["game_status"] = "Win"
 
-            # Handle stage completion/failure
             if self.session["game_status"] == "Quit":
                 self.session['current_stage'] -= 1
                 print("Let's play another time again!")
