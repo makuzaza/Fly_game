@@ -45,7 +45,7 @@ class Game:
         return icao, display_name, country_airports
 
     def start(self):
-        print("\n🛫 Welcome to the Flight Route Game!\n")
+        print("\n🛫 Welcome to the Flight Route Game!")
 
         self.session["current_stage"] = 0
         replay_count = 0
@@ -62,7 +62,7 @@ class Game:
             starting_airport = self.airport_manager.find_airport(self.session["origin"])
             print(f"\nYour starting airport is {starting_airport.ident} - {starting_airport.name} in {starting_airport.country}.")
 
-            task_criteria(self.session, self.airport_manager)
+            self.session = stage.task_criteria(self.session, self.airport_manager)
 
             print(f"\n===== STAGE {self.session['current_stage']} =====")
             print(f"You have {self.session['co2_available']:.2f} kg CO2 available")
