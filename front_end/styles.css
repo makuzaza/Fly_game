@@ -39,12 +39,15 @@ body {
 #app{
     width: 100vw;
     height: 100vh;
-}
+    display: flex;
+  justify-content: center;
+    align-items: center;
+  }
     /*  question box */
 .question-box {
     background: white;
     width: 60%;
-    max-width: 40%;
+    min-width: 40%;
     padding: 4%;
     border-radius: 2%;
     box-shadow: 0 4px 20px rgba(0,0,0,0.2);

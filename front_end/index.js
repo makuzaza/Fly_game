@@ -2,9 +2,9 @@
 
 // === Task page ===
 
-function setBackground(backgroundPath){
-    const app = document.getElementById("app");
-    app.style.backgroundImage = `url(${backgroundPath})`;
+function setBackground(backgroundPath) {
+  const app = document.getElementById("app");
+  app.style.backgroundImage = `url(${backgroundPath})`;
 }
 
 // logo in the navigation bar not needed?
@@ -24,46 +24,46 @@ function setBackground(backgroundPath){
 }*/
 
 function drawQuestionBox(questionText, yesCallback, noCallback) {
-    const app = document.getElementById("app");
-    app.innerHTML = ""; // clear previous screen
+  const app = document.getElementById("app");
+  app.innerHTML = ""; // clear previous screen
 
-    const screen = document.createElement("div");
-    screen.className = "screen";
+  const screen = document.createElement("div");
+  screen.className = "screen";
 
-    const box = document.createElement("div");
-    box.className = "question-box";
+  const box = document.createElement("div");
+  box.className = "question-box";
 
-    const question = document.createElement("h3");
-    question.textContent = questionText;
+  const question = document.createElement("h3");
+  question.textContent = questionText;
 
-    const buttonContainer = document.createElement("div");
-    buttonContainer.className = "question-buttons";
+  const buttonContainer = document.createElement("div");
+  buttonContainer.className = "question-buttons";
 
-    const yesBtn = document.createElement("button");
-    yesBtn.className = "question-button";
-    yesBtn.textContent = "YES";
-    yesBtn.onclick = yesCallback;
+  const yesBtn = document.createElement("button");
+  yesBtn.className = "question-button";
+  yesBtn.textContent = "YES";
+  yesBtn.onclick = yesCallback;
 
-    const noBtn = document.createElement("button");
-    noBtn.className = "question-button";
-    noBtn.textContent = "NO";
-    noBtn.onclick = noCallback;
+  const noBtn = document.createElement("button");
+  noBtn.className = "question-button";
+  noBtn.textContent = "NO";
+  noBtn.onclick = noCallback;
 
-    buttonContainer.appendChild(yesBtn);
-    buttonContainer.appendChild(noBtn);
+  buttonContainer.appendChild(yesBtn);
+  buttonContainer.appendChild(noBtn);
 
-    box.appendChild(question);
-    box.appendChild(buttonContainer);
+  box.appendChild(question);
+  box.appendChild(buttonContainer);
 
-    screen.appendChild(box);
-    app.appendChild(screen);
+  screen.appendChild(box);
+  app.appendChild(screen);
 }
 
 
 
 //navigationBar("logo2.png")
-drawQuestionBox("Do you want read the background story?","YES","NO")
-setBackground("background.jfif");
+drawQuestionBox("Do you want read the background story?", "YES", "NO")
+setBackground("./img/background.jpg");
 
 
 
@@ -76,11 +76,11 @@ async function loadResults() {
     if (!res.ok) throw new Error("HTTP error " + res.status);
     const data = await res.json();
 
-    if (data.game_status === "Win"){
+    if (data.game_status === "Win") {
       document.getElementById("result_status").textContent = "Mission complete!";
-    } else if (data.game_status === "Lose"){
+    } else if (data.game_status === "Lose") {
       document.getElementById("result_status").textContent = "Next time might be your chance!";
-    } else if (data.game_status === "Quit"){
+    } else if (data.game_status === "Quit") {
       document.getElementById("result_status").textContent = "Let's play another time again!";
     }
 
@@ -94,7 +94,7 @@ async function loadResults() {
 }
 
 loadResults();
-
+/*
 const resultAgain = document.querySelector('#result_again');
 const resultBest = document.querySelector('#result_best');
 const resultQuit = document.querySelector('#result_quit');
@@ -109,4 +109,4 @@ resultBest.addEventListener('click', () => {
 
 resultQuit.addEventListener('click', () => {
   alert("Go to the end-page.");
-});
+});*/
