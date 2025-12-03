@@ -99,7 +99,7 @@ document.addEventListener("click", (event) => {
             break;
 
         case "btn-start-again":
-            showScreen("screen-start");
+            showScreen("screen-game");
             break;
 
         case "btn-submit-country":
