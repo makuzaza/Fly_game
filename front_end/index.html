@@ -5,57 +5,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoTrip</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="{{ url_for('static', filename='index.js') }}" defer></script>
+    <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
     <header>
-        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="EcoTrip" class="logo">
+        <img src="./img/logo.png" alt="EcoTrip" class="logo">
     </header>
 <!-- === Start page === -->
 
 <!-- === Welcome page === -->
 
 <!-- === Task page === -->
+<div id="app">
 
+
+</div>
 <!-- === Rules page === -->
 
 <!-- === Main game page === -->
 
-<!-- === Results page === -->
+<!-- === Results page === -
     <div class="result_container">
-        <h1 id="result_status"></h1>   <!-- Here will be <h1 id="result_status"></h1> for JS -->
+        <h1 id="result_status"></h1>   
 
         <h2>Your game results:</h2>
         <div id="result_table">
             <table>
                 <tr>
                     <td>Levels passed</td>
-                    <td id="result_levels"></td>   <!-- Here will be level's amount from backend -->
+                    <td id="result_levels"></td>   
                 </tr>
                 <tr>
                     <td>Total distance, km</td>
-                    <td id="result_distance"></td>   <!-- Here will be distance from backend -->
+                    <td id="result_distance"></td>   
                 </tr>
                 <tr>
                     <td>Countries visited</td>
-                    <td id="result_countries"></td>   <!-- Here will be country's amount from backend -->
+                    <td id="result_countries"></td>   
                 </tr>
                 <tr>
                     <td>Total CO2, kg</td>
-                    <td id="result_co2"></td>   <!-- Here will be CO2 amount from backend -->
+                    <td id="result_co2"></td>   
                 </tr>
             </table>
         </div>
         <div class="result_buttons">
-            <button id="result_again">Play again</button>    <!-- Here will be JS code to play from the start -->
-            <button id="result_best">Best results</button>   <!-- Here will be JS code to show best results table instead of result table -->
-            <button id="result_quit">Quit</button>                  <!-- Here will be Js code to open end page -->
+            <button id="result_again">Play again</button>   
+            <button id="result_best">Best results</button>   
+            <button id="result_quit">Quit</button>                  
         </div>
     </div>
+-->
 
 <!-- === Final page === -->
 
 <!-- === Global html === -->
+    <script src="index.js" defer></script>
 </body>
 </html>

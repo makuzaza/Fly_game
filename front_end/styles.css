@@ -34,6 +34,61 @@ body {
 
 /* === Task page === */
 
+    /* app */
+
+#app{
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+  justify-content: center;
+    align-items: center;
+  }
+    /*  question box */
+.question-box {
+    background: white;
+    width: 60%;
+    min-width: 40%;
+    padding: 4%;
+    border-radius: 2%;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    text-align: center;
+
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+    /* Question text */
+.question-box h3 {
+    font-size: 160%;
+    margin: 0;
+    color: #333;
+}
+
+    /* Button container */
+.question-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+}
+
+    /* YES/NO buttons */
+.question-button {
+    background-color: #006ad4;  /* blue */
+    color: white;
+    border: none;
+    padding: 18px 40px;
+    border-radius: 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.question-button:hover {
+    background-color: #0054a8;
+}
+
 /* === Rules page === */
 
 /* === Main game page === */
