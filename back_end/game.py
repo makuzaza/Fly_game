@@ -1,6 +1,6 @@
 from airport import AirportManager
+from stage import Stage
 from tips_countries import tips_countries
-from stage import *
 from db_updating import db_table_creator, results_to_db
 from datetime import datetime
 from db import get_connection
@@ -45,7 +45,7 @@ class Game:
         return icao, display_name, country_airports
 
     def start(self):
-        print("\n🛫 Welcome to the Flight Route Game!")
+        print("\n🛫 Welcome to the Flight Route Game!\n")
 
         self.session["current_stage"] = 0
         replay_count = 0
@@ -54,15 +54,12 @@ class Game:
             if self.session["game_status"] in ("Lose", "Quit"):
                 break
 
-            stage = Stage(self.session["current_stage"] + 1)
-
             backup_session = copy.deepcopy(self.session)
             backup_total = copy.deepcopy(self.total)
 
-            starting_airport = self.airport_manager.find_airport(self.session["origin"])
-            print(f"\nYour starting airport is {starting_airport.ident} - {starting_airport.name} in {starting_airport.country}.")
-
-            self.session = stage.task_criteria(self.session, self.airport_manager)
+            # Use Stage class instead of task_criteria function
+            stage = Stage(self.session["current_stage"] + 1)
+            stage.task_criteria(self.session, self.airport_manager)
 
             print(f"\n===== STAGE {self.session['current_stage']} =====")
             print(f"You have {self.session['co2_available']:.2f} kg CO2 available")
@@ -70,6 +67,7 @@ class Game:
 
             countries_to_visit = list(self.session["places"].keys())
 
+            # Flag to control stage completion
             stage_failed = False
 
             while countries_to_visit:
@@ -124,16 +122,17 @@ class Game:
                 origin = self.airport_manager.find_airport(self.session["origin"])
                 dest = self.airport_manager.find_airport(dest_code)
 
-                print(f"\n🛫 Planning route from {origin.ident} to {dest.ident} with 2 stops...")
-
                 route = self.airport_manager.find_route_with_stops(origin, dest, 2)
                 if not route:
                     print("❌ No valid route.")
                     continue
 
                 dist = self.airport_manager.total_route_distance(route)
-                co2 = stage.calc_co2_emmission(dist)
+                # Use Stage class for CO2 calculation
+                stage_calc = Stage(self.session["current_stage"])
+                co2 = stage_calc.calc_co2_emmission(dist)
 
+                # === DISPLAY ROUTE DETAILS (like in original code) ===
                 print(f"\n📍 Route Summary:")
                 print(f"   Distance: {dist:.0f} km")
                 print(f"   CO2 Required: {co2:.2f} kg")
@@ -147,6 +146,7 @@ class Game:
                     else:
                         print(f"   🔄 STOP:  {airport.ident} - {airport.name}")
 
+                # Check if enough CO2
                 if co2 > self.session["co2_available"]:
                     print("❌ Your plane was unable to reach its destination.")
                     
@@ -161,19 +161,20 @@ class Game:
                             self.session["game_status"] = "Replay"
                             print(f"This is your {replay_count} replaying.")
                             stage_failed = True
-                            break
+                            break  # Break out of countries_to_visit loop
                         else:
-                            self.session['current_stage'] -= 1
+                            self.session['current_stage'] -= 1  # Didn't pass this stage
                             self.session["game_status"] = "Lose"
                             stage_failed = True
                             break
                     else:
-                        self.session['current_stage'] -= 1
+                        self.session['current_stage'] -= 1  # Didn't pass this stage
                         print("Next time might be your chance!")
                         self.session["game_status"] = "Lose"
                         stage_failed = True
                         break
 
+                # Success - update game state
                 self.session["co2_available"] -= co2
                 self.session["origin"] = dest_code
                 countries_to_visit.remove(matched_country)
@@ -190,6 +191,7 @@ class Game:
                 print(f"🎯 Arrived at {matched_country}! CO2 left: {self.session['co2_available']:.2f}")
                 self.session["game_status"] = "Win"
 
+            # Handle stage completion/failure
             if self.session["game_status"] == "Quit":
                 self.session['current_stage'] -= 1
                 print("Let's play another time again!")
@@ -197,8 +199,9 @@ class Game:
             elif self.session["game_status"] == "Lose":
                 break
             elif self.session["game_status"] == "Replay":
-                continue
+                continue  # Restart the stage
             elif not stage_failed:
+                # Stage completed successfully
                 replay_count = 0
                 print("\n🎉 Mission complete!")
 
