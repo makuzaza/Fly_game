@@ -45,7 +45,7 @@ class Game:
         return icao, display_name, country_airports
 
     def start(self):
-        print("\n🛫 Welcome to the Flight Route Game!")
+        print("\n🛫 Welcome to the Flight Route Game!\n")
 
         self.session["current_stage"] = 0
         replay_count = 0
@@ -59,18 +59,13 @@ class Game:
             backup_session = copy.deepcopy(self.session)
             backup_total = copy.deepcopy(self.total)
 
-            starting_airport = self.airport_manager.find_airport(self.session["origin"])
-            print(f"\nYour starting airport is {starting_airport.ident} - {starting_airport.name} in {starting_airport.country}.")
-
-            self.session = stage.task_criteria(self.session, self.airport_manager)
+            stage.task_criteria(self.session, self.airport_manager)
 
             print(f"\n===== STAGE {self.session['current_stage']} =====")
             print(f"You have {self.session['co2_available']:.2f} kg CO2 available")
             print("Countries to guess:", ", ".join(self.session["places"].keys()))
 
             countries_to_visit = list(self.session["places"].keys())
-
-            stage_failed = False
 
             while countries_to_visit:
                 print("\n🕵️ Clues:")
@@ -99,7 +94,7 @@ class Game:
                     else:
                         print("❌ Wrong. Try again!")
 
-                if self.session["game_status"] == "Quit" or matched_country is None:
+                if matched_country is None:
                     break
 
                 icao, cname, airports = self.stage_guess_country(matched_country)
@@ -124,8 +119,6 @@ class Game:
                 origin = self.airport_manager.find_airport(self.session["origin"])
                 dest = self.airport_manager.find_airport(dest_code)
 
-                print(f"\n🛫 Planning route from {origin.ident} to {dest.ident} with 2 stops...")
-
                 route = self.airport_manager.find_route_with_stops(origin, dest, 2)
                 if not route:
                     print("❌ No valid route.")
@@ -134,45 +127,21 @@ class Game:
                 dist = self.airport_manager.total_route_distance(route)
                 co2 = stage.calc_co2_emmission(dist)
 
-                print(f"\n📍 Route Summary:")
-                print(f"   Distance: {dist:.0f} km")
-                print(f"   CO2 Required: {co2:.2f} kg")
-                print(f"   CO2 Remaining: {self.session['co2_available']:.2f} kg")
-
-                for i, airport in enumerate(route):
-                    if i == 0:
-                        print(f"   🛫 START: {airport.ident} - {airport.name}")
-                    elif i == len(route) - 1:
-                        print(f"   🛬 END:   {airport.ident} - {airport.name}")
-                    else:
-                        print(f"   🔄 STOP:  {airport.ident} - {airport.name}")
+                print(f"\nRoute distance: {dist:.1f} km")
+                print(f"CO2 required: {co2:.2f}")
 
                 if co2 > self.session["co2_available"]:
-                    print("❌ Your plane was unable to reach its destination.")
-                    
-                    if replay_count < 3:
-                        print(f"You still have {3 - replay_count} tries to replay.")
-                        replay_choice = input("🛫 Do you want to replay this stage? (y): ").strip().lower()
-                        
-                        if replay_choice == "y":
-                            replay_count += 1
-                            self.session = copy.deepcopy(backup_session)
-                            self.total = copy.deepcopy(backup_total)
-                            self.session["game_status"] = "Replay"
-                            print(f"This is your {replay_count} replaying.")
-                            stage_failed = True
-                            break
-                        else:
-                            self.session['current_stage'] -= 1
-                            self.session["game_status"] = "Lose"
-                            stage_failed = True
-                            break
-                    else:
-                        self.session['current_stage'] -= 1
-                        print("Next time might be your chance!")
+                    print("❌ Not enough CO2!")
+                    print("You must replay this stage.")
+
+                    replay_count += 1
+                    if replay_count > 3:
                         self.session["game_status"] = "Lose"
-                        stage_failed = True
                         break
+
+                    self.session = copy.deepcopy(backup_session)
+                    self.total = copy.deepcopy(backup_total)
+                    continue
 
                 self.session["co2_available"] -= co2
                 self.session["origin"] = dest_code
@@ -187,30 +156,16 @@ class Game:
                     "co2": co2
                 })
 
-                print(f"🎯 Arrived at {matched_country}! CO2 left: {self.session['co2_available']:.2f}")
-                self.session["game_status"] = "Win"
-
-            if self.session["game_status"] == "Quit":
-                self.session['current_stage'] -= 1
-                print("Let's play another time again!")
-                break
-            elif self.session["game_status"] == "Lose":
-                break
-            elif self.session["game_status"] == "Replay":
-                continue
-            elif not stage_failed:
-                replay_count = 0
-                print("\n🎉 Mission complete!")
+                print(f"🎯 Arrived! CO2 left: {self.session['co2_available']:.2f}")
 
         self.end_game()
         return
 
     def end_game(self):
         print("\n===== GAME OVER =====")
-        print(f"Level passed: {self.session['current_stage']}")
-        print(f"Countries visited: {len(self.total['flight_history'])}")
         print(f"Total distance: {self.total['total_distance']:.1f} km")
         print(f"Total CO2: {self.total['total_co2']:.2f} kg")
+        print(f"Flights: {self.total['total_flights']}")
 
         db_table_creator()
         date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -225,5 +180,4 @@ class Game:
             self.session["game_status"],
         )
 
-        print("✅ Results saved to database.")
-        print("See you next time!")
+        print("Results saved to database.")
