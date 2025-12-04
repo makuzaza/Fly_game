@@ -132,6 +132,45 @@ def create_app():
             return jsonify({"error": "Failed to calculate route"}), 500
     
     # -----------------------------
+    # GET airports by country - /api/airports/country/FI
+    # -----------------------------
+    @app.route("/api/airports/country/<country_code>", methods=["GET"])
+    def get_airports_by_country(country_code):
+        """Return all airports that belong to a given country code (ISO / ICAO)."""
+
+        try:
+            code = country_code.upper()
+
+            airports = airport_manager.get_airports_by_country(code)
+
+            if not airports:
+                return jsonify({
+                    "country": code,
+                    "airports": [],
+                    "message": "No airports found"
+                }), 200
+
+            data = [
+                {
+                    "ident": a.ident,
+                    "name": a.name,
+                    "lat": a.lat,
+                    "lng": a.lng,
+                    "city": a.city,
+                    "country": a.country
+                }
+                for a in airports
+            ]
+            return jsonify({
+                "country": code,
+                "airports": data
+            }), 200
+
+        except Exception as e:
+            logger.error(f"Error fetching airports by country: {e}")
+            return jsonify({"error": "Failed to fetch airports"}), 500
+
+    # -----------------------------
     # GET Result - /api/result     
     # -----------------------------
     @app.route("/api/result", methods=["GET"])
