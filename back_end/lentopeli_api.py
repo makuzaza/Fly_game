@@ -147,7 +147,8 @@ def create_app():
                     {
                         "ident": a.ident,
                         "name": a.name,
-                        "city": a.city
+                        "city": a.city,
+                        "country": a.country
                     }
                     for a in airports
                 ]
@@ -208,7 +209,8 @@ def create_app():
                 {
                     "ident": a.ident,
                     "name": a.name,
-                    "type": "START" if i == 0 else ("END" if i == len(route)-1 else "STOP")
+                    "type": "START" if i == 0 else ("END" if i == len(route)-1 else "STOP"),
+                    "country": a.country
                 }
                 for i, a in enumerate(route)
             ]
