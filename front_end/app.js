@@ -8,6 +8,8 @@ let gameState = {
     countries: [],
     tips: [],
     origin: "",
+    originName: "",
+    originCountry: "",
     selectedCountry: null,
     selectedAirport: null,
     wrongAttempts: 0,
@@ -135,6 +137,8 @@ async function startNewGame(playerName) {
         gameState.countries = data.countries;
         gameState.tips = data.tips;
         gameState.origin = data.origin;
+        gameState.originName = data.origin_name || "Helsinki Vantaa Airport";
+        gameState.originCountry = data.origin_country || "Finland";
         gameState.wrongAttempts = 0;
         gameState.replayCount = 0;
         
@@ -305,7 +309,7 @@ async function endGameWithLose() {
 function updateGameDisplay() {
     document.getElementById("current-stage").textContent = gameState.stage;
     document.getElementById("co2-display").textContent = gameState.co2Available.toFixed(2);
-    document.getElementById("current-origin").textContent = gameState.origin;
+    document.getElementById("current-origin").textContent = `${gameState.origin} - ${gameState.originName} (${gameState.originCountry})`;
     
     // Display clues
     const cluesList = document.getElementById("clues-list");
@@ -342,13 +346,20 @@ function displayAirports(airports, countryName, countryCode) {
 
 function displayRoute(routeData) {
     const routeDetails = document.getElementById("route-details");
+    const startAirport = routeData.route[0];
+    const endAirport = routeData.route[routeData.route.length - 1];
+
+    const getCountry = (airport) => airport.country || airport.iso_country || "Unknown";
     routeDetails.innerHTML = `
+        <p><strong>Flight Route:</strong></p>
+        <p>From: ${startAirport.ident} - ${startAirport.name} (${getCountry(startAirport)})</p>
+        <p>To: ${endAirport.ident} - ${endAirport.name} (${getCountry(endAirport)})</p>
         <p><strong>Distance:</strong> ${routeData.distance} km</p>
         <p><strong>CO2 Required:</strong> ${routeData.co2_required} kg</p>
         <p><strong>CO2 Available:</strong> ${routeData.co2_available} kg</p>
         <div class="route-path">
             ${routeData.route.map(stop => 
-                `<p>${stop.type === "START" ? "🛫" : stop.type === "END" ? "🛬" : "🔄"} ${stop.type}: ${stop.ident} - ${stop.name}</p>`
+                `<p>${stop.type === "START" ? "🛫" : stop.type === "END" ? "🛬" : "🔄"} ${stop.type}: ${stop.ident} - ${stop.name} (${stop.country})</p>`
             ).join("")}
         </div>
     `;
@@ -463,6 +474,11 @@ async function handleConfirmFlight() {
     
     if (!result) return;
     
+    const destinationAirport = routeData.route[routeData.route.length - 1];
+    gameState.origin = destinationAirport.ident;
+    gameState.originName = destinationAirport.name;
+    gameState.originCountry = destinationAirport.country;
+
     if (result.game_complete) {
         alert("🎉 Congratulations! You completed all stages!");
         const finalResults = await getGameResults();
@@ -473,6 +489,11 @@ async function handleConfirmFlight() {
         gameState.co2Available = result.co2_available;
         gameState.countries = result.countries;
         gameState.tips = result.tips;
+        if (result.origin) {
+            gameState.origin = result.origin;
+            gameState.originName = result.origin_name || destinationAirport.name;
+            gameState.originCountry = result.origin_country || destinationAirport.country;
+        }
         gameState.replayCount = 0; // Reset replay count for new stage
         
         // Save new backup for next stage
