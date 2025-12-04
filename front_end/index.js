@@ -16,16 +16,13 @@ function renderHeader() {
 }
 
 let gameResults = null;
-// this functions needs to be in api.js
+// this functions needs to be moved in api.js
 async function loadResults() {
   try {
     const res = await fetch("http://localhost:5000/api/result"); // Flask request
     if (!res.ok) throw new Error("HTTP error " + res.status);
     const data = await res.json();
-
-    // Store results globally
     gameResults = data;
-
     return data;
   } catch (err) {
     console.error("Response error:", err);
