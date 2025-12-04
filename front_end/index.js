@@ -1,6 +1,6 @@
 import { fetchAirportsByCountry } from "./api.js";
 
-"use strict";
+("use strict");
 
 function setBackground(backgroundPath) {
   const app = document.getElementById("app");
@@ -13,6 +13,24 @@ function renderHeader() {
       <img src="./img/logo.png" alt="EcoTrip" class="logo" />
   `;
   return header;
+}
+
+let gameResults = null;
+// this functions needs to be in api.js
+async function loadResults() {
+  try {
+    const res = await fetch("http://localhost:5000/api/result"); // Flask request
+    if (!res.ok) throw new Error("HTTP error " + res.status);
+    const data = await res.json();
+
+    // Store results globally
+    gameResults = data;
+
+    return data;
+  } catch (err) {
+    console.error("Response error:", err);
+    return null;
+  }
 }
 
 // ----------------------------------------------
@@ -198,7 +216,7 @@ function showGameScreen() {
 // ----------------------------------------------
 // RESULTS SCREEN
 // ----------------------------------------------
-function showResultsScreen() {
+async function showResultsScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
@@ -207,22 +225,40 @@ function showResultsScreen() {
   const screen = document.createElement("div");
   screen.className = "screen results-screen";
 
-  screen.innerHTML = `
-    <h2>Results</h2>
-    <p>Levels passed: 0</p>
-    <p>Total distance: 0 km</p>
-    <p>Visited countries: 0</p>
-    <p>Total CO₂: 0 kg</p>
+  const data = await loadResults();
+
+  if (!data) {
+    screen.innerHTML = `
+      <h2>Results</h2>
+      <p>Error loading results. Please try again.</p>
+      <button id="btnRestart">Play Again</button>
+    `;
+  } else {
+    let statusMessage = "Game Over";
+    if (data.game_status === "Win") {
+      statusMessage = "Mission complete!";
+    } else if (data.game_status === "Lose") {
+      statusMessage = "Next time might be your chance!";
+    } else if (data.game_status === "Quit") {
+      statusMessage = "Let's play another time again!";
+    }
+
+    screen.innerHTML = `
+      <h2>Results</h2>
+      <h3>${statusMessage}</h3>
+      <p><strong>Levels passed:</strong> ${data.levels_passed || 0}</p>
+      <p><strong>Total distance:</strong> ${data.total_distance_km || 0} km</p>
+      <p><strong>Visited countries:</strong> ${data.countries_visited || 0}</p>
+      <p><strong>Total CO₂:</strong> ${data.total_co2_kg || 0} kg</p>
 
     <button id="btnRestart">Play Again</button>
   `;
 
-  app.appendChild(screen);
+    app.appendChild(screen);
 
-  document.getElementById("btnRestart").onclick = () => showGameScreen();
+    document.getElementById("btnRestart").onclick = () => showGameScreen();
+  }
 }
 
 setBackground("./img/background.jpg");
-
-// Start the app at the game page
 showStartScreen();
