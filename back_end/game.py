@@ -222,6 +222,8 @@ class Game:
 
         if self.session["game_status"] == "Win":
             self.efficiency = 80 * self.total["optimal_co2"] / self.total["total_co2"]
+        else:
+            self.efficiency = len(self.total['flight_history']) * 100 / 15
 
         results_to_db(
             self.player_name,

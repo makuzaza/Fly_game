@@ -4,7 +4,7 @@ yhteys = get_connection()
 
 # === Database table creator ===
 def db_table_creator():
-    #db_table_remover()    === Temporary for rewriting of the table ===
+    #db_table_remover()    #=== Temporary for rewriting the table ===
     sql = f"""
         CREATE TABLE IF NOT EXISTS results (
             ID INT NOT NULL AUTO_INCREMENT,
@@ -14,7 +14,7 @@ def db_table_creator():
             cities INT,
             km_amount FLOAT,
             co2_amount FLOAT,
-            efficient FLOAT,
+            efficiency FLOAT,
             status VARCHAR(40),
             PRIMARY KEY (ID)
         );
@@ -27,7 +27,7 @@ def db_table_creator():
 # === Fill the database table 'results' ===
 def results_to_db(name, date, level, city, km, co2, eff, status):
     sql = f"""
-        INSERT INTO results (name, date, levels, cities, km_amount, co2_amount, efficient, status)
+        INSERT INTO results (name, date, levels, cities, km_amount, co2_amount, efficiency, status)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
     """
     try:
