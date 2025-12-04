@@ -1,6 +1,6 @@
-'use strict';
+import { fetchAirportsByCountry } from "./api.js";
 
-// === Task page ===
+"use strict";
 
 function setBackground(backgroundPath) {
   const app = document.getElementById("app");
@@ -26,8 +26,8 @@ function showStartScreen() {
   screen.className = "screen start-screen";
 
   screen.innerHTML = `
-      <img src="./img/logo.png" style="width:300px;" alt="EcoTrip Logo" />
-      <input id="playerName" placeholder="Enter your name" />
+      <img src="./img/logo.png" style="width:300px;" alt="EcoTrip Logo" /><br/>
+      <input id="playerName" placeholder="Enter your name" /><br/>
       <button id="btnStart">Start Game</button>
   `;
 
@@ -40,7 +40,7 @@ function showStartScreen() {
       return;
     }
     sessionStorage.setItem("playerName", name);
-    showRulesQuestion(); 
+    showRulesQuestion();
   };
 }
 
@@ -54,7 +54,7 @@ function drawQuestionBox(questionText, yesCallback, noCallback) {
   app.appendChild(renderHeader());
 
   const screen = document.createElement("div");
-  screen.className = "screen";
+  screen.className = "screen question-screen";
 
   const box = document.createElement("div");
   box.className = "question-box";
@@ -89,8 +89,8 @@ function showRulesQuestion() {
   app.appendChild(renderHeader());
   drawQuestionBox(
     "Do you want to read the rules?",
-    showRulesScreen,    
-    showGameScreen 
+    showRulesScreen,
+    showGameScreen
   );
 }
 
@@ -108,7 +108,21 @@ function showRulesScreen() {
 
   screen.innerHTML = `
     <h2>Game Rules</h2>
-    <p>(Add your rules here)</p>
+    <p>Hello, my friend!</p>
+    <p>Welcome to the exciting world of global travel!</p>
+    <div>In this game, you will embark on flights to distant countries, solve intriguing puzzles, and experience unforgettable adventures.</div>
+    <div>Of course, it is important to keep the environment in mind — so plan your route carefully to reduce CO₂ emissions.</div>
+    <p>Here’s how it works:</p>
+    <div>You’ll start Level 1 from Helsinki, and always progress from previous destination.</div>
+    <div>Your task is to visit 3 countries by guessing their names.</div>
+    <div>Don’t worry - plenty of hints will guide you along the way.</div>
+    <div>Each level has a CO₂ budget, so plan your flights wisely!</div>
+    <div>We recommend using the map to choose the most optimal route.</div>
+    <div>Each country may have several airports, so choose wisely, always considering the environmental impact.</div>
+    <div>If you don’t succeed, each level can be replayed up to 3 times.</div>
+    <div>You can also exit the game at any time by typing “quit” or “X” on your keyboard.</div>
+    <div>At the end of the game, you’ll see your results, which will also be automatically saved to the database for future viewing.</div>
+    <p>Good luck! 🌍✈️</p>
     <button id="btnContinue">Continue</button>
   `;
 
@@ -133,7 +147,7 @@ function showGameScreen() {
     <h2>Game Screen</h2>
 
     <div class="map-box">
-        <iframe src="map.html" width="100%" height="300"></iframe>
+        <iframe src="map.html" style="min-width:800px; height:300px;"></iframe>
     </div>
 
     <div class="guess-section">
@@ -149,15 +163,33 @@ function showGameScreen() {
 
   app.appendChild(screen);
 
-  document.getElementById("btnSubmit").onclick = () => {
-    const country = document.getElementById("countryInput").value.trim();
-    const result = document.getElementById("guessResult");
+  document.getElementById("btnSubmit").onclick = async () => {
+    const code = document
+      .getElementById("countryInput")
+      .value.trim()
+      .toUpperCase();
+    const output = document.getElementById("guessResult");
 
-    if (!country) {
-      result.innerHTML = "<p>Please type a country.</p>";
-    } else {
-      result.innerHTML = `<p>You guessed: <b>${country}</b></p>`;
+    if (!code) {
+      output.innerHTML = "<p>Type a country code.</p>";
+      return;
     }
+
+    const result = await fetchAirportsByCountry(code);
+
+    if (!result || result.airports.length === 0) {
+      output.innerHTML = `<p>No airports found for <b>${code}</b></p>`;
+      return;
+    }
+
+    output.innerHTML = `
+        <h3>Airports in ${code}</h3>
+        <ul>
+            ${result.airports
+              .map((a) => `<li>${a.ident} — ${a.name} (${a.city})</li>`)
+              .join("")}
+        </ul>
+    `;
   };
 
   document.getElementById("btnResults").onclick = () => showResultsScreen();
@@ -194,4 +226,3 @@ setBackground("./img/background.jpg");
 
 // Start the app at the game page
 showStartScreen();
-
