@@ -57,3 +57,23 @@ export async function fetchGameResults() {
         return null;
     }
 }
+
+/* -------------------------------------------------------
+    GET /api/airports/country/<code>
+    Fetch airports by country code
+------------------------------------------------------- */
+
+export async function fetchAirportsByCountry(code) {
+    try {
+        const res = await fetch(`${API_BASE}/airports/country/${code}`);
+
+        if (!res.ok) {
+            throw new Error(`API error ${res.status}`);
+        }
+
+        return await res.json();
+    } catch (err) {
+        console.error("Error fetching airports:", err);
+        return null;
+    }
+}
