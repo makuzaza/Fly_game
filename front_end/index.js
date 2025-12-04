@@ -7,25 +7,51 @@ function setBackground(backgroundPath) {
   app.style.backgroundImage = `url(${backgroundPath})`;
 }
 
-// logo in the navigation bar not needed?
+function renderHeader() {
+  const header = document.createElement("header");
+  header.innerHTML = `
+      <img src="./img/logo.png" alt="EcoTrip" class="logo" />
+  `;
+  return header;
+}
 
-/*function navigationBar(logoPath){
-    const header = document.getElementById("logo");
-    header.innerHTML = "";
+// ----------------------------------------------
+// START SCREEN
+// ----------------------------------------------
+function showStartScreen() {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
 
-    const img = document.createElement("img");
-    img.src = logoPath;
-    img.alt = "Logo";
-    img.id = "headerLogo";
+  const screen = document.createElement("div");
+  screen.className = "screen start-screen";
 
-    header.appendChild(img);
+  screen.innerHTML = `
+      <img src="./img/logo.png" style="width:300px;" alt="EcoTrip Logo" />
+      <input id="playerName" placeholder="Enter your name" />
+      <button id="btnStart">Start Game</button>
+  `;
 
+  app.appendChild(screen);
 
-}*/
+  document.getElementById("btnStart").onclick = () => {
+    const name = document.getElementById("playerName").value.trim();
+    if (!name) {
+      alert("Please enter your name!");
+      return;
+    }
+    sessionStorage.setItem("playerName", name);
+    showRulesQuestion(); 
+  };
+}
 
+// ----------------------------------------------
+// SECOND SCREEN
+// ----------------------------------------------
 function drawQuestionBox(questionText, yesCallback, noCallback) {
   const app = document.getElementById("app");
   app.innerHTML = ""; // clear previous screen
+
+  app.appendChild(renderHeader());
 
   const screen = document.createElement("div");
   screen.className = "screen";
@@ -59,54 +85,113 @@ function drawQuestionBox(questionText, yesCallback, noCallback) {
   app.appendChild(screen);
 }
 
-
-
-//navigationBar("logo2.png")
-drawQuestionBox("Do you want read the background story?", "YES", "NO")
-setBackground("./img/background.jpg");
-
-
-
-
-
-// === Results page ===
-async function loadResults() {
-  try {
-    const res = await fetch("/api/results"); // Flask request
-    if (!res.ok) throw new Error("HTTP error " + res.status);
-    const data = await res.json();
-
-    if (data.game_status === "Win") {
-      document.getElementById("result_status").textContent = "Mission complete!";
-    } else if (data.game_status === "Lose") {
-      document.getElementById("result_status").textContent = "Next time might be your chance!";
-    } else if (data.game_status === "Quit") {
-      document.getElementById("result_status").textContent = "Let's play another time again!";
-    }
-
-    document.getElementById("result_levels").textContent = data.levels_passed;
-    document.getElementById("result_distance").textContent = data.total_distance_km;
-    document.getElementById("result_countries").textContent = data.countries_visited;
-    document.getElementById("result_co2").textContent = data.total_co2_kg;
-  } catch (err) {
-    console.error("Response error:", err);
-  }
+function showRulesQuestion() {
+  app.appendChild(renderHeader());
+  drawQuestionBox(
+    "Do you want to read the rules?",
+    showRulesScreen,    
+    showGameScreen 
+  );
 }
 
-loadResults();
-/*
-const resultAgain = document.querySelector('#result_again');
-const resultBest = document.querySelector('#result_best');
-const resultQuit = document.querySelector('#result_quit');
+// ----------------------------------------------
+// RULES SCREEN
+// ----------------------------------------------
+function showRulesScreen() {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
 
-resultAgain.addEventListener('click', () => {
-  alert("Run game from beginning.");
-});
+  app.appendChild(renderHeader());
 
-resultBest.addEventListener('click', () => {
-  alert("Output best results.");
-});
+  const screen = document.createElement("div");
+  screen.className = "screen rules-screen";
 
-resultQuit.addEventListener('click', () => {
-  alert("Go to the end-page.");
-});*/
+  screen.innerHTML = `
+    <h2>Game Rules</h2>
+    <p>(Add your rules here)</p>
+    <button id="btnContinue">Continue</button>
+  `;
+
+  app.appendChild(screen);
+
+  document.getElementById("btnContinue").onclick = () => showGameScreen();
+}
+
+// ----------------------------------------------
+// GAME SCREEN
+// ----------------------------------------------
+function showGameScreen() {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  app.appendChild(renderHeader());
+
+  const screen = document.createElement("div");
+  screen.className = "screen game-screen";
+
+  screen.innerHTML = `
+    <h2>Game Screen</h2>
+
+    <div class="map-box">
+        <iframe src="map.html" width="100%" height="300"></iframe>
+    </div>
+
+    <div class="guess-section">
+      <label>Guess the country:</label>
+      <input id="countryInput" placeholder="Enter country" />
+      <button id="btnSubmit">Submit</button>
+    </div>
+
+    <div id="guessResult"></div>
+
+    <button id="btnResults">Results</button>
+  `;
+
+  app.appendChild(screen);
+
+  document.getElementById("btnSubmit").onclick = () => {
+    const country = document.getElementById("countryInput").value.trim();
+    const result = document.getElementById("guessResult");
+
+    if (!country) {
+      result.innerHTML = "<p>Please type a country.</p>";
+    } else {
+      result.innerHTML = `<p>You guessed: <b>${country}</b></p>`;
+    }
+  };
+
+  document.getElementById("btnResults").onclick = () => showResultsScreen();
+}
+
+// ----------------------------------------------
+// RESULTS SCREEN
+// ----------------------------------------------
+function showResultsScreen() {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  app.appendChild(renderHeader());
+
+  const screen = document.createElement("div");
+  screen.className = "screen results-screen";
+
+  screen.innerHTML = `
+    <h2>Results</h2>
+    <p>Levels passed: 0</p>
+    <p>Total distance: 0 km</p>
+    <p>Visited countries: 0</p>
+    <p>Total CO₂: 0 kg</p>
+
+    <button id="btnRestart">Play Again</button>
+  `;
+
+  app.appendChild(screen);
+
+  document.getElementById("btnRestart").onclick = () => showGameScreen();
+}
+
+setBackground("./img/background.jpg");
+
+// Start the app at the game page
+showStartScreen();
+
