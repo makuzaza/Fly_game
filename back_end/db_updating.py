@@ -4,6 +4,7 @@ yhteys = get_connection()
 
 # === Database table creator ===
 def db_table_creator():
+    #db_table_remover()    #=== Temporary for rewriting the table ===
     sql = f"""
         CREATE TABLE IF NOT EXISTS results (
             ID INT NOT NULL AUTO_INCREMENT,
@@ -13,6 +14,7 @@ def db_table_creator():
             cities INT,
             km_amount FLOAT,
             co2_amount FLOAT,
+            efficiency FLOAT,
             status VARCHAR(40),
             PRIMARY KEY (ID)
         );
@@ -23,18 +25,26 @@ def db_table_creator():
     return
 
 # === Fill the database table 'results' ===
-def results_to_db(name, date, level, city, km, co2, status):
+def results_to_db(name, date, level, city, km, co2, eff, status):
     sql = f"""
-        INSERT INTO results (name, date, levels, cities, km_amount, co2_amount, status)
-        VALUES (%s, %s, %s, %s, %s, %s, %s);
+        INSERT INTO results (name, date, levels, cities, km_amount, co2_amount, efficiency, status)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
     """
     try:
         cursor = yhteys.cursor()
-        cursor.execute(sql, (name, date, level, city, km, co2, status))
+        cursor.execute(sql, (name, date, level, city, km, co2, eff, status))
         yhteys.commit()
         return True
     except Exception as e:
         print("Mistake:", e)
         return False
 
-# === If it doesn't work, read instructions from the notes ===
+# === To remove results table from DB ===
+def db_table_remover():
+    sql = f"""
+        DROP TABLE IF EXISTS results;
+    """
+    cursor = yhteys.cursor()  # yhteys is a connection function
+    cursor.execute(sql)
+    yhteys.commit()   # save changes
+    return

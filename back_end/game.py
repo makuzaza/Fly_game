@@ -6,9 +6,11 @@ from datetime import datetime
 from db import get_connection
 import copy
 
+
 class Game:
     def __init__(self, player_name):
         self.player_name = player_name
+        self.efficiency = 0
         self.yhteys = get_connection()
         self.airport_manager = AirportManager()
 
@@ -24,6 +26,7 @@ class Game:
         self.total = {
             "total_distance": 0.0,
             "total_co2": 0,
+            "optimal_co2": 0,
             "total_flights": 0,
             "flight_history": []
         }
@@ -60,9 +63,11 @@ class Game:
             backup_total = copy.deepcopy(self.total)
 
             starting_airport = self.airport_manager.find_airport(self.session["origin"])
-            print(f"\nYour starting airport is {starting_airport.ident} - {starting_airport.name} in {starting_airport.country}.")
+            print(
+                f"\nYour starting airport is {starting_airport.ident} - {starting_airport.name} in {starting_airport.country}.")
 
             self.session = stage.task_criteria(self.session, self.airport_manager)
+            self.total["optimal_co2"] += self.session["co2_available"]
 
             print(f"\n===== STAGE {self.session['current_stage']} =====")
             print(f"You have {self.session['co2_available']:.2f} kg CO2 available")
@@ -149,11 +154,11 @@ class Game:
 
                 if co2 > self.session["co2_available"]:
                     print("❌ Your plane was unable to reach its destination.")
-                    
+
                     if replay_count < 3:
                         print(f"You still have {3 - replay_count} tries to replay.")
                         replay_choice = input("🛫 Do you want to replay this stage? (y): ").strip().lower()
-                        
+
                         if replay_choice == "y":
                             replay_count += 1
                             self.session = copy.deepcopy(backup_session)
@@ -215,6 +220,11 @@ class Game:
         db_table_creator()
         date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+        if self.session["game_status"] == "Win":
+            self.efficiency = 80 * self.total["optimal_co2"] / self.total["total_co2"]
+        else:
+            self.efficiency = len(self.total['flight_history']) * 100 / 15
+
         results_to_db(
             self.player_name,
             date,
@@ -222,6 +232,7 @@ class Game:
             len(self.total["flight_history"]),
             self.total["total_distance"],
             self.total["total_co2"],
+            self.efficiency,
             self.session["game_status"],
         )
 
