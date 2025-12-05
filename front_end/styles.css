@@ -211,6 +211,27 @@ button:hover {
     color: black;
 }
 
+/* === Final page === */
+.bye-container {
+    width: 100%;
+    margin: 11.8rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bye-message {
+    width: 60%;
+    padding: 1rem;
+    background-color: mediumblue;
+    color: whitesmoke;
+    border: 1px solid;
+    border-radius: 20px;
+    display: grid;
+    place-items: center;
+}
+
+/* === media Result page === */
 @media screen and (max-width: 600px) {
     .question-buttons {
         gap: 10px;

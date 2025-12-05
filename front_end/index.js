@@ -318,7 +318,7 @@ async function showResultsScreen() {
                 </tr>
                 <tr>
                     <td>Game status</td>
-                    <td id="game_status">${statusMessage}</td>
+                    <td id="game_status">${data.game_status}</td>
                 </tr>
             </table>
         </div>
@@ -333,8 +333,34 @@ async function showResultsScreen() {
 
     document.getElementById("result_again").onclick = () => showGameScreen();
     document.getElementById("result_best").onclick = () => showGameScreen();
-    document.getElementById("result_quit").onclick = () => showGameScreen();
+    document.getElementById("result_quit").onclick = () => showByeScreen();
   }
+}
+
+// ----------------------------------------------
+// BYE SCREEN
+// ----------------------------------------------
+
+async function showByeScreen() {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  app.appendChild(renderHeader());
+
+  const screen = document.createElement("div");
+  screen.className = "bye-container";
+
+  screen.innerHTML = `
+      <div class="bye-message">
+        <h2>Session complete. Aircraft secured.</h2>
+        <p>Thank you for your service, Pilot!</p>
+        <p>The sky await your return!</p>
+        <p>---------------</p>
+        <p>Goodbye!</p>
+      </div>
+    `;
+
+  app.appendChild(screen);
 }
 
 setBackground("./img/background.jpg");
