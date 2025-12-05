@@ -1,4 +1,214 @@
 // -----------------------------
+// Map Screen Class (inline definition)
+// -----------------------------
+class MapScreen {
+    constructor(apiUrl) {
+        this.apiUrl = apiUrl;
+        this.map = null;
+        this.airports = [];
+        this.markers = [];
+        this.routeLine = null;
+        this.onAirportClick = null;
+    }
+
+    async init(containerId = "map-container") {
+        this.map = L.map(containerId).setView([50, 10], 4);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(this.map);
+        await this.loadAirports();
+        this.displayAirportMarkers();
+    }
+
+    async loadAirports() {
+        try {
+            const response = await fetch(`${this.apiUrl}/api/airports`);
+            if (!response.ok) throw new Error("Failed to load airports");
+            this.airports = await response.json();
+            console.log(`Loaded ${this.airports.length} airports`);
+        } catch (error) {
+            console.error("Error loading airports:", error);
+        }
+    }
+
+    displayAirportMarkers() {
+        this.markers.forEach(marker => marker.remove());
+        this.markers = [];
+
+        this.airports.forEach(airport => {
+            const marker = L.circleMarker([airport.lat, airport.lng], {
+                radius: 5,
+                fillColor: "#3388ff",
+                color: "#fff",
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.6
+            });
+
+            marker.bindPopup(`
+                <strong>${airport.name}</strong><br>
+                ${airport.ident}<br>
+                ${airport.city}, ${airport.country}
+            `);
+
+            marker.on('click', () => {
+                if (this.onAirportClick) {
+                    this.onAirportClick(airport);
+                }
+            });
+
+            marker.addTo(this.map);
+            this.markers.push(marker);
+        });
+    }
+
+    highlightAirports(airportCodes) {
+        this.markers.forEach(marker => marker.remove());
+        this.markers = [];
+
+        this.airports.forEach(airport => {
+            const isHighlighted = airportCodes.includes(airport.ident);
+            
+            const marker = L.circleMarker([airport.lat, airport.lng], {
+                radius: isHighlighted ? 8 : 5,
+                fillColor: isHighlighted ? "#ff0000" : "#3388ff",
+                color: "#fff",
+                weight: 1,
+                opacity: 1,
+                fillOpacity: isHighlighted ? 0.9 : 0.6
+            });
+
+            marker.bindPopup(`
+                <strong>${airport.name}</strong><br>
+                ${airport.ident}<br>
+                ${airport.city}, ${airport.country}
+                ${isHighlighted ? '<br><em>Destination Available</em>' : ''}
+            `);
+
+            marker.on('click', () => {
+                if (this.onAirportClick) {
+                    this.onAirportClick(airport);
+                }
+            });
+
+            marker.addTo(this.map);
+            this.markers.push(marker);
+        });
+    }
+
+    drawRoute(routeAirportCodes) {
+        if (this.routeLine) {
+            this.routeLine.remove();
+        }
+
+        const routeCoords = [];
+        routeAirportCodes.forEach(code => {
+            const airport = this.airports.find(a => a.ident === code);
+            if (airport) {
+                routeCoords.push([airport.lat, airport.lng]);
+            }
+        });
+
+        if (routeCoords.length > 1) {
+            this.routeLine = L.polyline(routeCoords, {
+                color: '#ff0000',
+                weight: 3,
+                opacity: 0.7,
+                dashArray: '10, 10'
+            }).addTo(this.map);
+            this.map.fitBounds(this.routeLine.getBounds(), { padding: [50, 50] });
+        }
+    }
+
+    highlightRoute(routeData) {
+        if (!routeData || !routeData.route) return;
+
+        const routeCodes = routeData.route.map(stop => stop.ident);
+        this.drawRoute(routeCodes);
+
+        this.markers.forEach(marker => marker.remove());
+        this.markers = [];
+
+        this.airports.forEach(airport => {
+            const routeIndex = routeCodes.indexOf(airport.ident);
+            const isInRoute = routeIndex !== -1;
+            
+            let color = "#3388ff";
+            let radius = 5;
+            
+            if (isInRoute) {
+                if (routeIndex === 0) {
+                    color = "#00ff00";
+                    radius = 10;
+                } else if (routeIndex === routeCodes.length - 1) {
+                    color = "#ff0000";
+                    radius = 10;
+                } else {
+                    color = "#ffaa00";
+                    radius = 8;
+                }
+            }
+            
+            const marker = L.circleMarker([airport.lat, airport.lng], {
+                radius: radius,
+                fillColor: color,
+                color: "#fff",
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
+            });
+
+            let popupText = `
+                <strong>${airport.name}</strong><br>
+                ${airport.ident}<br>
+                ${airport.city}, ${airport.country}
+            `;
+            
+            if (isInRoute) {
+                const stop = routeData.route[routeIndex];
+                popupText += `<br><em>${stop.type}</em>`;
+            }
+
+            marker.bindPopup(popupText);
+            marker.on('click', () => {
+                if (this.onAirportClick) {
+                    this.onAirportClick(airport);
+                }
+            });
+
+            marker.addTo(this.map);
+            this.markers.push(marker);
+        });
+    }
+
+    clearRoute() {
+        if (this.routeLine) {
+            this.routeLine.remove();
+            this.routeLine = null;
+        }
+        this.displayAirportMarkers();
+    }
+
+    focusAirport(airportCode) {
+        const airport = this.airports.find(a => a.ident === airportCode);
+        if (airport) {
+            this.map.setView([airport.lat, airport.lng], 8);
+        }
+    }
+
+    setOnAirportClick(callback) {
+        this.onAirportClick = callback;
+    }
+
+    resize() {
+        if (this.map) {
+            this.map.invalidateSize();
+        }
+    }
+}
+
+// -----------------------------
 // Game State
 // -----------------------------
 let gameState = {
@@ -8,8 +218,6 @@ let gameState = {
     countries: [],
     tips: [],
     origin: "",
-    originName: "",
-    originCountry: "",
     selectedCountry: null,
     selectedAirport: null,
     wrongAttempts: 0,
@@ -19,6 +227,7 @@ let gameState = {
 };
 
 const API_URL = "http://localhost:5000";
+let mapScreen = null;
 
 // -----------------------------
 // Helper to create screens
@@ -39,8 +248,9 @@ const app = document.getElementById("app");
 
 // START SCREEN
 const startScreen = createScreen("screen-start", `
-    <div><img src="assets/logo.png" class="logo"></div>
-    <div><input id="player-name" type="text" placeholder="Enter your name" /></div>
+    <img src="assets/logo.png" class="logo">
+    <h1>Flight Game - Route Planner</h1>
+    <input id="player-name" type="text" placeholder="Enter your name" />
     <button id="btn-start">Start Game</button>
 `);
 
@@ -66,8 +276,10 @@ const gameScreen = createScreen("screen-game", `
     <div id="game-info">
         <h3>Stage <span id="current-stage">1</span>/5</h3>
         <p>💨 CO2 Available: <span id="co2-display">0</span> kg</p>
-        <p>📍 Current Location: <span id="current-origin">${gameState.origin}</span></p>
+        <p>📍 Current Location: <span id="current-origin">EFHK</span></p>
     </div>
+
+    <div id="map-container" style="height: 400px; width: 100%; margin: 20px 0; border: 2px solid #ccc;"></div>
 
     <div id="mission-container">
         <h3>🕵️ Country Clues:</h3>
@@ -117,6 +329,27 @@ function showScreen(id) {
 showScreen("screen-start");
 
 // -----------------------------
+// Initialize Map when game screen is shown
+// -----------------------------
+async function initializeMap() {
+    if (!mapScreen) {
+        mapScreen = new MapScreen(API_URL);
+        await mapScreen.init("map-container");
+        
+        // Set callback for airport clicks on map
+        mapScreen.setOnAirportClick((airport) => {
+            // Only allow selection if airports are currently being shown
+            if (document.getElementById("airport-selection").style.display === "block") {
+                handleAirportSelect(airport.ident, gameState.selectedCountry);
+            }
+        });
+    } else {
+        // Map already exists, just resize it
+        mapScreen.resize();
+    }
+}
+
+// -----------------------------
 // API Calls
 // -----------------------------
 async function startNewGame(playerName) {
@@ -136,8 +369,6 @@ async function startNewGame(playerName) {
         gameState.countries = data.countries;
         gameState.tips = data.tips;
         gameState.origin = data.origin;
-        gameState.originName = data.origin_name || "Helsinki Vantaa Airport";
-        gameState.originCountry = data.origin_country || "Finland";
         gameState.wrongAttempts = 0;
         gameState.replayCount = 0;
         
@@ -146,6 +377,11 @@ async function startNewGame(playerName) {
         
         updateGameDisplay();
         showScreen("screen-game");
+
+        // Initialize map
+        setTimeout(async () => {
+            await initializeMap();
+        }, 100);
     } catch (error) {
         alert("Error starting game: " + error.message);
     }
@@ -308,7 +544,7 @@ async function endGameWithLose() {
 function updateGameDisplay() {
     document.getElementById("current-stage").textContent = gameState.stage;
     document.getElementById("co2-display").textContent = gameState.co2Available.toFixed(2);
-    document.getElementById("current-origin").textContent = `${gameState.origin} - ${gameState.originName} (${gameState.originCountry})`;
+    document.getElementById("current-origin").textContent = gameState.origin;
     
     // Display clues
     const cluesList = document.getElementById("clues-list");
@@ -341,24 +577,23 @@ function displayAirports(airports, countryName, countryCode) {
     });
     
     document.getElementById("airport-selection").style.display = "block";
+    
+    // Highlight airports on map
+    if (mapScreen) {
+        const airportCodes = airports.map(a => a.ident);
+        mapScreen.highlightAirports(airportCodes);
+    }
 }
 
 function displayRoute(routeData) {
     const routeDetails = document.getElementById("route-details");
-    const startAirport = routeData.route[0];
-    const endAirport = routeData.route[routeData.route.length - 1];
-
-    const getCountry = (airport) => airport.country || airport.iso_country || "Unknown";
     routeDetails.innerHTML = `
-        <p><strong>Flight Route:</strong></p>
-        <p>From: ${startAirport.ident} - ${startAirport.name} (${getCountry(startAirport)})</p>
-        <p>To: ${endAirport.ident} - ${endAirport.name} (${getCountry(endAirport)})</p>
         <p><strong>Distance:</strong> ${routeData.distance} km</p>
         <p><strong>CO2 Required:</strong> ${routeData.co2_required} kg</p>
         <p><strong>CO2 Available:</strong> ${routeData.co2_available} kg</p>
         <div class="route-path">
             ${routeData.route.map(stop => 
-                `<p>${stop.type === "START" ? "🛫" : stop.type === "END" ? "🛬" : "🔄"} ${stop.type}: ${stop.ident} - ${stop.name} (${stop.country})</p>`
+                `<p>${stop.type === "START" ? "🛫" : stop.type === "END" ? "🛬" : "🔄"} ${stop.type}: ${stop.ident} - ${stop.name}</p>`
             ).join("")}
         </div>
     `;
@@ -439,9 +674,11 @@ async function handleCountrySubmit() {
             document.getElementById("guess-feedback").textContent = 
                 `❌ Wrong! Tip: The correct country is ${gameState.countries[0]}`;
             document.getElementById("attempts-info").textContent = "You can now type it to continue.";
+            // Don't reset attempts here - keep it at 3 so user knows tip is active
         } else {
             document.getElementById("guess-feedback").textContent = 
                 `❌ Wrong guess. Try again! (${gameState.wrongAttempts}/3)`;
+            document.getElementById("attempts-info").textContent = "";
         }
     }
 }
@@ -472,11 +709,6 @@ async function handleConfirmFlight() {
     
     if (!result) return;
     
-    const destinationAirport = routeData.route[routeData.route.length - 1];
-    gameState.origin = destinationAirport.ident;
-    gameState.originName = destinationAirport.name;
-    gameState.originCountry = destinationAirport.country;
-
     if (result.game_complete) {
         alert("🎉 Congratulations! You completed all stages!");
         const finalResults = await getGameResults();
@@ -487,11 +719,6 @@ async function handleConfirmFlight() {
         gameState.co2Available = result.co2_available;
         gameState.countries = result.countries;
         gameState.tips = result.tips;
-        if (result.origin) {
-            gameState.origin = result.origin;
-            gameState.originName = result.origin_name || destinationAirport.name;
-            gameState.originCountry = result.origin_country || destinationAirport.country;
-        }
         gameState.replayCount = 0; // Reset replay count for new stage
         
         // Save new backup for next stage
@@ -510,6 +737,20 @@ async function handleConfirmFlight() {
 
 function handleCancelFlight() {
     document.getElementById("route-info").style.display = "none";
+    
+    // Clear route from map
+    if (mapScreen) {
+        // Re-highlight available airports
+        const airportsList = document.getElementById("airports-list");
+        if (airportsList && document.getElementById("airport-selection").style.display === "block") {
+            // Get current airports being shown
+            const buttons = airportsList.querySelectorAll('.airport-btn');
+            if (buttons.length > 0) {
+                // Extract airport codes and re-highlight
+                mapScreen.displayAirportMarkers();
+            }
+        }
+    }
 }
 
 // -----------------------------
