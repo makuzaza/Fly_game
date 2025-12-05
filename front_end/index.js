@@ -132,7 +132,7 @@ function showRulesScreen() {
     <div>Your task is to visit 3 countries by guessing their names.</div>
     <div>Don’t worry - plenty of hints will guide you along the way.</div>
     <div>Each level has a CO₂ budget, so plan your flights wisely!</div>
-    <div>We recommend using the map to choose the most optimal route.</div>
+    <div>We recommend using the map to choose the most optimal route.</div><br/>
     <div>Each country may have several airports, so choose wisely, always considering the environmental impact.</div>
     <div>If you don’t succeed, each level can be replayed up to 3 times.</div>
     <div>You can also exit the game at any time by typing “quit” or “X” on your keyboard.</div>

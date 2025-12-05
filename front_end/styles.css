@@ -7,27 +7,23 @@ html {
     padding: 0;
 }
 
+body {
+    margin: 0;
+}
+
 header {
-    display: flex;
-    justify-content: space-between;
-    padding: 0;
-    position: fixed;
-    z-index: 1000;
-    width: 100%;
-    align-items: flex-start;
-    top: 0;
-    left: 0;
+  width: 100%;
+  text-align: left;
+  position: relative;
+  z-index: 10;
 }
 
 .logo {
     width: auto;
     height: 3rem;
-    padding: 0 0 0 1rem;
+    padding: 0.5rem 0 0 0.5rem;
 }
 
-body {
-    margin: 0;
-}
 /* === Start page === */
 .start-screen {
     display: flex;
@@ -40,16 +36,26 @@ body {
     width: 100%;
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
   }
     /*  question box */
+
+.question-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80%;
+
+}
 .question-box {
     background: white;
     width: 60%;
     min-width: 40%;
     padding: 4%;
-    border-radius: 2%;
+    border-radius: 5%;
     box-shadow: 0 4px 20px rgba(0,0,0,0.2);
     text-align: center;
     display: flex;
@@ -95,10 +101,24 @@ body {
     align-items: flex-start;
     justify-content: center;
     line-height: 1.4;
-    padding: 2rem;
+    margin: 0 1rem 1rem 1rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    background-color: aliceblue;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
 
 /* === Main game page === */
+.game-screen, .question-screen, .rules-screen, .results-screen {  
+  flex: 1;  
+  display: flex;           
+  justify-content: center;
+  flex-direction: column;
+}
+
+.game-screen {
+    padding-bottom: 1rem;
+}
 
 /* === Results page === */
 .result_container {
