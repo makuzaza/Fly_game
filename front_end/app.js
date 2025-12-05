@@ -39,9 +39,8 @@ const app = document.getElementById("app");
 
 // START SCREEN
 const startScreen = createScreen("screen-start", `
-    <img src="assets/logo.png" class="logo">
-    <h1>Flight Game - Route Planner</h1>
-    <input id="player-name" type="text" placeholder="Enter your name" />
+    <div><img src="assets/logo.png" class="logo"></div>
+    <div><input id="player-name" type="text" placeholder="Enter your name" /></div>
     <button id="btn-start">Start Game</button>
 `);
 
@@ -440,7 +439,6 @@ async function handleCountrySubmit() {
             document.getElementById("guess-feedback").textContent = 
                 `❌ Wrong! Tip: The correct country is ${gameState.countries[0]}`;
             document.getElementById("attempts-info").textContent = "You can now type it to continue.";
-            gameState.wrongAttempts = 0;
         } else {
             document.getElementById("guess-feedback").textContent = 
                 `❌ Wrong guess. Try again! (${gameState.wrongAttempts}/3)`;
