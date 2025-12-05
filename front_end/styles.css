@@ -135,6 +135,19 @@ button:hover {
     width: 150px;
 }
 
+.map-results-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    padding: 10px 18px;
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
 /* === Results page === */
 .result_container {
     width: 100%;
