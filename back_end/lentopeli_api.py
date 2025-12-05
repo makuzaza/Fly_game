@@ -221,7 +221,29 @@ def create_app():
         except Exception as e:
             logger.error(f"Error in stage criteria: {e}")
             return jsonify({"error": "Failed to generate stage"}), 500
- 
+    
+    # -----------------------------
+    # GET Reset - /api/reset     
+    # -----------------------------
+    # Probably will need to be changed to POST, is not get to make it easier to test using browser.
+
+    @app.route("/api/reset", methods=["GET"]) 
+    def reset_game():
+        try:
+            stage_state["level"] = 0
+            stage_state["origin"] = "EFHK"
+            stage.level = 0
+
+            return jsonify({
+                "message": "Game reset",
+                "level": stage_state["level"],
+                "origin": stage_state["origin"]
+            }), 200
+
+        except Exception as e:
+            logger.error(f"Error resetting game: {e}")
+            return jsonify({"error": "Failed to reset game"}), 500
+        
     # -----------------------------
     # GET Result - /api/result     
     # -----------------------------
