@@ -59,6 +59,27 @@ export async function fetchStage() {
 }
 
 /* -------------------------------------------------------
+   GET /api/reset
+   Reset game api to initial state
+------------------------------------------------------- */
+export async function resetGame() {
+    try {
+        const res = await fetch(`${API_BASE}/reset`, {
+            method: "POST"
+        });
+
+        if (!res.ok) {
+            throw new Error(`Failed to reset: ${res.status}`);
+        }
+
+        return await res.json();
+    } catch (err) {
+        console.error("Reset Error:", err);
+        return null;
+    }
+}
+
+/* -------------------------------------------------------
    GET /api/result
    Fetch player game results
 ------------------------------------------------------- */
@@ -78,7 +99,6 @@ export async function fetchGameResults() {
 }
 
 /* -------------------------------------------------------
-
     GET /api/airports/country/<code>
     Fetch airports by country code
 ------------------------------------------------------- */
