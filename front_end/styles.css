@@ -152,9 +152,9 @@ button:hover {
 
 /* === Results page === */
 
-#result_container {
-    width: 100%;
-    min-height: 100vh;
+.result_container {
+    width: 80%;
+    min-height: 80vh;
     margin: 0;
     padding: 0;
 }
