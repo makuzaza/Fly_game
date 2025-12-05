@@ -153,8 +153,8 @@ button:hover {
 /* === Results page === */
 
 .result_container {
+    flex: 1; 
     width: 80%;
-    min-height: 80vh;
     margin: 0;
     padding: 0;
 }
