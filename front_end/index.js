@@ -1,4 +1,5 @@
 import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults } from "./api.js";
+import { createMapScreen } from "./mapScreen.js";
 
 ("use strict");
 function setBackground(backgroundPath) {
@@ -12,6 +13,26 @@ function renderHeader() {
       <img src="./img/logo.png" alt="EcoTrip" class="logo" />
   `;
   return header;
+}
+
+function showMap() {
+    const screen = createMapScreen(
+        airport => {
+            console.log("Game received airport:", airport);
+
+            // Save airport selection to global game state if needed:
+            // gameState.origin = airport.ident;
+            // OR move to next screen:
+            // showGameScreen();
+        },
+        () => {
+            // When user clicks Results button
+            showResultsScreen();
+        }
+    );
+
+    root.innerHTML = "";
+    root.appendChild(screen);
 }
 
 let gameResults = null;
@@ -40,7 +61,7 @@ function showStartScreen() {
   screen.className = "screen start-screen";
 
   screen.innerHTML = `
-      <img src="./img/logo.png" style="width:300px;" alt="EcoTrip Logo" /><br/>
+      <img src="./img/logo.png" style="width:300px;" alt="EcoTrip Logo" />
       <input id="playerName" placeholder="Enter your name" /><br/>
       <button id="btnStart">Start Game</button>
   `;
@@ -131,7 +152,7 @@ function showRulesScreen() {
     <div>Your task is to visit 3 countries by guessing their names.</div>
     <div>Don’t worry - plenty of hints will guide you along the way.</div>
     <div>Each level has a CO₂ budget, so plan your flights wisely!</div>
-    <div>We recommend using the map to choose the most optimal route.</div>
+    <div>We recommend using the map to choose the most optimal route.</div><br/>
     <div>Each country may have several airports, so choose wisely, always considering the environmental impact.</div>
     <div>If you don’t succeed, each level can be replayed up to 3 times.</div>
     <div>You can also exit the game at any time by typing “quit” or “X” on your keyboard.</div>
