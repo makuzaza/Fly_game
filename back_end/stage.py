@@ -10,7 +10,7 @@ class Stage:
 
     # === Define stage and randomly choose countries with one airport each ===
     def task_criteria(self, session_state, airport_manager):
-        session_state['current_stage'] += 1
+        session_state['current_stage'] = self.level
 
         selected_countries = random.sample(list(tips_countries.keys()), 3)
 
@@ -36,6 +36,7 @@ class Stage:
         # === Set CO2 allowance dynamically based on best route + margin ===
         best_order = self.get_shortest_route(session_state, airport_manager)
         session_state['co2_available'] = best_order['co2_with_margin']
+        session_state['order_countries'] = best_order['order_countries']
 
         return session_state
 
