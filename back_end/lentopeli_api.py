@@ -1,17 +1,22 @@
 import logging
 from flask import Flask, jsonify
 from flask_cors import CORS
+from tips_countries import tips_countries
 
 # --- Game Logic ---
 from airport import AirportManager
-from game import Game
+from stage import Stage
 
 def create_app():
     app = Flask(__name__)
 
     # --- Game Logic Initialization ---
     airport_manager = AirportManager()
-    game_manager = Game(player_name="Example test")
+    stage_state = {
+        "level": 0,
+        "origin": "EFHK"
+        }
+    stage = Stage(stage_state["level"])
 
     # --- Headers ---
     CORS(app) 
@@ -73,7 +78,6 @@ def create_app():
     # -----------------------------
     # GET layover route - /api/layover_route/EFHK/KJFK        
     # -----------------------------
-
     @app.route("/api/layover_route/<origin_code>/<dest_code>", methods=["GET"])
     def get_layover_route(origin_code, dest_code):
         """
@@ -113,6 +117,7 @@ def create_app():
                 "origin": origin_code,
                 "destination": dest_code,
                 "distance_km": distance,
+                "co2_needed": stage.calc_co2_emmission(distance),
                 "stops": len(layover_route) - 2,  # count intermediates only
                 "layover_route": [
                     {
@@ -169,7 +174,54 @@ def create_app():
         except Exception as e:
             logger.error(f"Error fetching airports by country: {e}")
             return jsonify({"error": "Failed to fetch airports"}), 500
+    
+    # -----------------------------
+    # GET Stage - /api/stage     
+    # -----------------------------
+    @app.route("/api/stage", methods=["GET"])
+    def get_stage():
+        """
+            Compute the stage and return: places, co2_budget, order_countries, origin, current_stage and clues.
+        """
+        try:
+            # === Increase level ===
+            stage_state["level"] += 1
+            stage.level = stage_state["level"]
 
+            session_state = {
+                "current_stage": stage_state["level"],
+                "origin": stage_state["origin"], 
+                "places": {},
+                "co2_available": 0,
+                "order_countries": [],
+                "clues": {},
+            }
+
+            # Generate the task
+            task = stage.task_criteria(
+                session_state=session_state,
+                airport_manager=airport_manager
+            )
+
+            # Add clues based on selected countries
+            task["clues"] = {
+                country: tips_countries.get(country, "No clue available")
+                for country in task.get("places", {}).keys()
+            }
+
+            # Update origin
+            if task["order_countries"]:
+                last_country = task["order_countries"][-1]
+                # Convert country → airport IATA
+                last_airport = task["places"][last_country]
+                stage_state["origin"] = last_airport
+ 
+            return jsonify(task), 200
+
+        except Exception as e:
+            logger.error(f"Error in stage criteria: {e}")
+            return jsonify({"error": "Failed to generate stage"}), 500
+ 
     # -----------------------------
     # GET Result - /api/result     
     # -----------------------------
@@ -179,27 +231,13 @@ def create_app():
             Retrieve the current game results for a player.
         """
         
-        try:
-            total = game_manager.total
-            session = game_manager.session
-            if not game_manager.total or game_manager.session["game_status"] is None:
-                #return jsonify({"error": "No game played yet"}), 404
-                # Example static data for now
-                data = {
-                    "levels_passed": 5,
-                    "total_distance_km": 20000,
-                    "countries_visited": 15,
-                    "total_co2_kg": 2500,
-                    "game_status": "Win"
-                }
-                return jsonify(data), 200
-        
+        try:   
             data = {
-                "levels_passed": session.get("current_stage", 0),
-                "total_distance_km": total.get("total_distance", 0.0),
-                "countries_visited": len(session.get("places", {})),
-                "total_co2_kg": total.get("total_co2", 0.0),
-                "game_status": session.get("game_status", "Not started")
+                "levels_passed": 5,
+                "total_distance_km": 20000,
+                "countries_visited": 9,
+                "total_co2_kg": 2500,
+                "game_status": "Win"
             }
             return jsonify(data), 200
 
@@ -226,3 +264,4 @@ if __name__ == "__main__":
     app = create_app()
     # Listen ONLY on local machine
     app.run(host="localhost", port=5000, debug="1")
+
