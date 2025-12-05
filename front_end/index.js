@@ -318,7 +318,7 @@ async function showResultsScreen() {
                 </tr>
                 <tr>
                     <td>Game status</td>
-                    <td id="game_status">${statusMessage}</td>
+                    <td id="game_status">${data.game_status}</td>
                 </tr>
             </table>
         </div>
@@ -327,14 +327,99 @@ async function showResultsScreen() {
             <button id="result_best">Best results</button>
             <button id="result_quit">Quit</button>
         </div>
+        
+        <!-- Modal window -->
+        <div id="leaderboard" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Leaderboard</h2>
+                <div id="leaderboard_table">
+                    <table>
+                        <tr>
+                            <th>Place</th>
+                            <th>Name</th>
+                            <th>Distance, km</th>
+                            <th>CO2, kg</th>
+                            <th>Efficiency, %</th>
+                            <th>Status</th>
+                        </tr>
+                        <tr>
+                            <td>1</td>
+                            <td>Maria</td>
+                            <td>10000</td>
+                            <td>2500</td>
+                            <td>90</td>
+                            <td>Win</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Luara</td>
+                            <td>9800</td>
+                            <td>2490</td>
+                            <td>88</td>
+                            <td>Win</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Olena</td>
+                            <td>11000</td>
+                            <td>2800</td>
+                            <td>82</td>
+                            <td>Quit</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
   `;
 
     app.appendChild(screen);
 
     document.getElementById("result_again").onclick = () => showGameScreen();
-    document.getElementById("result_best").onclick = () => showGameScreen();
-    document.getElementById("result_quit").onclick = () => showGameScreen();
+    const modal = document.getElementById("leaderboard");
+    const btnLeaderboard = document.getElementById("result_best");
+    const btnClose = modal.querySelector(".close");
+    document.getElementById("result_quit").onclick = () => showByeScreen();
+
+    btnLeaderboard.onclick = () => {
+      modal.style.display = "block";
+    };
+    btnClose.onclick = () => {
+      modal.style.display = "none";
+    };
+    window.onclick = (event) => {
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    };
+
   }
+}
+
+// ----------------------------------------------
+// BYE SCREEN
+// ----------------------------------------------
+
+async function showByeScreen() {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  app.appendChild(renderHeader());
+
+  const screen = document.createElement("div");
+  screen.className = "bye-container";
+
+  screen.innerHTML = `
+      <div class="bye-message">
+        <h2>Session complete. Aircraft secured.</h2>
+        <p>Thank you for your service, Pilot!</p>
+        <p>The sky await your return!</p>
+        <p>---------------</p>
+        <p>Goodbye!</p>
+      </div>
+    `;
+
+  app.appendChild(screen);
 }
 
 setBackground("./img/background.jpg");
