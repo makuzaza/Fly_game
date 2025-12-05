@@ -1,5 +1,4 @@
 import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults } from "./api.js";
-import { createMapScreen } from "./mapScreen.js";
 
 ("use strict");
 function setBackground(backgroundPath) {
@@ -13,26 +12,6 @@ function renderHeader() {
       <img src="./img/logo.png" alt="EcoTrip" class="logo" />
   `;
   return header;
-}
-
-function showMap() {
-    const screen = createMapScreen(
-        airport => {
-            console.log("Game received airport:", airport);
-
-            // Save airport selection to global game state if needed:
-            // gameState.origin = airport.ident;
-            // OR move to next screen:
-            // showGameScreen();
-        },
-        () => {
-            // When user clicks Results button
-            showResultsScreen();
-        }
-    );
-
-    root.innerHTML = "";
-    root.appendChild(screen);
 }
 
 let gameResults = null;
