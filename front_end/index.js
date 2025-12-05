@@ -1,4 +1,4 @@
-import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults } from "./api.js";
+import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, resetGame } from "./api.js";
 
 ("use strict");
 function setBackground(backgroundPath) {
