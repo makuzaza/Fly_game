@@ -40,6 +40,25 @@ export async function fetchLayoverRoute(origin, destination) {
 }
 
 /* -------------------------------------------------------
+   GET /api/stage
+   Fetch stage criteria: places, origin, co2 budget, order, clues, etc.
+------------------------------------------------------- */
+export async function fetchStage() {
+    try {
+        const res = await fetch(`${API_BASE}/stage`);
+
+        if (!res.ok) {
+            throw new Error(`Failed to fetch stage: ${res.status}`);
+        }
+
+        return await res.json();
+    } catch (err) {
+        console.error("API Error:", err);
+        return null;
+    }
+}
+
+/* -------------------------------------------------------
    GET /api/result
    Fetch player game results
 ------------------------------------------------------- */

@@ -1,7 +1,6 @@
-import { fetchAirportsByCountry } from "./api.js";
+import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults } from "./api.js";
 
 ("use strict");
-
 function setBackground(backgroundPath) {
   const app = document.getElementById("app");
   app.style.backgroundImage = `url(${backgroundPath})`;
@@ -149,10 +148,43 @@ function showRulesScreen() {
 // ----------------------------------------------
 // GAME SCREEN
 // ----------------------------------------------
-function showGameScreen() {
+async function showGameScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
+  // ---- Load Stage data ----
+  const stage = await fetchStage();
+  console.log("Loaded Stage:", stage);
+  console.log('places: ', stage.places)
+
+  function validateCountryInput(code) {
+    // Must be exactly 2 characters (ISO country code)
+    if (code.length !== 2) {
+      return { valid: false, message: "Country code must be 2 letters (e.g. FI, US, JP)." };
+    }
+
+    // Must be alphabetic
+    if (!/^[A-Z]{2}$/.test(code)) {
+      return { valid: false, message: "Country code must contain only letters." };
+    }
+
+    // 2. Check if the ISO code exists in the stage's 'places'
+    if (!stage.places || !stage.places[code]) {
+      return { valid: false, message: `X ${code} is not one of the target countries for this stage.` };
+    }
+
+    // 3. Lookup ICAO code for this country
+    const icao = stage.places[code];
+
+    return {
+        valid: true,
+        iso: code,
+        icao: icao,
+        message: `Correct guess: ${code} -> Airport ${icao}`
+    };
+  }
+
+  // ---- Build UI ----
   app.appendChild(renderHeader());
 
   const screen = document.createElement("div");
@@ -178,6 +210,7 @@ function showGameScreen() {
 
   app.appendChild(screen);
 
+  // ---- Submit btn logc ----
   document.getElementById("btnSubmit").onclick = async () => {
     const code = document
       .getElementById("countryInput")
@@ -185,10 +218,28 @@ function showGameScreen() {
       .toUpperCase();
     const output = document.getElementById("guessResult");
 
+    // --- Validate input ---
     if (!code) {
       output.innerHTML = "<p>Type a country code.</p>";
       return;
     }
+    const validation = validateCountryInput(code);
+    if (!validation.valid) {
+        output.innerHTML = `<p>${validation.message}</p>`;
+        return; // Stop everything
+    } else {
+      console.log(`<p>${validation.message}</p>`);
+    }
+
+    const destination = validation.icao;
+    const origin = stage["origin"]; // use returned stage origin
+
+    // --- Load layover route (only when valid guess) ---
+    console.log("Fetching layover from", origin, "to", destination);
+
+    const layover_route = await fetchLayoverRoute(origin, destination);
+
+    console.log("Loaded layover_route:", layover_route);
 
     const result = await fetchAirportsByCountry(code);
 
@@ -204,7 +255,7 @@ function showGameScreen() {
               .map((a) => `<li>${a.ident} — ${a.name} (${a.city})</li>`)
               .join("")}
         </ul>
-    `;
+    `;    
   };
 
   document.getElementById("btnResults").onclick = () => showResultsScreen();
@@ -222,7 +273,7 @@ async function showResultsScreen() {
   const screen = document.createElement("div");
   screen.className = "screen results-screen";
 
-  const data = await loadResults();
+  const data = await fetchGameResults();
 
   if (!data) {
     screen.innerHTML = `
