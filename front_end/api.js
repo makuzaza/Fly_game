@@ -64,7 +64,7 @@ export async function fetchStage() {
 ------------------------------------------------------- */
 export async function resetGame() {
     try {
-        const res = await fetch(`${API_BASE}/game/reset`, {
+        const res = await fetch(`${API_BASE}/reset`, {
             method: "POST"
         });
 
