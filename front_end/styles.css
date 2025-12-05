@@ -40,8 +40,16 @@ header {
     justify-content: center;
     align-items: center;
   }
-    /*  question box */
 
+input {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    width: 200px;
+}
+
+    /*  question box */
 .question-screen {
     display: flex;
     flex-direction: column;
@@ -78,11 +86,11 @@ header {
 }
 
     /* YES/NO buttons */
-.question-button {
+button {
     background-color: #006ad4;  /* blue */
     color: white;
     border: none;
-    padding: 18px 40px;
+    padding: 0.6rem 1.5rem;
     border-radius: 20px;
     font-size: 1.2rem;
     font-weight: bold;
@@ -90,7 +98,7 @@ header {
     transition: 0.2s ease;
 }
 
-.question-button:hover {
+button:hover {
     background-color: #0054a8;
 }
 
@@ -118,6 +126,10 @@ header {
 
 .game-screen {
     padding-bottom: 1rem;
+}
+
+#btnResults {
+    width: 150px;
 }
 
 /* === Results page === */

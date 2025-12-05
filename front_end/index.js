@@ -41,7 +41,7 @@ function showStartScreen() {
   screen.className = "screen start-screen";
 
   screen.innerHTML = `
-      <img src="./img/logo.png" style="width:300px;" alt="EcoTrip Logo" /><br/>
+      <img src="./img/logo.png" style="width:300px;" alt="EcoTrip Logo" />
       <input id="playerName" placeholder="Enter your name" /><br/>
       <button id="btnStart">Start Game</button>
   `;
