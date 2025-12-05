@@ -292,7 +292,7 @@ async function showResultsScreen() {
   app.appendChild(renderHeader());
 
   const screen = document.createElement("div");
-  screen.className = "screen results-screen";
+  screen.className = "result_container";
 
   const data = await fetchGameResults();
 
@@ -300,7 +300,11 @@ async function showResultsScreen() {
     screen.innerHTML = `
       <h2>Results</h2>
       <p>Error loading results. Please try again.</p>
-      <button id="btnRestart">Play Again</button>
+      <div class="result_buttons">
+            <button id="result_again">Play Again</button>
+            <button id="result_best">Best results</button>
+            <button id="result_quit">Quit</button>
+      </div>
     `;
   } else {
     let statusMessage = "Game Over";
@@ -313,19 +317,44 @@ async function showResultsScreen() {
     }
 
     screen.innerHTML = `
-      <h2>Results</h2>
-      <h3>${statusMessage}</h3>
-      <p><strong>Levels passed:</strong> ${data.levels_passed || 0}</p>
-      <p><strong>Total distance:</strong> ${data.total_distance_km || 0} km</p>
-      <p><strong>Visited countries:</strong> ${data.countries_visited || 0}</p>
-      <p><strong>Total CO₂:</strong> ${data.total_co2_kg || 0} kg</p>
-
-    <button id="btnRestart">Play Again</button>
+        <h1 id="result_status">${statusMessage}</h1> <!-- This should be Win/Lose/Quit -->
+        <h2>Your game results:</h2>
+        <div id="result_table">
+            <table>
+                <tr>
+                    <td>Levels passed</td>
+                    <td id="result_levels">${data.levels_passed || 0}</td>
+                </tr>
+                <tr>
+                    <td>Total distance, km</td>
+                    <td id="result_distance">${data.total_distance_km || 0}</td>
+                </tr>
+                <tr>
+                    <td>Countries visited</td>
+                    <td id="result_countries">${data.countries_visited || 0}</td>
+                </tr>
+                <tr>
+                    <td>Total CO2, kg</td>
+                    <td id="result_co2">${data.total_co2_kg || 0}</td>
+                </tr>
+                <tr>
+                    <td>Game status</td>
+                    <td id="game_status">${statusMessage}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="result_buttons">
+            <button id="result_again">Play Again</button>
+            <button id="result_best">Best results</button>
+            <button id="result_quit">Quit</button>
+        </div>
   `;
 
     app.appendChild(screen);
 
-    document.getElementById("btnRestart").onclick = () => showGameScreen();
+    document.getElementById("result_again").onclick = () => showGameScreen();
+    document.getElementById("result_best").onclick = () => showGameScreen();
+    document.getElementById("result_quit").onclick = () => showGameScreen();
   }
 }
 

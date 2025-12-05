@@ -12,6 +12,8 @@ html {
 
 body {
     margin: 0;
+    width: 100%;
+    height: 100%;
 }
 
 header {
@@ -35,9 +37,9 @@ header {
     justify-content: center;
 }
     /* app */
-#app{
+.app{
     width: 100%;
-    min-height: 100vh;
+    /*min-height: 100vh;*/
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -149,7 +151,8 @@ button:hover {
 }
 
 /* === Results page === */
-.result_container {
+
+#result_container {
     width: 100%;
     display: grid;
     min-height: 100vh;
