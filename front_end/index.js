@@ -1,10 +1,7 @@
 import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, resetGame } from "./api.js";
+import { initMap } from "./mapScreen.js";
 
 ("use strict");
-function setBackground(backgroundPath) {
-  const app = document.getElementById("app");
-  app.style.backgroundImage = `url(${backgroundPath})`;
-}
 
 function renderHeader() {
   const header = document.createElement("header");
@@ -192,9 +189,7 @@ async function showGameScreen() {
 
   screen.innerHTML = `
     <!-- LEFT SIDE: MAP -->
-    <div class="map-box">
-      <iframe src="map.html" style="min-width:800px; height:300px;"></iframe>
-    </div>
+    <div id="map-container"></div>
 
     <div class="side-panel">
       <!-- RIGHT SIDE: TRIP-UPDATE SECTION -->
@@ -216,6 +211,7 @@ async function showGameScreen() {
   `;
 
   app.appendChild(screen);
+  initMap("map-container", "http://localhost:5000");
 
   // ---- Submit btn logc ----
   document.getElementById("btnSubmit").onclick = async () => {
@@ -433,5 +429,4 @@ async function showByeScreen() {
   app.appendChild(screen);
 }
 
-setBackground("./img/background.jpg");
 showStartScreen();
