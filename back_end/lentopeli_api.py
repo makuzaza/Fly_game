@@ -349,7 +349,19 @@ def create_app():
             if backup_session and backup_total:
                 game.session = backup_session
                 game.total = backup_total
-            
+
+            # IMPORTANT: Generate NEW countries and clues for this stage
+            # Clear the old places and regenerate
+            current_stage_num = game.session["current_stage"]
+        
+            # Reset places to empty
+            game.session["places"] = {}
+        
+            # Regenerate stage with NEW random countries
+            stage = Stage(current_stage_num)
+            # Set current_stage back by 1 because task_criteria increments it
+            game.session["current_stage"] = current_stage_num - 1
+            stage.task_criteria(game.session, game.airport_manager)
             # Get current stage info
             countries_to_visit = list(game.session["places"].keys())
             tips = [tips_countries.get(c, "No clue.") for c in countries_to_visit]

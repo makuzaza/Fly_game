@@ -189,6 +189,7 @@ async function saveBackup() {
       current_stage: data.stage,
       co2_available: data.co2_available,
       places: {},
+      game_status: null, 
     };
 
     // Store places as object
@@ -199,6 +200,7 @@ async function saveBackup() {
     gameState.backupTotal = {
       total_distance: data.total_distance,
       total_co2: data.total_co2,
+      total_flights: data.flights_count,
       flight_history: [],
     };
   } catch (error) {
@@ -229,8 +231,23 @@ async function replayStage() {
       gameState.wrongAttempts = 0;
       gameState.replayCount++;
 
+      // Reset all selection state
+      gameState.wrongAttempts = 0;
+      gameState.selectedCountry = null;
+      gameState.selectedAirport = null;
+
+      // Hide all sections and clear UI
+      document.getElementById("airport-selection").style.display = "none";
+      document.getElementById("route-info").style.display = "none";
+      document.getElementById("country-input").value = "";
+
       updateGameDisplay();
       document.getElementById("guess-section").style.display = "block";
+
+      if (mapInitialized) {
+        const { displayAirportMarkers } = await import('./mapScreen.js');
+        displayAirportMarkers();
+      }
     }
   } catch (error) {
     alert("Error replaying stage: " + error.message);
