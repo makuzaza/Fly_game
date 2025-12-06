@@ -130,15 +130,18 @@ button:hover {
 
 /* === Main game page === */
 .game-screen {
-  display: flex;           
-  justify-content: center;
+  display: flex;
   flex-direction: row;
   width: 100%;
-  flex: 1;
+  height: auto;
+  min-height: calc(100vh - 4rem);
 }
+
 /* === LEFT SIDE: MAP === */
 #map-container {
   flex: 2;     /* takes 2 part*/    
+  height: auto;
+  min-height: 200px;
   margin: 10px 0 10px 10px;
   border-radius: 10px;
 }
@@ -163,12 +166,14 @@ button:hover {
   flex-direction: column;
   padding: 10px;
   gap: 10px;
+  height: auto;
 }
 /* === RIGHT SIDE: TRIP-UPDATE SECTION === */
 .trip-update {
   flex: 1.5;     /* takes 1.5 */
   background: #e0e0ff; /* just to visualize */  
   border-radius: 10px;
+  min-height: 150px;
 }
 
 /* === RIGHT SIDE: INTERACTIVE-BOX SECTION === */
@@ -315,6 +320,10 @@ button:hover {
 
     .game-screen {
         flex-direction: column;
+    }
+
+    #map-container {
+        margin: 10px 10px 0 10px;
     }
 
     #result_status {
