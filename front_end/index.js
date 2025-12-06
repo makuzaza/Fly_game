@@ -1,10 +1,7 @@
 import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
+import { initMap } from "./mapScreen.js";
 
 ("use strict");
-function setBackground(backgroundPath) {
-  const app = document.getElementById("app");
-  app.style.backgroundImage = `url(${backgroundPath})`;
-}
 
 function renderHeader() {
   const header = document.createElement("header");
@@ -191,24 +188,30 @@ async function showGameScreen() {
   screen.className = "screen game-screen";
 
   screen.innerHTML = `
-    <h2>Game Screen</h2>
+    <!-- LEFT SIDE: MAP -->
+    <div id="map-container"></div>
 
-    <div class="map-box">
-        <iframe src="map.html" style="min-width:800px; height:300px;"></iframe>
+    <div class="side-panel">
+      <!-- RIGHT SIDE: TRIP-UPDATE SECTION -->
+      <div class="trip-update"> </div>
+
+      <!-- RIGHT SIDE: INTERACTIVE-BOX SECTION -->
+      <div class="interactive-box">
+        <div id="guessResult"></div>
+
+        <div class="guess-section">
+          <input id="countryInput" placeholder="Enter country" />
+          <button id="btnSubmit">Submit</button>
+        </div>
+
+        <button id="btnResults">Results</button>
+      </div>
+
     </div>
-
-    <div class="guess-section">
-      <label>Guess the country:</label>
-      <input id="countryInput" placeholder="Enter country" />
-      <button id="btnSubmit">Submit</button>
-    </div>
-
-    <div id="guessResult"></div>
-
-    <button id="btnResults">Results</button>
   `;
 
   app.appendChild(screen);
+  initMap("map-container", "http://localhost:5000");
 
   // ---- Submit btn logc ----
   document.getElementById("btnSubmit").onclick = async () => {
@@ -260,6 +263,10 @@ async function showGameScreen() {
 
   document.getElementById("btnResults").onclick = () => showResultsScreen();
 }
+// ----------------------------------------------
+// TASK SCREEN
+// ----------------------------------------------
+
 
 // ----------------------------------------------
 // RESULTS SCREEN
@@ -427,5 +434,4 @@ async function showByeScreen() {
   app.appendChild(screen);
 }
 
-setBackground("./img/background.jpg");
 showStartScreen();
