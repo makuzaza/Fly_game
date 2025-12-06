@@ -2,6 +2,7 @@ import logging
 from flask import Flask, jsonify
 from flask_cors import CORS
 from tips_countries import tips_countries
+from db import get_connection
 
 # --- Game Logic ---
 from airport import AirportManager
@@ -266,6 +267,37 @@ def create_app():
         except Exception as e:
             logger.error(f"Error fetching game results: {e}")
             return jsonify({"error": "Failed to fetch game results"}), 500
+
+    # -------------------------------------
+    # GET Leaderboard - /api/leaderboard
+    # -------------------------------------
+    @app.route("/api/leaderboard")
+    def leaderboard():
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                name,
+                ROUND(km_amount)  AS km_amount,
+                ROUND(co2_amount) AS co2_amount,
+                ROUND(efficiency) AS efficiency,
+                status
+            FROM results
+            ORDER BY efficiency DESC
+        """)
+        rows = cursor.fetchall()
+        conn.close()
+
+        # add rank
+        leaderboard_data = []
+        for i, row in enumerate(rows, start=1):
+            row["place"] = i
+            leaderboard_data.append(row)
+
+        top10 = leaderboard_data[:10]
+
+        return jsonify({"leaderboard": top10})
 
     # -----------------------------
     # Error handling

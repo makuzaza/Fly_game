@@ -1,4 +1,4 @@
-import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, resetGame } from "./api.js";
+import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
 
 ("use strict");
 function setBackground(backgroundPath) {
@@ -335,38 +335,17 @@ async function showResultsScreen() {
                 <h2>Leaderboard</h2>
                 <div id="leaderboard_table">
                     <table>
-                        <tr>
-                            <th>Place</th>
-                            <th>Name</th>
-                            <th>Distance, km</th>
-                            <th>CO2, kg</th>
-                            <th>Efficiency, %</th>
-                            <th>Status</th>
-                        </tr>
-                        <tr>
-                            <td>1</td>
-                            <td>Maria</td>
-                            <td>10000</td>
-                            <td>2500</td>
-                            <td>90</td>
-                            <td>Win</td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Luara</td>
-                            <td>9800</td>
-                            <td>2490</td>
-                            <td>88</td>
-                            <td>Win</td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>Olena</td>
-                            <td>11000</td>
-                            <td>2800</td>
-                            <td>82</td>
-                            <td>Quit</td>
-                        </tr>
+                        <thead>
+                            <tr>
+                                <th>Place</th>
+                                <th>Name</th>
+                                <th>Distance, km</th>
+                                <th>CO2, kg</th>
+                                <th>Efficiency, %</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body"></tbody>
                     </table>
                 </div>
             </div>
@@ -381,7 +360,8 @@ async function showResultsScreen() {
     const btnClose = modal.querySelector(".close");
     document.getElementById("result_quit").onclick = () => showByeScreen();
 
-    btnLeaderboard.onclick = () => {
+    btnLeaderboard.onclick = async () => {
+      await loadLeaderboard();
       modal.style.display = "block";
     };
     btnClose.onclick = () => {
@@ -394,6 +374,31 @@ async function showResultsScreen() {
     };
 
   }
+}
+
+// Leaderboard loading
+async function loadLeaderboard() {
+  const result = await fetchLeaderboard();
+  if (!result) return;
+
+  const tableBody = document.getElementById("leaderboard-body");
+  tableBody.innerHTML = "";
+
+  result.leaderboard.forEach(player => {
+    const row = document.createElement("tr");
+    if (player.name === result.current_name) {
+      row.style.backgroundColor = "#ffeeba";
+    }
+    row.innerHTML = `
+      <td>${player.place}</td>
+      <td>${player.name}</td>
+      <td>${player.km_amount}</td>
+      <td>${player.co2_amount}</td>
+      <td>${player.efficiency}%</td>
+      <td>${player.status}</td>
+    `;
+    tableBody.appendChild(row);
+  });
 }
 
 // ----------------------------------------------
