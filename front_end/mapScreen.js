@@ -1,3 +1,4 @@
+import { fetchAirports } from "./api.js";
 export { initMap };
 
 let map = null;
@@ -12,18 +13,8 @@ async function initMap(containerId = "map-container", apiBaseUrl = "") {
         maxZoom: 19
     }).addTo(map);
 
-    await loadAirports(apiBaseUrl);
+    airports = await fetchAirports(apiBaseUrl);
     displayAirportMarkers();
-}
-
-async function loadAirports(apiBaseUrl) {
-    try {
-        const response = await fetch(`${apiBaseUrl}/api/airports`);
-        airports = await response.json();
-        console.log("Loaded airports:", airports.length);
-    } catch (err) {
-        console.error("Failed to load airports", err);
-    }
 }
 
 function displayAirportMarkers() {
