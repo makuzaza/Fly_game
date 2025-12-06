@@ -129,7 +129,7 @@ button:hover {
 }
 
 /* === Main game page === */
-.game-screen{
+.game-screen {
   display: flex;           
   justify-content: center;
   flex-direction: row;
@@ -311,7 +311,11 @@ button:hover {
 @media screen and (max-width: 600px) {
     .question-buttons {
         gap: 10px;
-}
+    }
+
+    .game-screen {
+        flex-direction: column;
+    }
 
     #result_status {
         margin: 0;
