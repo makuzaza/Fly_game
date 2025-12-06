@@ -48,7 +48,6 @@ function displayAirportMarkers() {
             </button>
         `);
 
-        // Add handler when popup opens
         marker.on("popupopen", () => {
             const btn = document.querySelector(".choose-airport-btn");
             if (btn) {
