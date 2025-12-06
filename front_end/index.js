@@ -191,21 +191,28 @@ async function showGameScreen() {
   screen.className = "screen game-screen";
 
   screen.innerHTML = `
-    <h2>Game Screen</h2>
-
+    <!-- LEFT SIDE: MAP -->
     <div class="map-box">
-        <iframe src="map.html" style="min-width:800px; height:300px;"></iframe>
+      <iframe src="map.html" style="min-width:800px; height:300px;"></iframe>
     </div>
 
-    <div class="guess-section">
-      <label>Guess the country:</label>
-      <input id="countryInput" placeholder="Enter country" />
-      <button id="btnSubmit">Submit</button>
+    <div class="side-panel">
+      <!-- RIGHT SIDE: TRIP-UPDATE SECTION -->
+      <div class="trip-update"> </div>
+
+      <!-- RIGHT SIDE: INTERACTIVE-BOX SECTION -->
+      <div class="interactive-box">
+        <div id="guessResult"></div>
+
+        <div class="guess-section">
+          <input id="countryInput" placeholder="Enter country" />
+          <button id="btnSubmit">Submit</button>
+        </div>
+
+        <button id="btnResults">Results</button>
+      </div>
+
     </div>
-
-    <div id="guessResult"></div>
-
-    <button id="btnResults">Results</button>
   `;
 
   app.appendChild(screen);
@@ -260,6 +267,10 @@ async function showGameScreen() {
 
   document.getElementById("btnResults").onclick = () => showResultsScreen();
 }
+// ----------------------------------------------
+// TASK SCREEN
+// ----------------------------------------------
+
 
 // ----------------------------------------------
 // RESULTS SCREEN
