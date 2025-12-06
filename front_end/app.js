@@ -471,6 +471,11 @@ async function handleConfirmFlight() {
   gameState.originName = info?.name || "";
   gameState.originCountry = info?.country || "";
 
+  if (mapInitialized) {
+        const { displayAirportMarkers } = await import('./mapScreen.js');
+        displayAirportMarkers();
+    }
+    
   if (result.game_complete) {
     alert("🎉 Congratulations! You completed all stages!");
     const finalResults = await getGameResults();
@@ -501,23 +506,6 @@ async function handleConfirmFlight() {
 
 function handleCancelFlight() {
   document.getElementById("route-info").style.display = "none";
-
-  // Clear route from map
-  if (mapScreen) {
-    // Re-highlight available airports
-    const airportsList = document.getElementById("airports-list");
-    if (
-      airportsList &&
-      document.getElementById("airport-selection").style.display === "block"
-    ) {
-      // Get current airports being shown
-      const buttons = airportsList.querySelectorAll(".airport-btn");
-      if (buttons.length > 0) {
-        // Extract airport codes and re-highlight
-        mapScreen.displayAirportMarkers();
-      }
-    }
-  }
 }
 
 export {

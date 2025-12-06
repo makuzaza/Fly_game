@@ -18,6 +18,7 @@ let markers = [];
 let routeLine = null;
 let onAirportClickCallback = null;
 let apiUrl = "";
+let availableAirportCodes = []; // Track which airports can be selected
 
 // Initialize the map
 async function initMap(containerId = "map-container", apiBaseUrl = "") {
@@ -55,6 +56,7 @@ function displayAirportMarkers() {
     // Clear existing markers
     markers.forEach(marker => marker.remove());
     markers = [];
+    availableAirportCodes = []; // Clear available airports
 
     airports.forEach(airport => {
         const marker = L.circleMarker([airport.lat, airport.lng], {
@@ -66,19 +68,12 @@ function displayAirportMarkers() {
             fillOpacity: 0.6
         });
 
-        // Add popup with airport info
+        // Add popup with airport info (no button)
         marker.bindPopup(`
             <strong>${airport.name}</strong><br>
             ${airport.ident}<br>
             ${airport.city}, ${airport.country}
         `);
-
-        // Make marker clickable
-        marker.on('click', () => {
-            if (onAirportClickCallback) {
-                onAirportClickCallback(airport);
-            }
-        });
 
         marker.addTo(map);
         markers.push(marker);
@@ -89,6 +84,7 @@ function displayAirportMarkers() {
 function highlightAirports(airportCodes) {
     markers.forEach(marker => marker.remove());
     markers = [];
+    availableAirportCodes = airportCodes; // Store which airports are selectable
 
     airports.forEach(airport => {
         const isHighlighted = airportCodes.includes(airport.ident);
@@ -102,18 +98,35 @@ function highlightAirports(airportCodes) {
             fillOpacity: isHighlighted ? 0.9 : 0.6
         });
 
-        marker.bindPopup(`
-            <strong>${airport.name}</strong><br>
-            ${airport.ident}<br>
-            ${airport.city}, ${airport.country}
-            ${isHighlighted ? '<br><em>Destination Available</em>' : ''}
-        `);
+        // Only add "Choose" button for highlighted (red) airports
+        const popupHTML = isHighlighted 
+            ? `
+                <strong>${airport.name}</strong><br>
+                ${airport.ident}<br>
+                ${airport.city}, ${airport.country}<br>
+                <button class="choose-airport-btn" data-ident="${airport.ident}">Choose</button>
+              `
+            : `
+                <strong>${airport.name}</strong><br>
+                ${airport.ident}<br>
+                ${airport.city}, ${airport.country}
+              `;
 
-        marker.on('click', () => {
-            if (onAirportClickCallback) {
-                onAirportClickCallback(airport);
-            }
-        });
+        marker.bindPopup(popupHTML);
+
+        // Only add click handler for highlighted airports
+        if (isHighlighted) {
+            marker.on("popupopen", () => {
+                const btn = document.querySelector(".choose-airport-btn");
+                if (btn) {
+                    btn.onclick = () => {
+                        if (onAirportClickCallback) {
+                            onAirportClickCallback(airport);
+                        }
+                    };
+                }
+            });
+        }
 
         marker.addTo(map);
         markers.push(marker);
@@ -154,6 +167,8 @@ function highlightRoute(routeData) {
 
     const routeCodes = routeData.route.map(stop => stop.ident);
     drawRoute(routeCodes);
+    
+    // Keep airports selectable when showing route (don't clear availableAirportCodes)
 
     // Highlight route airports differently
     markers.forEach(marker => marker.remove());
@@ -162,6 +177,7 @@ function highlightRoute(routeData) {
     airports.forEach(airport => {
         const routeIndex = routeCodes.indexOf(airport.ident);
         const isInRoute = routeIndex !== -1;
+        const isAvailable = availableAirportCodes.includes(airport.ident);
         
         let color = "#3388ff";
         let radius = 5;
@@ -177,6 +193,10 @@ function highlightRoute(routeData) {
                 color = "#ffaa00"; // Stop - orange
                 radius = 8;
             }
+        } else if (isAvailable) {
+            // Keep available airports red
+            color = "#ff0000";
+            radius = 8;
         }
         
         const marker = L.circleMarker([airport.lat, airport.lng], {
@@ -199,14 +219,27 @@ function highlightRoute(routeData) {
             popupText += `<br><em>${stop.type || 'Stop'}</em>`;
         }
 
+        // Add "Choose" button for available airports
+        if (isAvailable) {
+            popupText += `<br><button class="choose-airport-btn" data-ident="${airport.ident}">Choose</button>`;
+        }
+
         marker.bindPopup(popupText);
-
-        marker.on('click', () => {
-            if (onAirportClickCallback) {
-                onAirportClickCallback(airport);
-            }
-        });
-
+        
+        // Add click handler for available airports
+        if (isAvailable) {
+            marker.on("popupopen", () => {
+                const btn = document.querySelector(".choose-airport-btn");
+                if (btn) {
+                    btn.onclick = () => {
+                        if (onAirportClickCallback) {
+                            onAirportClickCallback(airport);
+                        }
+                    };
+                }
+            });
+        }
+        
         marker.addTo(map);
         markers.push(marker);
     });
