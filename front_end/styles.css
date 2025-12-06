@@ -46,7 +46,7 @@ header {
     /* app */
 #app{
     width: 100%;
-    min-height: 100vh !important;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -134,7 +134,7 @@ button:hover {
   flex-direction: row;
   width: 100%;
   height: auto;
-  min-height: calc(100vh - 4rem);
+  min-height: calc(100vh - 60px);
 }
 
 /* === LEFT SIDE: MAP === */
