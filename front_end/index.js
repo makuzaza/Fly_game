@@ -179,14 +179,16 @@ function showGameScreen() {
 
       <!-- RIGHT SIDE: INTERACTIVE-BOX SECTION -->
       <div class="interactive-box">
-        <div id="guessResult"></div>
+        <div id="chatMessages"></div>
 
         <div class="guess-section">
           <input id="countryInput" placeholder="Enter country" />
-          <button id="btnSubmit">Submit</button>
+          <button id="btnSubmit">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+            <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
+          </button>
+          <button id="btnMoreOptions">+</button>
         </div>
-
-        <button id="btnResults">Results</button>
       </div>
 
     </div>
