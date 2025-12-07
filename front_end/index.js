@@ -154,6 +154,10 @@ function showRulesScreen() {
 }
 
 // ----------------------------------------------
+// TASK SCREEN
+// ----------------------------------------------
+
+// ----------------------------------------------
 // GAME SCREEN
 // ----------------------------------------------
 function showGameScreen() {
@@ -203,7 +207,7 @@ function showGameScreen() {
       .getElementById("countryInput")
       .value.trim()
       .toUpperCase();
-    const output = document.getElementById("guessResult");
+    const output = document.getElementById("chatMessages");
 
     // --- Validate input ---
     const validation = validateCountryInput(code);
@@ -244,10 +248,6 @@ function showGameScreen() {
 
   document.getElementById("btnResults").onclick = () => showResultsScreen();
 }
-// ----------------------------------------------
-// TASK SCREEN
-// ----------------------------------------------
-
 
 // ----------------------------------------------
 // RESULTS SCREEN
