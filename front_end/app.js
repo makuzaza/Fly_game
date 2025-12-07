@@ -6,7 +6,8 @@ import {
   resizeMap,
   getAirports,
 } from "./mapScreen.js";
-import { showScreen } from "./index.js";
+
+import { showGameScreen, showResultsScreen } from "./index.js";
 // -----------------------------
 // Game State
 // -----------------------------
@@ -34,6 +35,7 @@ function getAirportInfo(ident) {
   const airports = getAirports();
   return airports.find((a) => a.ident === ident) || null;
 }
+
 // -----------------------------
 // Initialize Map when game screen is shown
 // -----------------------------
@@ -87,10 +89,12 @@ async function startNewGame(playerName) {
     // Save backup for potential replay
     await saveBackup();
 
-    updateGameDisplay();
-    showScreen("screen-game");
+    // Show game screen first
+    showGameScreen();
 
-    // Initialize map
+    // Then update display and initialize map
+    updateGameDisplay();
+
     setTimeout(async () => {
       await initializeMap();
     }, 100);
@@ -189,7 +193,7 @@ async function saveBackup() {
       current_stage: data.stage,
       co2_available: data.co2_available,
       places: {},
-      game_status: null, 
+      game_status: null,
     };
 
     // Store places as object
@@ -245,7 +249,7 @@ async function replayStage() {
       document.getElementById("guess-section").style.display = "block";
 
       if (mapInitialized) {
-        const { displayAirportMarkers } = await import('./mapScreen.js');
+        const { displayAirportMarkers } = await import("./mapScreen.js");
         displayAirportMarkers();
       }
     }
@@ -284,7 +288,7 @@ function updateGameDisplay() {
     gameState.co2Available || 0
   ).toFixed(2);
 
-  let originText = gameState.origin;
+  let originText = "EFHK - Helsinki-Vantaa (FI)";
   if (gameState.originName)
     originText = `${gameState.origin} - ${gameState.originName} (${gameState.originCountry})`;
   document.getElementById("current-origin").textContent = originText;
@@ -379,6 +383,7 @@ function displayRoute(routeData) {
 }
 
 function showResults(results) {
+  showResultsScreen();
   const container = document.getElementById("results-container");
   container.innerHTML = `
         <h3>Your Results:</h3>
@@ -390,7 +395,6 @@ function showResults(results) {
             <tr><td>Status:</td><td>${results.game_status}</td></tr>
         </table>
     `;
-  showScreen("screen-results");
 }
 
 // -----------------------------
@@ -416,6 +420,7 @@ function handleCO2Failure() {
     endGameWithLose();
   }
 }
+
 async function handleCountrySubmit() {
   const input = document
     .getElementById("country-input")
@@ -444,7 +449,6 @@ async function handleCountrySubmit() {
       ).textContent = `❌ Wrong! Tip: The correct country is ${gameState.countries[0]}`;
       document.getElementById("attempts-info").textContent =
         "You can now type it to continue.";
-      // Don't reset attempts here - keep it at 3 so user knows tip is active
     } else {
       document.getElementById(
         "guess-feedback"
@@ -489,10 +493,10 @@ async function handleConfirmFlight() {
   gameState.originCountry = info?.country || "";
 
   if (mapInitialized) {
-        const { displayAirportMarkers } = await import('./mapScreen.js');
-        displayAirportMarkers();
-    }
-    
+    const { displayAirportMarkers } = await import("./mapScreen.js");
+    displayAirportMarkers();
+  }
+
   if (result.game_complete) {
     alert("🎉 Congratulations! You completed all stages!");
     const finalResults = await getGameResults();

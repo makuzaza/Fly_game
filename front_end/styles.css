@@ -9,11 +9,6 @@ body {
     height: 100vh;
 }
 
-.screen {
-    display: none;
-    text-align: center;
-}
-
 .screen.active {
     display: block;
 }
@@ -58,7 +53,6 @@ button:hover {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: #38a1db;
 }
 
 input {
