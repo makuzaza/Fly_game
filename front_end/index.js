@@ -11,6 +11,16 @@ function renderHeader() {
   return header;
 }
 
+// ---- Load Stage data and store it in the sessionStorage ---- 
+async function loadStage() {
+  const stage = await fetchStage();
+  sessionStorage.setItem("stage", JSON.stringify(stage));
+  console.log("Loaded Stage:", stage);
+  console.log('places: ', stage.places);
+  return;
+};
+loadStage();
+
 let gameResults = null;
 // this functions needs to be moved in api.js
 async function loadResults() {
@@ -149,10 +159,8 @@ async function showGameScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  // ---- Load Stage data ----
-  const stage = await fetchStage();
-  console.log("Loaded Stage:", stage);
-  console.log('places: ', stage.places)
+  // ---- get stored stage data ----
+  const stage = JSON.parse(sessionStorage.getItem("stage"));
 
   function validateCountryInput(code) {
     // Must be exactly 2 characters (ISO country code)
