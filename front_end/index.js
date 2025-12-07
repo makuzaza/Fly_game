@@ -1,5 +1,6 @@
 import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
 import { initMap } from "./mapScreen.js";
+import { validateCountryInput } from "./chatHelpers.js";
 
 ("use strict");
 
@@ -155,39 +156,12 @@ function showRulesScreen() {
 // ----------------------------------------------
 // GAME SCREEN
 // ----------------------------------------------
-async function showGameScreen() {
+function showGameScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
   // ---- get stored stage data ----
   const stage = JSON.parse(sessionStorage.getItem("stage"));
-
-  function validateCountryInput(code) {
-    // Must be exactly 2 characters (ISO country code)
-    if (code.length !== 2) {
-      return { valid: false, message: "Country code must be 2 letters (e.g. FI, US, JP)." };
-    }
-
-    // Must be alphabetic
-    if (!/^[A-Z]{2}$/.test(code)) {
-      return { valid: false, message: "Country code must contain only letters." };
-    }
-
-    // 2. Check if the ISO code exists in the stage's 'places'
-    if (!stage.places || !stage.places[code]) {
-      return { valid: false, message: `X ${code} is not one of the target countries for this stage.` };
-    }
-
-    // 3. Lookup ICAO code for this country
-    const icao = stage.places[code];
-
-    return {
-        valid: true,
-        iso: code,
-        icao: icao,
-        message: `Correct guess: ${code} -> Airport ${icao}`
-    };
-  }
 
   // ---- Build UI ----
   app.appendChild(renderHeader());
@@ -230,11 +204,8 @@ async function showGameScreen() {
     const output = document.getElementById("guessResult");
 
     // --- Validate input ---
-    if (!code) {
-      output.innerHTML = "<p>Type a country code.</p>";
-      return;
-    }
     const validation = validateCountryInput(code);
+
     if (!validation.valid) {
         output.innerHTML = `<p>${validation.message}</p>`;
         return; // Stop everything
