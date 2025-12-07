@@ -218,6 +218,32 @@ button:hover {
   cursor: pointer;
 }
 
+.more-menu {
+  position: absolute;
+  right: 10px;
+  bottom: 70px;
+  background: #e8f1ff;
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.25);
+  border: 1px solid #bcd4ff;
+  z-index: 999;
+}
+.more-menu.hidden {
+  display: none;
+}
+.more-menu button {
+  background: #006ad4;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
 /* === Results page === */
 
 .result_container {
