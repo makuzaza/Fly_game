@@ -99,6 +99,24 @@ export async function fetchGameResults() {
 }
 
 /* -------------------------------------------------------
+   GET /api/leaderboard
+   Fetch leaderboard from results table
+------------------------------------------------------- */
+
+export async function fetchLeaderboard() {
+  try {
+    const response = await fetch(`http://localhost:5000/api/leaderboard`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch leaderboard");
+    }
+    return await response.json();
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+/* -------------------------------------------------------
     GET /api/airports/country/<code>
     Fetch airports by country code
 ------------------------------------------------------- */
