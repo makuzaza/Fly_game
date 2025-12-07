@@ -193,6 +193,15 @@ function showGameScreen() {
           </button>
           <button id="btnMoreOptions">+</button>
         </div>
+        <!-- MINI MODAL / POPUP MENU -->
+        <div id="moreMenu" class="more-menu hidden">
+          <button id="btnResults">Results</button>
+          <button id="btnRules">Rules</button>
+          <button id="btnLeaderboard">Leaderboard</button>
+          <button id="btnReplayStage">Replay Game</button>
+          <button id="btnReplayGame">Replay Stage</button>
+        </div>
+
       </div>
 
     </div>
@@ -246,7 +255,44 @@ function showGameScreen() {
     `;    
   };
 
-  document.getElementById("btnResults").onclick = () => showResultsScreen();
+  // ---- Toggle btn logic ----
+  const btnMore = document.getElementById("btnMoreOptions");
+  const menu = document.getElementById("moreMenu");
+
+  btnMore.onclick = (e) => {
+    e.stopPropagation();  
+    menu.classList.toggle("hidden");
+  };
+
+  // Close popup when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!menu.contains(e.target) && e.target !== btnMore) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  // Button actions
+  document.getElementById("btnResults").onclick = () => {
+    console.log("Results clicked");
+    showResultsScreen(); 
+  };
+
+  document.getElementById("btnRules").onclick = () => {
+    console.log("Rules clicked");
+  };
+
+  document.getElementById("btnLeaderboard").onclick = () => {
+    console.log("Leaderboard clicked");
+  };
+
+  document.getElementById("btnReplayStage").onclick = () => {
+    console.log("Replay btnReplayStage clicked");
+  };
+
+  document.getElementById("btnReplayGame").onclick = () => {
+    console.log("Replay btnReplayStage clicked");
+  };
+
 }
 
 // ----------------------------------------------
