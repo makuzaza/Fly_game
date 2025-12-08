@@ -186,6 +186,7 @@ button:hover {
   border-radius: 10px;
   border: 1px solid #ccc;
   font-family: "Arial", sans-serif; /* Check if there will be a padronized font in future*/
+  position: relative;
 }
 #chatMessages{
   flex: 1;
