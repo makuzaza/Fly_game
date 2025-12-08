@@ -6,6 +6,14 @@ import {
   gameState,
 } from "./app.js";
 
+function renderHeader() {
+  const header = document.createElement("header");
+  header.innerHTML = `
+      <img src="./assets/logo.png" alt="EcoTrip" class="logo" />
+  `;
+  return header;
+}
+
 // -----------------------------
 // Show Start Screen
 // -----------------------------
@@ -15,9 +23,9 @@ function showStartScreen() {
   const screen = document.createElement("div");
   screen.className = "screen start-screen";
   screen.innerHTML = `
-    <div><img src="assets/logo.png" class="logo" alt="EcoTrip Logo" /></div>
+    <img src="assets/logo.png" class="logo_main" alt="EcoTrip Logo" />
     <input id="player-name" type="text" placeholder="Enter your name" />
-    <div><button id="btn-start">Start Game</button></div>
+    <button id="btn-start">Start Game</button>
   `;
   app.appendChild(screen);
 
@@ -38,12 +46,13 @@ function showStartScreen() {
 function showRulesChoiceScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
+  app.appendChild(renderHeader());
   const screen = document.createElement("div");
   screen.className = "screen rules-choice-screen";
   screen.innerHTML = `
-    <h2>Would you like to read the background story?</h2>
-    <button id="btn-yes-rules">Yes</button>
-    <button id="btn-no-rules">No</button>
+    <h2>Would you like to read the rules?</h2>
+    <div><button id="btn-yes-rules">Yes</button>
+    <button id="btn-no-rules">No</button></div>
   `;
   app.appendChild(screen);
 
@@ -58,10 +67,11 @@ function showRulesChoiceScreen() {
 function showRulesScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
+  app.appendChild(renderHeader());
   const screen = document.createElement("div");
   screen.className = "screen rules-screen";
   screen.innerHTML = `
-    <h2>Background Story</h2>
+    <h2>Rules:</h2>
     <p>Plan your flights wisely to stay within CO2 and flight limits!</p>
     <p>You will visit different countries based on clues, manage your CO2 budget, and complete 5 stages.</p>
     <button id="btn-rules-continue">Continue</button>
@@ -78,18 +88,19 @@ function showRulesScreen() {
 export function showGameScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
+  app.appendChild(renderHeader());
   const screen = document.createElement("div");
   screen.className = "screen game-screen";
   screen.innerHTML = `
-    <h2>EcoTrip Mission</h2>
+    <div id="map-container"></div>
+    
+    <div class="game-info-container">
     
     <div id="game-info">
-        <h3>Stage <span id="current-stage">1</span>/5</h3>
+        <p>Stage <span id="current-stage">1</span>/5</p>
         <p>💨 CO2 Available: <span id="co2-display">0</span> kg</p>
         <p>📍 Current Location: <span id="current-origin"></span></p>
     </div>
-
-    <div id="map-container" style="height: 400px; width: 100%; margin: 20px 0; border: 2px solid #ccc;"></div>
 
     <div id="mission-container">
         <h3>🕵️ Country Clues:</h3>
@@ -113,7 +124,7 @@ export function showGameScreen() {
             <button id="btn-confirm-flight">Confirm Flight</button>
             <button id="btn-cancel-flight">Choose Different Airport</button>
         </div>
-    </div>
+    </div></div>
   `;
   app.appendChild(screen);
 
@@ -139,6 +150,7 @@ export function showGameScreen() {
 export function showResultsScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
+  app.appendChild(renderHeader());
   const screen = document.createElement("div");
   screen.className = "screen results-screen";
   screen.innerHTML = `
