@@ -209,7 +209,14 @@ async function showGameScreen() {
 
   screen.innerHTML = `
     <!-- LEFT SIDE: MAP -->
-    <div id="map-container"></div>
+    <div id="map-container">
+        <!-- FOOTER: 3 tips -->
+        <footer id="tips-footer" aria-label="Tips">
+            <div class="tip" id="tip1"><span class="tip-label">Tip 1:</span> unguessed</div>
+            <div class="tip highlighted" id="tip2"><span class="tip-label">Tip 2:</span> guessed</div>
+            <div class="tip" id="tip3"><span class="tip-label">Tip 3:</span> unguessed</div>
+        </footer>
+    </div>
 
     <div class="side-panel">
       <!-- RIGHT SIDE: TRIP-UPDATE SECTION -->
