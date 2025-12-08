@@ -224,11 +224,21 @@ button:hover {
   flex: 2.5;     /* takes 2.5*/
   display: flex;
   flex-direction: column;
-  background: #e0e0ff; /* just to visualize */
+  background: #ece5dd;
+  overflow: hidden;
   border-radius: 10px;
+  border: 1px solid #ccc;
+  font-family: "Arial", sans-serif; /* Check if there will be a padronized font in future*/
+  position: relative;
 }
-#btnResults {
-    width: 150px;
+#chatMessages{
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 221px;
 }
 
 #quit-modal {
@@ -276,6 +286,73 @@ button:hover {
 
 .modal-buttons button:hover {
   background-color: #0054a8;
+}
+
+/*Chat area */
+.guess-section{
+  display: flex;
+  padding: 10px;
+  background: #f0f0f0;
+  border-top: 1px solid #ccc;
+}
+.msg { 
+  max-width: 80%;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.3;
+}
+.msg.user {
+  background: #d4f8c4;
+  align-self: flex-end;
+  border-bottom-right-radius: 0;
+}
+.msg.system {
+  background: #fff;
+  align-self: flex-start;
+  border-bottom-left-radius: 0;
+}
+/*Input area (bottom bar) */
+#countryInput {
+  flex: 1;
+  padding: 8px;
+  border-radius: 20px;
+  border: 1px solid #bbb;
+  outline: none;
+  padding-left: 15px;
+}
+.guess-section button {
+  margin-left: 10px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+}
+/*Toggle btn */
+.more-menu {
+  position: absolute;
+  right: 10px;
+  bottom: 70px;
+  background: #e8f1ff;
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.25);
+  border: 1px solid #bcd4ff;
+  z-index: 999;
+}
+.more-menu.hidden {
+  display: none;
+}
+.more-menu button {
+  background: #006ad4;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 /* === Results page === */

@@ -1,5 +1,6 @@
 import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
 import { initMap } from "./mapScreen.js";
+import { get_game_status, introStage1, addSystemMsg } from "./chatHelpers.js";
 
 ("use strict");
 
@@ -22,6 +23,28 @@ function renderHeaderWithQuit() {
     document.getElementById("quit-modal").style.display = "flex";
   };
   return header;
+}
+// ---- Load Stage data and store it in the sessionStorage ---- 
+async function loadStage() {
+  const stage = await fetchStage();
+  sessionStorage.setItem("stage", JSON.stringify(stage));
+  console.log("Loaded Stage:", stage);
+  console.log('places: ', stage.places);
+  return;
+};
+loadStage();
+
+// =============================
+// Game Session State Manager
+// =============================
+function getSession() {
+  return JSON.parse(sessionStorage.getItem("gameSession")) || {};
+}
+function setSession(updates) {
+  const current = getSession();
+  const updated = { ...current, ...updates };
+  sessionStorage.setItem("gameSession", JSON.stringify(updated));
+  return updated;
 }
 
 // ----------------------------------------------
@@ -147,37 +170,36 @@ async function showGameScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  // ---- Load Stage data ----
-  const stage = await fetchStage();
-  console.log("Loaded Stage:", stage);
-  console.log('places: ', stage.places)
+  // ------------------------------------
+  // Load Stage + Session
+  // ------------------------------------
+  let stage = get_game_status();  
+  let session = getSession() || {};
+    console.log(session);
 
-  function validateCountryInput(code) {
-    // Must be exactly 2 characters (ISO country code)
-    if (code.length !== 2) {
-      return { valid: false, message: "Country code must be 2 letters (e.g. FI, US, JP)." };
+    // if no session or stage exists, or user wants fresh start
+    if (!session || !stage) {
+      sessionStorage.removeItem("session");
+      sessionStorage.removeItem("stage");
+      stage = await loadStage();   // create new stage
+      session = {};
     }
+    console.log("No session or stage found. Starting fresh.");
 
-    // Must be alphabetic
-    if (!/^[A-Z]{2}$/.test(code)) {
-      return { valid: false, message: "Country code must contain only letters." };
-    }
+    // Initialize session fields
+    session.playerName      ??= sessionStorage.getItem("playerName");
+    session.currentStage    ??= stage.current_stage;    // 1–3
+    session.orderCountries  ??= stage.order_countries;  // [ISO1, ISO2, ISO3]
+    session.clueGuesses     ??= [];                     // per stage guesses
+    session.origin          ??= stage.origin;
+    session.startOrigin     ??= stage.origin;
+    session.wrongGuessCount ??= 0;
+    session.initialCo2      ??= stage.co2_available;
+    session.co2Available    ??= stage.co2_available;
+    session.places          ??= stage.places;
 
-    // 2. Check if the ISO code exists in the stage's 'places'
-    if (!stage.places || !stage.places[code]) {
-      return { valid: false, message: `X ${code} is not one of the target countries for this stage.` };
-    }
-
-    // 3. Lookup ICAO code for this country
-    const icao = stage.places[code];
-
-    return {
-        valid: true,
-        iso: code,
-        icao: icao,
-        message: `Correct guess: ${code} -> Airport ${icao}`
-    };
-  }
+    setSession(session);
+    console.log('session: ', session);
 
   // ---- Build UI ----
   app.appendChild(renderHeaderWithQuit());
@@ -195,11 +217,20 @@ async function showGameScreen() {
 
       <!-- RIGHT SIDE: INTERACTIVE-BOX SECTION -->
       <div class="interactive-box">
-        <div id="guessResult"></div>
+        <div id="chatMessages"></div>
 
         <div class="guess-section">
           <input id="countryInput" placeholder="Enter country" />
-          <button id="btnSubmit">Submit</button>
+          <button id="btnSubmit">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+            <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
+          </button>
+          <button id="btnMoreOptions">+</button>
+        </div>
+        <!-- MINI MODAL / POPUP MENU -->
+        <div id="moreMenu" class="more-menu hidden">
+          <button id="btnResults">Results</button>
+          <button id="btnRules">Rules</button>
         </div>
 
       </div>
@@ -240,57 +271,41 @@ async function showGameScreen() {
   initMap("map-container", "http://localhost:5000");
 
   // ---- Submit btn logc ----
-  document.getElementById("btnSubmit").onclick = async () => {
-    const code = document
-      .getElementById("countryInput")
-      .value.trim()
-      .toUpperCase();
-    const output = document.getElementById("guessResult");
+  const output = document.getElementById("chatMessages");
+  // ------------------------------------
+  // Intro for Stage 1
+  // ------------------------------------
+  if (session.currentStage === 1 && session.clueGuesses.length === 0) {
+      introStage1(output, session.playerName);
+      console.log("IntroStage1 triggered for player:", session.playerName);
+  }
 
-    // --- Validate input ---
-    if (!code) {
-      output.innerHTML = "<p>Type a country code.</p>";
-      return;
+  // ---- Toggle btn logic ----
+  const btnMore = document.getElementById("btnMoreOptions");
+  const menu = document.getElementById("moreMenu");
+
+  btnMore.onclick = (e) => {
+    e.stopPropagation();  
+    menu.classList.toggle("hidden");
+  };
+
+  // Close popup when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!menu.contains(e.target) && e.target !== btnMore) {
+      menu.classList.add("hidden");
     }
-    const validation = validateCountryInput(code);
-    if (!validation.valid) {
-        output.innerHTML = `<p>${validation.message}</p>`;
-        return; // Stop everything
-    } else {
-      console.log(`<p>${validation.message}</p>`);
-    }
+  });
 
-    const destination = validation.icao;
-    const origin = stage["origin"]; // use returned stage origin
+  // Button actions
+  document.getElementById("btnResults").onclick = () => {
+    console.log("Results clicked");
+    showResultsScreen(); 
+  };
 
-    // --- Load layover route (only when valid guess) ---
-    console.log("Fetching layover from", origin, "to", destination);
-
-    const layover_route = await fetchLayoverRoute(origin, destination);
-
-    console.log("Loaded layover_route:", layover_route);
-
-    const result = await fetchAirportsByCountry(code);
-
-    if (!result || result.airports.length === 0) {
-      output.innerHTML = `<p>No airports found for <b>${code}</b></p>`;
-      return;
-    }
-
-    output.innerHTML = `
-        <h3>Airports in ${code}</h3>
-        <ul>
-            ${result.airports
-              .map((a) => `<li>${a.ident} — ${a.name} (${a.city})</li>`)
-              .join("")}
-        </ul>
-    `;    
+  document.getElementById("btnRules").onclick = () => {
+    console.log("Rules clicked");
   };
 }
-// ----------------------------------------------
-// TASK SCREEN
-// ----------------------------------------------
-
 
 // ----------------------------------------------
 // RESULTS SCREEN

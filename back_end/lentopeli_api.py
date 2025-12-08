@@ -77,10 +77,10 @@ def create_app():
             return jsonify({"error": "Failed to fetch airports"}), 500
     
     # -----------------------------
-    # GET layover route - /api/layover_route/EFHK/KJFK        
+    # GET layover route - /api/layover_route/EFHK/KJFK/0        
     # -----------------------------
-    @app.route("/api/layover_route/<origin_code>/<dest_code>", methods=["GET"])
-    def get_layover_route(origin_code, dest_code):
+    @app.route("/api/layover_route/<origin_code>/<dest_code>/<num_of_stops>", methods=["GET"])
+    def get_layover_route(origin_code, dest_code, num_of_stops=0):
         """
             Flight connection (For cases when not using direct flight between two countries).
             Calculates a layover (multi-stop) flight route between two airports.
@@ -93,7 +93,7 @@ def create_app():
             # Validate parameters
             if not origin_code or not dest_code:
                 return jsonify({
-                    "error": "Missing required path parameters: /api/layover_route/<origin>/<destination>"
+                    "error": "Missing required path parameters: /api/layover_route/<origin>/<destination>/<num_of_stops>"
                 }), 400
 
             # Find airports
@@ -110,7 +110,7 @@ def create_app():
                 }), 404
 
             # Compute layover route
-            layover_route = airport_manager.find_route_with_stops(origin, dest, num_stops=2)
+            layover_route = airport_manager.find_route_with_stops(origin, dest, int(num_of_stops))
             distance = airport_manager.total_route_distance(layover_route)
 
             # Prepare result
