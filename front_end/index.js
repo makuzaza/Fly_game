@@ -397,17 +397,20 @@ async function loadLeaderboard() {
 
   result.leaderboard.forEach(player => {
     const row = document.createElement("tr");
-    if (player.name === result.current_name) {
-      row.style.backgroundColor = "#ffeeba";
-    }
+
     row.innerHTML = `
-      <td>${player.place}</td>
+      <td>${player.display_place || player.place}</td>
       <td>${player.name}</td>
       <td>${player.km_amount}</td>
       <td>${player.co2_amount}</td>
       <td>${player.efficiency}%</td>
       <td>${player.status}</td>
     `;
+
+    if (player.id === result.current_id) {
+      row.style.backgroundColor = "midnightblue";
+      row.style.color = "whitesmoke";
+    }
     tableBody.appendChild(row);
   });
 }

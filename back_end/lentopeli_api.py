@@ -282,6 +282,7 @@ def create_app():
 
         cursor.execute("""
             SELECT
+                id,
                 name,
                 ROUND(km_amount)  AS km_amount,
                 ROUND(co2_amount) AS co2_amount,
@@ -291,6 +292,20 @@ def create_app():
             ORDER BY efficiency DESC
         """)
         rows = cursor.fetchall()
+
+        # current player - the last line in the table
+        cursor.execute("""
+            SELECT
+                id,
+                name,
+                ROUND(km_amount)  AS km_amount,
+                ROUND(co2_amount) AS co2_amount,
+                ROUND(efficiency) AS efficiency,
+                status
+            FROM results
+            ORDER BY id DESC LIMIT 1
+        """)
+        current_result = cursor.fetchone()
         conn.close()
 
         # add rank
@@ -301,7 +316,27 @@ def create_app():
 
         top10 = leaderboard_data[:10]
 
-        return jsonify({"leaderboard": top10})
+        # check, if current player in the top-10
+        current_in_top10 = any(r["id"] == current_result["id"] for r in top10)
+
+        if not current_in_top10:
+            # search real rank
+            for r in leaderboard_data:
+                if r["id"] == current_result["id"]:
+                    current_result["place"] = r["place"]
+                    break
+            # replace the last line in leaderboard
+            current_result["display_place"] = current_result["place"]
+            top10[-1] = current_result
+        else:
+            # if in top-10, add display_place = place
+            for r in top10:
+                r["display_place"] = r["place"]
+
+        return jsonify({
+            "leaderboard": top10,
+            "current_id": current_result["id"]
+        })
 
     # -----------------------------
     # Error handling
