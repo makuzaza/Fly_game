@@ -1,6 +1,11 @@
 // ---- get stored stage data ----
-  const stage = JSON.parse(sessionStorage.getItem("stage"));
-
+export function get_game_status() {
+  return JSON.parse(sessionStorage.getItem("stage"));
+}
+// ---- store stage data ----
+export function save_game_status(stage) {
+  sessionStorage.setItem("stage", JSON.stringify(stage));
+}
 // -----------------------------------
 // USER MSG INPUT VALIDATOR
 // -----------------------------------
@@ -38,6 +43,27 @@ export function validateCountryInput(code, places) {
         icao: icao,
         message: `Correct guess: ${code} -> Airport ${icao}`
     };
+}
+
+// -----------------------------------
+//  MESSAGES BASE MODEL
+// -----------------------------------
+export function addSystemMsg(outputEl, text) {
+  const div = document.createElement("div");
+  div.className = "msg system";
+  div.textContent = text; 
+  outputEl.appendChild(div);
+
+  outputEl.scrollTop = outputEl.scrollHeight;
+}
+
+export function addUserMsg(outputEl, text) {
+  const div = document.createElement("div");
+  div.className = "msg user";
+  div.textContent = text;
+  outputEl.appendChild(div);
+
+  outputEl.scrollTop = outputEl.scrollHeight;
 }
 
 // -----------------------------------
