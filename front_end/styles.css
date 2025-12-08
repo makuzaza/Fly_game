@@ -264,6 +264,30 @@ button:hover {
   cursor: pointer;
 }
 
+/* === FOOTER: 3 tips === */
+#tips {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 75%;
+  display: flex;
+  justify-content: space-around;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 0.5rem;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+#tips .tip {
+  flex: 1;
+  margin: 0 0.5rem;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 0.5rem;
+  text-align: center;
+  background-color: #f0f8ff;
+}
+
 /* === Results page === */
 .result_container {
     flex: 1; 

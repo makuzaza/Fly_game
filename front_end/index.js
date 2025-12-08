@@ -243,6 +243,12 @@ async function showGameScreen() {
       </div>
 
     </div>
+    <!-- FOOTER: 3 tips -->
+    <footer id="tips">
+        <div class="tip">Tip1</div>
+        <div class="tip">Tip2</div>
+        <div class="tip">Tip3</div>
+    </footer>
   `;
 
   app.appendChild(screen);
