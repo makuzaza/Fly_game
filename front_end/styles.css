@@ -287,6 +287,11 @@ button:hover {
   background-color: #0054a8;
 }
 
+.leaflet-popup-content {
+    margin: 10px;
+    width: 180px;
+}
+
 .weather-info {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 10px;
