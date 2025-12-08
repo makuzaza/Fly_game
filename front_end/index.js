@@ -15,7 +15,7 @@ function renderHeaderWithQuit() {
   const header = document.createElement("header");
   header.innerHTML = `
       <img src="./img/logo.png" alt="EcoTrip" class="logo" />
-      <div class="quit-container"><div class="quit">Quit the game</div>
+      <div class="quit-icon">
       <img src="./img/logout.png" alt="Exit" class="exit" /></div>
   `;
   header.querySelector(".exit").onclick = () => {
@@ -225,7 +225,7 @@ async function showGameScreen() {
 
     screen.innerHTML += `
     <div id="quit-modal">
-        <div class="modal-content">
+        <div class="modal-content-quit">
             <h3>Are you sure you want to quit the game?</h3>
             <div class="modal-buttons">
                 <button id="quit-yes">Yes, quit</button>
