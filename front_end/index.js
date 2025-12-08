@@ -216,7 +216,14 @@ async function showGameScreen() {
 
   screen.innerHTML = `
     <!-- LEFT SIDE: MAP -->
-    <div id="map-container"></div>
+    <div id="map-container">
+        <!-- FOOTER: 3 tips -->
+        <footer id="tips-footer" aria-label="Tips">
+            <div class="tip"><span class="tip-label">Tip 1:</span> text</div>
+            <div class="tip"><span class="tip-label">Tip 2:</span> text</div>
+            <div class="tip"><span class="tip-label">Tip 3:</span> text</div>
+        </footer>
+    </div>
 
     <div class="side-panel">
       <!-- RIGHT SIDE: TRIP-UPDATE SECTION -->
@@ -243,12 +250,6 @@ async function showGameScreen() {
       </div>
 
     </div>
-    <!-- FOOTER: 3 tips -->
-    <footer id="tips">
-        <div class="tip">Tip1</div>
-        <div class="tip">Tip2</div>
-        <div class="tip">Tip3</div>
-    </footer>
   `;
 
   app.appendChild(screen);

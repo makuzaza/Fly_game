@@ -141,6 +141,7 @@ button:hover {
 #map-container {
   flex: 2;     /* takes 2 part*/    
   height: auto;
+  position: relative;
   min-height: 200px;
   margin: 10px 0 10px 10px;
   border-radius: 10px;
@@ -265,27 +266,44 @@ button:hover {
 }
 
 /* === FOOTER: 3 tips === */
-#tips {
+#tips-footer {
   position: absolute;
-  bottom: 0;
   left: 0;
-  width: 75%;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
   display: flex;
-  justify-content: space-around;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 0.5rem;
+  gap: 12px;
+  align-items: stretch;
+  justify-content: space-between;
+  padding: 10px 12px;
   box-sizing: border-box;
-  z-index: 1;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: saturate(1.2) blur(2px);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-#tips .tip {
-  flex: 1;
-  margin: 0 0.5rem;
-  border: 1px solid #333;
-  border-radius: 4px;
-  padding: 0.5rem;
-  text-align: center;
-  background-color: #f0f8ff;
+#tips-footer .tip {
+  flex: 1 1 0;
+  color: midnightblue;
+  font-size: 14px;
+  line-height: 1.3;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgb(89, 146, 211);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  min-height: 42px;
+}
+
+#tips-footer .tip-label {
+  font-weight: 600;
+  color: #9fd0ff;
+  margin-right: 6px;
+}
+
+.leaflet-control-container {
+  z-index: 1001;
 }
 
 /* === Results page === */
