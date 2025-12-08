@@ -1,5 +1,5 @@
-import logging
-from flask import Flask, jsonify
+import logging, requests
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from tips_countries import tips_countries
 from db import get_connection
@@ -337,6 +337,38 @@ def create_app():
             "leaderboard": top10,
             "current_id": current_result["id"]
         })
+
+    # -----------------------------
+    # Weather API
+    # -----------------------------
+    @app.route("/api/weather", methods=["GET"])
+    def get_weather():
+        icao = request.args.get("icao")
+
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT latitude_deg, longitude_deg FROM airport WHERE ident = %s", (icao,))
+        row = cursor.fetchone()
+        conn.close()
+
+        if not row:
+            return jsonify({"error": "ICAO not found"}), 404
+        lat, lon = row["latitude_deg"], row["longitude_deg"]
+
+        weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid=94c7555a5514b269f255445ba98c6e57"
+        try:
+            result = requests.get(weather_url)
+            if result.status_code == 200:
+                json_result = result.json()
+                return jsonify({
+                    "weather": json_result["weather"][0]["main"],
+                    "description": json_result["weather"][0]["description"],
+                    "temperature": round(json_result["main"]["temp"] - 273.15)
+                })
+            else:
+                return jsonify({"error": "Failed to fetch weather"}), result.status_code
+        except requests.exceptions.RequestException as e:
+            return jsonify({"error": "Search failed"}), 500
 
     # -----------------------------
     # Error handling
