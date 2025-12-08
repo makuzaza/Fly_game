@@ -1,6 +1,6 @@
 import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
 import { initMap } from "./mapScreen.js";
-import { get_game_status, validateCountryInput } from "./chatHelpers.js";
+import { get_game_status, introStage1, addSystemMsg } from "./chatHelpers.js";
 
 ("use strict");
 
@@ -238,7 +238,6 @@ async function showGameScreen() {
         <div id="moreMenu" class="more-menu hidden">
           <button id="btnResults">Results</button>
           <button id="btnRules">Rules</button>
-          <button id="btnReplayGame">Replay Stage</button>
         </div>
 
       </div>
@@ -250,49 +249,18 @@ async function showGameScreen() {
   initMap("map-container", "http://localhost:5000");
 
   // ---- Submit btn logc ----
-  document.getElementById("btnSubmit").onclick = async () => {
-    const code = document
-      .getElementById("countryInput")
-      .value.trim()
-      .toUpperCase();
-    const output = document.getElementById("chatMessages");
-
-    // --- Validate input ---
-    const validation = validateCountryInput(code, session.places);
-
-    if (!validation.valid) {
-        output.innerHTML = `<p>${validation.message}</p>`;
-        return; // Stop everything
-    } else {
-      console.log(`<p>${validation.message}</p>`);
-    }
-
-    const destination = validation.icao;
-    const origin = stage["origin"]; // use returned stage origin
-
-    // --- Load layover route (only when valid guess) ---
-    console.log("Fetching layover from", origin, "to", destination);
-
-    const layover_route = await fetchLayoverRoute(origin, destination);
-
-    console.log("Loaded layover_route:", layover_route);
-
-    const result = await fetchAirportsByCountry(code);
-
-    if (!result || result.airports.length === 0) {
-      output.innerHTML = `<p>No airports found for <b>${code}</b></p>`;
-      return;
-    }
-
-    output.innerHTML = `
-        <h3>Airports in ${code}</h3>
-        <ul>
-            ${result.airports
-              .map((a) => `<li>${a.ident} — ${a.name} (${a.city})</li>`)
-              .join("")}
-        </ul>
-    `;    
-  };
+  const output = document.getElementById("chatMessages");
+  // ------------------------------------
+  // Intro for Stage 1
+  // ------------------------------------
+  if (session.currentStage === 1 && session.clueGuesses.length === 0) {
+      introStage1(output, session.playerName);
+      console.log("IntroStage1 triggered for player:", session.playerName);
+  }
+  if (session.currentStage >= 2 && session.clueGuesses.length === 0) {
+      addSystemMsg(output, `Welcome to ${session.currentStage} level, ${session.playerName}!!,`);
+      addSystemMsg(output, `What is your guess now?`);
+  }
 
   // ---- Toggle btn logic ----
   const btnMore = document.getElementById("btnMoreOptions");
@@ -319,19 +287,6 @@ async function showGameScreen() {
   document.getElementById("btnRules").onclick = () => {
     console.log("Rules clicked");
   };
-
-  document.getElementById("btnLeaderboard").onclick = () => {
-    console.log("Leaderboard clicked");
-  };
-
-  document.getElementById("btnReplayStage").onclick = () => {
-    console.log("Replay btnReplayStage clicked");
-  };
-
-  document.getElementById("btnReplayGame").onclick = () => {
-    console.log("Replay btnReplayStage clicked");
-  };
-
 }
 
 // ----------------------------------------------
