@@ -1,6 +1,6 @@
 import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
 import { initMap } from "./mapScreen.js";
-import { validateCountryInput } from "./chatHelpers.js";
+import { get_game_status, validateCountryInput } from "./chatHelpers.js";
 
 ("use strict");
 
@@ -21,6 +21,13 @@ async function loadStage() {
   return;
 };
 loadStage();
+
+// =============================
+// Game Session State Manager
+// =============================
+function getSession() {
+  return JSON.parse(sessionStorage.getItem("gameSession")) || {};
+}
 
 let gameResults = null;
 // this functions needs to be moved in api.js
@@ -164,9 +171,10 @@ async function showGameScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  // ---- get stored stage data ----
-  const stage = JSON.parse(sessionStorage.getItem("stage"));
-
+  // ------------------------------------
+  // Load Stage + Session
+  // ------------------------------------
+  let stage = get_game_status();  
   let session = getSession() || {};
     console.log(session);
 
