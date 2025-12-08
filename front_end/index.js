@@ -257,10 +257,6 @@ async function showGameScreen() {
       introStage1(output, session.playerName);
       console.log("IntroStage1 triggered for player:", session.playerName);
   }
-  if (session.currentStage >= 2 && session.clueGuesses.length === 0) {
-      addSystemMsg(output, `Welcome to ${session.currentStage} level, ${session.playerName}!!,`);
-      addSystemMsg(output, `What is your guess now?`);
-  }
 
   // ---- Toggle btn logic ----
   const btnMore = document.getElementById("btnMoreOptions");
