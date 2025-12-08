@@ -67,7 +67,6 @@ input {
   display: flex;
   flex-direction: row;
   width: 100%;
-  max-width: 100%;
   height: auto;
 }
 
@@ -91,20 +90,16 @@ input {
 @media screen and (max-width: 768px) {
   .game-screen {
     flex-direction: column;
-    justify-content: flex-start !important;
-    align-items: stretch !important;
-    width: 100%;
-    max-width: 100%;
+
   }
 
   #map-container {
     width: 100%;
     height: 200px;
-    margin: 10px 0;
+    margin: 10px;
   }
 
   .game-info-container {
-    width: 100%;
-    padding: 10px 0;
+    padding: 10px;
   }
 }
