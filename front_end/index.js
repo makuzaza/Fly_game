@@ -28,6 +28,12 @@ loadStage();
 function getSession() {
   return JSON.parse(sessionStorage.getItem("gameSession")) || {};
 }
+function setSession(updates) {
+  const current = getSession();
+  const updated = { ...current, ...updates };
+  sessionStorage.setItem("gameSession", JSON.stringify(updated));
+  return updated;
+}
 
 let gameResults = null;
 // this functions needs to be moved in api.js
