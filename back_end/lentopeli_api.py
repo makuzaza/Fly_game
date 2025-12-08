@@ -1,5 +1,5 @@
-import logging
-from flask import Flask, jsonify
+import logging, requests
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from tips_countries import tips_countries
 from db import get_connection
@@ -250,19 +250,23 @@ def create_app():
     # -----------------------------
     @app.route("/api/result", methods=["GET"])
     def get_results():
-        """
-            Retrieve the current game results for a player.
-        """
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
         
-        try:   
-            data = {
-                "levels_passed": 5,
-                "total_distance_km": 20000,
-                "countries_visited": 9,
-                "total_co2_kg": 2500,
-                "game_status": "Win"
-            }
-            return jsonify(data), 200
+        try:
+            cursor.execute("""
+                SELECT levels, km_amount, cities, co2_amount, efficiency, status
+                FROM results
+                ORDER BY id DESC LIMIT 1
+            """)
+            row = cursor.fetchone()
+            conn.close()
+
+            if row:
+                row["km_amount"] = round(float(row["km_amount"]))
+                row["co2_amount"] = round(float(row["co2_amount"]))
+                row["efficiency"] = round(float(row["efficiency"]))
+                return jsonify(row), 200
 
         except Exception as e:
             logger.error(f"Error fetching game results: {e}")
@@ -278,6 +282,7 @@ def create_app():
 
         cursor.execute("""
             SELECT
+                id,
                 name,
                 ROUND(km_amount)  AS km_amount,
                 ROUND(co2_amount) AS co2_amount,
@@ -287,6 +292,20 @@ def create_app():
             ORDER BY efficiency DESC
         """)
         rows = cursor.fetchall()
+
+        # current player - the last line in the table
+        cursor.execute("""
+            SELECT
+                id,
+                name,
+                ROUND(km_amount)  AS km_amount,
+                ROUND(co2_amount) AS co2_amount,
+                ROUND(efficiency) AS efficiency,
+                status
+            FROM results
+            ORDER BY id DESC LIMIT 1
+        """)
+        current_result = cursor.fetchone()
         conn.close()
 
         # add rank
@@ -297,7 +316,59 @@ def create_app():
 
         top10 = leaderboard_data[:10]
 
-        return jsonify({"leaderboard": top10})
+        # check, if current player in the top-10
+        current_in_top10 = any(r["id"] == current_result["id"] for r in top10)
+
+        if not current_in_top10:
+            # search real rank
+            for r in leaderboard_data:
+                if r["id"] == current_result["id"]:
+                    current_result["place"] = r["place"]
+                    break
+            # replace the last line in leaderboard
+            current_result["display_place"] = current_result["place"]
+            top10[-1] = current_result
+        else:
+            # if in top-10, add display_place = place
+            for r in top10:
+                r["display_place"] = r["place"]
+
+        return jsonify({
+            "leaderboard": top10,
+            "current_id": current_result["id"]
+        })
+
+    # -----------------------------
+    # Weather API
+    # -----------------------------
+    @app.route("/api/weather", methods=["GET"])
+    def get_weather():
+        icao = request.args.get("icao")
+
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT latitude_deg, longitude_deg FROM airport WHERE ident = %s", (icao,))
+        row = cursor.fetchone()
+        conn.close()
+
+        if not row:
+            return jsonify({"error": "ICAO not found"}), 404
+        lat, lon = row["latitude_deg"], row["longitude_deg"]
+
+        weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid=94c7555a5514b269f255445ba98c6e57"
+        try:
+            result = requests.get(weather_url)
+            if result.status_code == 200:
+                json_result = result.json()
+                return jsonify({
+                    "weather": json_result["weather"][0]["main"],
+                    "description": json_result["weather"][0]["description"],
+                    "temperature": round(json_result["main"]["temp"] - 273.15)
+                })
+            else:
+                return jsonify({"error": "Failed to fetch weather"}), result.status_code
+        except requests.exceptions.RequestException as e:
+            return jsonify({"error": "Search failed"}), 500
 
     # -----------------------------
     # Error handling

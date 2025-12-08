@@ -311,11 +311,11 @@ async function showResultsScreen() {
     `;
   } else {
     let statusMessage = "Game Over";
-    if (data.game_status === "Win") {
+    if (data.status === "Win") {
       statusMessage = "Mission complete!";
-    } else if (data.game_status === "Lose") {
+    } else if (data.status === "Lose") {
       statusMessage = "Next time might be your chance!";
-    } else if (data.game_status === "Quit") {
+    } else if (data.status === "Quit") {
       statusMessage = "Let's play another time again!";
     }
 
@@ -326,23 +326,27 @@ async function showResultsScreen() {
             <table>
                 <tr>
                     <td>Levels passed</td>
-                    <td id="result_levels">${data.levels_passed || 0}</td>
+                    <td id="result_levels">${data.levels || 0}</td>
                 </tr>
                 <tr>
                     <td>Total distance, km</td>
-                    <td id="result_distance">${data.total_distance_km || 0}</td>
+                    <td id="result_distance">${data.km_amount || 0}</td>
                 </tr>
                 <tr>
                     <td>Countries visited</td>
-                    <td id="result_countries">${data.countries_visited || 0}</td>
+                    <td id="result_countries">${data.cities || 0}</td>
                 </tr>
                 <tr>
                     <td>Total CO2, kg</td>
-                    <td id="result_co2">${data.total_co2_kg || 0}</td>
+                    <td id="result_co2">${data.co2_amount || 0}</td>
+                </tr>
+                <tr>
+                    <td>Efficiency, %</td>
+                    <td id="efficiency">${data.efficiency || 0}</td>
                 </tr>
                 <tr>
                     <td>Game status</td>
-                    <td id="game_status">${data.game_status}</td>
+                    <td id="game_status">${data.status}</td>
                 </tr>
             </table>
         </div>
@@ -365,7 +369,7 @@ async function showResultsScreen() {
                                 <th>Name</th>
                                 <th>Distance, km</th>
                                 <th>CO2, kg</th>
-                                <th>Efficiency, %</th>
+                                <th>Efficiency</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -410,17 +414,20 @@ async function loadLeaderboard() {
 
   result.leaderboard.forEach(player => {
     const row = document.createElement("tr");
-    if (player.name === result.current_name) {
-      row.style.backgroundColor = "#ffeeba";
-    }
+
     row.innerHTML = `
-      <td>${player.place}</td>
+      <td>${player.display_place || player.place}</td>
       <td>${player.name}</td>
       <td>${player.km_amount}</td>
       <td>${player.co2_amount}</td>
       <td>${player.efficiency}%</td>
       <td>${player.status}</td>
     `;
+
+    if (player.id === result.current_id) {
+      row.style.backgroundColor = "midnightblue";
+      row.style.color = "whitesmoke";
+    }
     tableBody.appendChild(row);
   });
 }
