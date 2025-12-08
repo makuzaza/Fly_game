@@ -362,8 +362,10 @@ def create_app():
                 json_result = result.json()
                 return jsonify({
                     "weather": json_result["weather"][0]["main"],
+                    "wind": json_result["wind"]["speed"],
                     "description": json_result["weather"][0]["description"],
-                    "temperature": round(json_result["main"]["temp"] - 273.15)
+                    "temperature": round(json_result["main"]["temp"] - 273.15),
+                    "icon": f"http://openweathermap.org/img/wn/{json_result['weather'][0]['icon']}@2x.png"
                 })
             else:
                 return jsonify({"error": "Failed to fetch weather"}), result.status_code

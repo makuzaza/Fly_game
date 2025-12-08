@@ -17,21 +17,11 @@ async function initMap(containerId = "map-container", apiBaseUrl = "") {
     displayAirportMarkers();
 }
 
-async function displayAirportMarkers() {
+function displayAirportMarkers() {
     markers.forEach(m => m.remove());
     markers = [];
 
     for (const airport of airports) {
-        const weather =  await fetchWeather(airport.ident);
-
-        let weatherHTML = "<em>Weather unavailable</em>";
-        if (weather && !weather.error) {
-            weatherHTML = `
-                🌡 Temp: ${weather.temperature}°C<br>
-                ☁️ ${weather.weather} (${weather.description})
-            `;
-        }
-
         const marker = L.circleMarker([airport.lat, airport.lng], {
             radius: 6,
             fillColor: "#3388ff",
@@ -40,32 +30,53 @@ async function displayAirportMarkers() {
             fillOpacity: 0.8
         });
 
+        // Initial popup without weather
         marker.bindPopup(`
             <strong>${airport.name}</strong><br>
             ${airport.ident}<br>
-            ${airport.city}, ${airport.country}<br><br>
+            ${airport.city}, ${airport.country}<br>
+            <div class="weather-container">Loading weather...</div>
             <button class="choose-airport-btn" data-ident="${airport.ident}">
                 Choose
             </button>
         `);
 
-        marker.on("popupopen", () => {
+        // Load weather when popup opens
+        marker.on("popupopen", async () => {
             const popupEl = marker.getPopup().getElement();
             if (!popupEl) return;
-            
-            const btn = popupEl.querySelector(".choose-airport-btn");
-            if (!btn) return;
 
-            btn.onclick = () => {
-                console.log("Chosen airport:", airport);
-                
-                btn.textContent = "Chosen";
-                btn.disabled = true;
-                btn.style.backgroundColor = "#4CAF50";
-            };
+            const weatherContainer = popupEl.querySelector(".weather-container");
+            const btn = popupEl.querySelector(".choose-airport-btn");
+
+            // Fetch weather data
+            const weather = await fetchWeather(airport.ident);
+
+            let weatherHTML = "<em>Weather unavailable</em>";
+            if (weather) {
+                weatherHTML = `
+                <div class="weather-info">
+                    <div class="weather-description"><img style="width: 30px; height: 30px;" src="${weather.icon}" alt="${weather.description}">${weather.weather}</div>
+                    🌡️ Temp: ${weather.temperature}°C<br>
+                    💨 Wind: ${weather.wind} m/s<br>
+                </div>
+                `;
+            }
+
+            weatherContainer.innerHTML = weatherHTML;
+            if (btn) {
+                btn.onclick = () => {
+                    console.log("Chosen airport:", airport);
+                    console.log("Weather", weather);
+                    
+                    btn.textContent = "Chosen";
+                    btn.disabled = true;
+                    btn.style.backgroundColor = "#4CAF50";
+                };
+            }
         });
 
         marker.addTo(map);
         markers.push(marker);
-    };
+    }
 }
