@@ -135,3 +135,19 @@ export async function fetchAirportsByCountry(code) {
         return null;
     }
 }
+
+/* -------------------------------------------------------
+    GET /api/weather?icao=<icao>
+    Fetch weather data for given ICAO code
+------------------------------------------------------- */
+
+export async function fetchWeather(icao) {
+    try {
+        const res = await fetch(`${API_BASE}/weather?icao=${icao}`);
+        if (!res.ok) return null;
+        return await res.json();
+    } catch (e) {
+        console.error("Weather fetch error:", e);
+        return null;
+    }
+}

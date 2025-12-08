@@ -1,4 +1,4 @@
-import { fetchAirports } from "./api.js";
+import { fetchAirports, fetchWeather } from "./api.js";
 export { initMap };
 
 let map = null;
@@ -17,11 +17,21 @@ async function initMap(containerId = "map-container", apiBaseUrl = "") {
     displayAirportMarkers();
 }
 
-function displayAirportMarkers() {
+async function displayAirportMarkers() {
     markers.forEach(m => m.remove());
     markers = [];
 
-    airports.forEach(airport => {
+    for (const airport of airports) {
+        const weather =  await fetchWeather(airport.ident);
+
+        let weatherHTML = "<em>Weather unavailable</em>";
+        if (weather && !weather.error) {
+            weatherHTML = `
+                🌡 Temp: ${weather.temperature}°C<br>
+                ☁️ ${weather.weather} (${weather.description})
+            `;
+        }
+
         const marker = L.circleMarker([airport.lat, airport.lng], {
             radius: 6,
             fillColor: "#3388ff",
@@ -57,5 +67,5 @@ function displayAirportMarkers() {
 
         marker.addTo(map);
         markers.push(marker);
-    });
+    };
 }
