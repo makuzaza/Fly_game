@@ -168,7 +168,7 @@ async function confirmFlight(airportCode, countryCode, distance, co2) {
   }
 }
 
-async function getGameResults() {
+export async function getGameResults() {
   try {
     const response = await fetch(
       `${API_URL}/api/result/${gameState.playerName}`
@@ -382,13 +382,13 @@ function displayRoute(routeData) {
   highlightRoute(routeData);
 }
 
-function showResults(results) {
+export function showResults(results) {
   showResultsScreen();
   const container = document.getElementById("results-container");
   container.innerHTML = `
         <h3>Your Results:</h3>
         <table>
-            <tr><td>Levels Passed:</td><td>${results.levels_passed}</td></tr>
+            <tr><td>Levels Achieved:</td><td>${results.levels_achieved}</td></tr>
             <tr><td>Countries Visited:</td><td>${results.countries_visited}</td></tr>
             <tr><td>Total Distance:</td><td>${results.total_distance_km} km</td></tr>
             <tr><td>Total CO2:</td><td>${results.total_co2_kg} kg</td></tr>

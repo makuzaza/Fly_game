@@ -3,6 +3,8 @@ import {
   handleCountrySubmit,
   handleConfirmFlight,
   handleCancelFlight,
+  getGameResults,
+  showResults,
   gameState,
 } from "./app.js";
 
@@ -11,6 +13,19 @@ function renderHeader() {
   header.innerHTML = `
       <img src="./assets/logo.png" alt="EcoTrip" class="logo" />
   `;
+  return header;
+}
+
+function renderHeaderWithQuit() {
+  const header = document.createElement("header");
+  header.innerHTML = `
+      <img src="./assets/logo.png" alt="EcoTrip" class="logo" />
+      <div class="quit-icon">
+      <img src="./assets/exit.png" alt="Exit" class="exit" /></div>
+  `;
+  header.querySelector(".exit").onclick = () => {
+    document.getElementById("quit-modal").style.display = "flex";
+  };
   return header;
 }
 
@@ -88,7 +103,7 @@ function showRulesScreen() {
 export function showGameScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
-  app.appendChild(renderHeader());
+  app.appendChild(renderHeaderWithQuit());
   const screen = document.createElement("div");
   screen.className = "screen game-screen";
   screen.innerHTML = `
@@ -126,7 +141,36 @@ export function showGameScreen() {
         </div>
     </div></div>
   `;
+
+  screen.innerHTML += `
+    <div id="quit-modal">
+        <div class="modal-content-quit">
+            <h3>Are you sure you want to quit the game?</h3>
+            <div class="modal-buttons">
+                <button id="quit-yes">Yes, quit</button>
+                <button id="quit-no">No, continue to play</button>
+            </div>
+        </div>
+    </div>
+  `;
   app.appendChild(screen);
+
+  const quitModal = document.getElementById("quit-modal");
+
+  document.getElementById("quit-yes").onclick = async () => {
+    quitModal.style.display = "none";
+    const results = await getGameResults();
+    showResults(results); 
+  };
+
+  document.getElementById("quit-no").onclick = () => {
+    quitModal.style.display = "none";
+  };
+
+  // Close by clicking outside modal
+  quitModal.onclick = (event) => {
+    if (event.target === quitModal) quitModal.style.display = "none";
+  };
 
   // Setup event listeners for game screen
   document.getElementById("btn-submit-country").onclick = () =>

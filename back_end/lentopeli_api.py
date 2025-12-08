@@ -441,7 +441,7 @@ def create_app():
             
             data = {
                 "player_name": player_name,
-                "levels_passed": game.session["current_stage"],
+                "levels_achieved": game.session["current_stage"],
                 "total_distance_km": round(game.total["total_distance"], 1),
                 "countries_visited": len(game.total["flight_history"]),
                 "total_co2_kg": round(game.total["total_co2"], 2),

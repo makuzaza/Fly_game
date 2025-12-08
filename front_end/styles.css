@@ -1,7 +1,8 @@
 body {
     margin: 0;
+    padding: 0;
     font-family: 'Roboto', sans-serif;
-    background: #f4f7f6;
+    background: #f8f5f5;
 }
 
 #app {
@@ -15,9 +16,11 @@ body {
 
 header {
   width: 100%;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   position: relative;
-  z-index: 10;
+  z-index: 100;
 }
 
 .logo {
@@ -29,6 +32,93 @@ header {
 .logo_main {
     width: auto;
     height: 6rem;
+}
+
+.quit-icon {
+    position: relative;
+    display: inline-block;
+}
+
+.quit-icon::after {
+    content: "Click to exit the game";
+    position: absolute;
+    top: 90%;
+    right: -50px;
+    transform: translateX(-40%);
+    background: #000;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.quit-icon:hover::after {
+    opacity: 1;
+}
+
+.exit {
+    width: 50px;
+    padding-right: 10px;
+    cursor: pointer;
+}
+
+.quit {
+    color: #006ad4;
+    margin-right: 10px;
+}
+
+.quit:hover {
+    opacity: 0.7;
+}
+
+#quit-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(3px);
+  background: rgba(0, 0, 0, 0.4);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content-quit {
+  width: 60%;
+  background: white;
+  padding: 20px 30px;
+  border-radius: 12px;
+  width: 300px;
+  text-align: center;
+}
+
+.modal-buttons {
+  gap: 20px;
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+.modal-buttons button {
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+#quit-yes {
+  background-color: #d32f2f;
+  color: white;
+}
+
+.modal-buttons button:hover {
+  background-color: #0054a8;
 }
 
 button {
@@ -90,7 +180,6 @@ input {
 @media screen and (max-width: 768px) {
   .game-screen {
     flex-direction: column;
-
   }
 
   #map-container {
