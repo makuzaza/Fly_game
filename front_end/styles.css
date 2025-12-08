@@ -256,7 +256,6 @@ button:hover {
 }
 
 .modal-content-quit {
-  width: 60%;
   background: white;
   padding: 20px 30px;
   border-radius: 12px;
@@ -272,7 +271,7 @@ button:hover {
 }
 
 .modal-buttons button {
-  width: 100px;
+  width: 150px;
   padding: 10px;
   border-radius: 6px;
   border: none;
