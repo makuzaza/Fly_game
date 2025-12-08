@@ -24,21 +24,6 @@ function renderHeaderWithQuit() {
   return header;
 }
 
-let gameResults = null;
-// this functions needs to be moved in api.js
-async function loadResults() {
-  try {
-    const res = await fetch("http://localhost:5000/api/result"); // Flask request
-    if (!res.ok) throw new Error("HTTP error " + res.status);
-    const data = await res.json();
-    gameResults = data;
-    return data;
-  } catch (err) {
-    console.error("Response error:", err);
-    return null;
-  }
-}
-
 // ----------------------------------------------
 // START SCREEN
 // ----------------------------------------------
@@ -217,7 +202,6 @@ async function showGameScreen() {
           <button id="btnSubmit">Submit</button>
         </div>
 
-        <button id="btnResults">Results</button>
       </div>
 
     </div>
