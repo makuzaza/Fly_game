@@ -18,15 +18,58 @@ body {
 
 header {
   width: 100%;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   position: relative;
-  z-index: 10;
+  z-index: 100;
 }
 
 .logo {
     width: auto;
     height: 3rem;
     padding: 0.5rem 0 0 0.5rem;
+}
+
+.quit-icon {
+    position: relative;
+    display: inline-block;
+}
+
+.quit-icon::after {
+    content: "Click to exit the game";
+    position: absolute;
+    top: 90%;
+    right: -50px;
+    transform: translateX(-40%);
+    background: #ffffff;
+    color: #000;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.quit-icon:hover::after {
+    opacity: 1;
+}
+
+.exit {
+    width: 50px;
+    padding-right: 10px;
+    cursor: pointer;
+}
+
+.quit {
+    color: #006ad4;
+    margin-right: 10px;
+}
+
+.quit:hover {
+    opacity: 0.7;
 }
 
 .question-screen, .rules-screen, .results-screen {  
@@ -103,7 +146,7 @@ button {
     color: white;
     border: none;
     padding: 0.6rem 1.5rem;
-    border-radius: 20px;
+    border-radius: 6px;
     font-size: 1.2rem;
     font-weight: bold;
     cursor: pointer;
@@ -197,6 +240,53 @@ button:hover {
   gap: 10px;
   max-height: 221px;
 }
+
+#quit-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(3px);
+  background: rgba(0, 0, 0, 0.4);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content-quit {
+  background: white;
+  padding: 20px 30px;
+  border-radius: 12px;
+  width: 300px;
+  text-align: center;
+}
+
+.modal-buttons {
+  gap: 20px;
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+.modal-buttons button {
+  width: 150px;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+#quit-yes {
+  background-color: #d32f2f;
+  color: white;
+}
+
+.modal-buttons button:hover {
+  background-color: #0054a8;
+}
+
 /*Chat area */
 .guess-section{
   display: flex;
@@ -390,6 +480,10 @@ button:hover {
 
 /* === media Result page === */
 @media screen and (max-width: 600px) {
+    .quit {
+        display: none;
+    }
+
     .question-buttons {
         gap: 10px;
     }

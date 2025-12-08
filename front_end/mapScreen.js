@@ -40,16 +40,19 @@ function displayAirportMarkers() {
         `);
 
         marker.on("popupopen", () => {
-            const btn = document.querySelector(".choose-airport-btn");
-            if (btn) {
-                btn.onclick = () => {
-                    console.log("Chosen airport:", airport);
+            const popupEl = marker.getPopup().getElement();
+            if (!popupEl) return;
+            
+            const btn = popupEl.querySelector(".choose-airport-btn");
+            if (!btn) return;
 
-                    btn.textContent = "Chosen";
-                    btn.disabled = true;
-                    btn.style.backgroundColor = "#4CAF50";
-                };
-            }
+            btn.onclick = () => {
+                console.log("Chosen airport:", airport);
+                
+                btn.textContent = "Chosen";
+                btn.disabled = true;
+                btn.style.backgroundColor = "#4CAF50";
+            };
         });
 
         marker.addTo(map);

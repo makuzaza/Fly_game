@@ -12,6 +12,18 @@ function renderHeader() {
   return header;
 }
 
+function renderHeaderWithQuit() {
+  const header = document.createElement("header");
+  header.innerHTML = `
+      <img src="./img/logo.png" alt="EcoTrip" class="logo" />
+      <div class="quit-icon">
+      <img src="./img/logout.png" alt="Exit" class="exit" /></div>
+  `;
+  header.querySelector(".exit").onclick = () => {
+    document.getElementById("quit-modal").style.display = "flex";
+  };
+  return header;
+}
 // ---- Load Stage data and store it in the sessionStorage ---- 
 async function loadStage() {
   const stage = await fetchStage();
@@ -33,21 +45,6 @@ function setSession(updates) {
   const updated = { ...current, ...updates };
   sessionStorage.setItem("gameSession", JSON.stringify(updated));
   return updated;
-}
-
-let gameResults = null;
-// this functions needs to be moved in api.js
-async function loadResults() {
-  try {
-    const res = await fetch("http://localhost:5000/api/result"); // Flask request
-    if (!res.ok) throw new Error("HTTP error " + res.status);
-    const data = await res.json();
-    gameResults = data;
-    return data;
-  } catch (err) {
-    console.error("Response error:", err);
-    return null;
-  }
 }
 
 // ----------------------------------------------
@@ -167,10 +164,6 @@ function showRulesScreen() {
 }
 
 // ----------------------------------------------
-// TASK SCREEN
-// ----------------------------------------------
-
-// ----------------------------------------------
 // GAME SCREEN
 // ----------------------------------------------
 async function showGameScreen() {
@@ -209,7 +202,7 @@ async function showGameScreen() {
     console.log('session: ', session);
 
   // ---- Build UI ----
-  app.appendChild(renderHeader());
+  app.appendChild(renderHeaderWithQuit());
 
   const screen = document.createElement("div");
   screen.className = "screen game-screen";
@@ -245,7 +238,36 @@ async function showGameScreen() {
     </div>
   `;
 
+    screen.innerHTML += `
+    <div id="quit-modal">
+        <div class="modal-content-quit">
+            <h3>Are you sure you want to quit the game?</h3>
+            <div class="modal-buttons">
+                <button id="quit-yes">Yes, quit</button>
+                <button id="quit-no">No, continue</button>
+            </div>
+        </div>
+    </div>
+  `;
+
   app.appendChild(screen);
+
+  const quitModal = document.getElementById("quit-modal");
+
+  document.getElementById("quit-yes").onclick = () => {
+    quitModal.style.display = "none";
+    showResultsScreen();
+  };
+
+  document.getElementById("quit-no").onclick = () => {
+    quitModal.style.display = "none";
+  };
+
+  // Close by clicking outside modal
+  quitModal.onclick = (event) => {
+    if (event.target === quitModal) quitModal.style.display = "none";
+  };
+
   initMap("map-container", "http://localhost:5000");
 
   // ---- Submit btn logc ----
