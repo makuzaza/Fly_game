@@ -195,7 +195,7 @@ button:hover {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: 202px;
+  max-height: 221px;
 }
 /*Chat area */
 .guess-section{

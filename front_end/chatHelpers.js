@@ -70,14 +70,9 @@ export function addUserMsg(outputEl, text) {
 //  FIRST STAGE INTRO MESSAGES
 // -----------------------------------
 export function introStage1(outputEl, playerName) {
-  addSystemMsg(outputEl, `Hello ${playerName},`);
-  addSystemMsg(outputEl, `Welcome to your central station!`);
-  addSystemMsg(outputEl, `I am your personal assistant and will guide you through the missions.`);
-  addSystemMsg(outputEl, `Before we start remember: the order of country guesses is VERY important.`);
-  addSystemMsg(outputEl, `If you run out of CO₂, in the meedle of a mission, you fail.`);
-  addSystemMsg(outputEl, `You already received your clues, so let's begin!`);
-  addSystemMsg(outputEl, `Please guess a country.`);
-  addSystemMsg(outputEl, `You may input the cuntry name or just select any airport in the country where you plan to go first.`);
+  addSystemMsg(outputEl, `Hello ${playerName}, welcome to your central station. I'll be your assistant.`);
+  addSystemMsg(outputEl, `Important: the order of your guesses matters, and running out of CO₂ during a mission means failure.`);
+  addSystemMsg(outputEl, `You've got your clues—let’s begin! Guess a country or select an airport from the map in your starting country.`);
   //    VIDEO EXAMPLE - USER CAN PLAY OR NOT - EXPAND/CONTRACT OR NOT
 }
 //------------------------------------
