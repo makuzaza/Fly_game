@@ -148,7 +148,7 @@ export function showGameScreen() {
             <h3>Are you sure you want to quit the game?</h3>
             <div class="modal-buttons">
                 <button id="quit-yes">Yes, quit</button>
-                <button id="quit-no">No, continue to play</button>
+                <button id="quit-no">No, continue</button>
             </div>
         </div>
     </div>
