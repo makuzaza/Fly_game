@@ -160,12 +160,39 @@ function showRulesScreen() {
 // ----------------------------------------------
 // GAME SCREEN
 // ----------------------------------------------
-function showGameScreen() {
+async function showGameScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
   // ---- get stored stage data ----
   const stage = JSON.parse(sessionStorage.getItem("stage"));
+
+  let session = getSession() || {};
+    console.log(session);
+
+    // if no session or stage exists, or user wants fresh start
+    if (!session || !stage) {
+      sessionStorage.removeItem("session");
+      sessionStorage.removeItem("stage");
+      stage = await loadStage();   // create new stage
+      session = {};
+    }
+    console.log("No session or stage found. Starting fresh.");
+
+    // Initialize session fields
+    session.playerName      ??= sessionStorage.getItem("playerName");
+    session.currentStage    ??= stage.current_stage;    // 1–3
+    session.orderCountries  ??= stage.order_countries;  // [ISO1, ISO2, ISO3]
+    session.clueGuesses     ??= [];                     // per stage guesses
+    session.origin          ??= stage.origin;
+    session.startOrigin     ??= stage.origin;
+    session.wrongGuessCount ??= 0;
+    session.initialCo2      ??= stage.co2_available;
+    session.co2Available    ??= stage.co2_available;
+    session.places          ??= stage.places;
+
+    setSession(session);
+    console.log('session: ', session);
 
   // ---- Build UI ----
   app.appendChild(renderHeader());
@@ -197,8 +224,6 @@ function showGameScreen() {
         <div id="moreMenu" class="more-menu hidden">
           <button id="btnResults">Results</button>
           <button id="btnRules">Rules</button>
-          <button id="btnLeaderboard">Leaderboard</button>
-          <button id="btnReplayStage">Replay Game</button>
           <button id="btnReplayGame">Replay Stage</button>
         </div>
 
@@ -219,7 +244,7 @@ function showGameScreen() {
     const output = document.getElementById("chatMessages");
 
     // --- Validate input ---
-    const validation = validateCountryInput(code);
+    const validation = validateCountryInput(code, session.places);
 
     if (!validation.valid) {
         output.innerHTML = `<p>${validation.message}</p>`;
