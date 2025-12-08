@@ -21,12 +21,12 @@ export async function fetchAirports() {
 }
 
 /* -------------------------------------------------------
-   GET /api/layover_route/<origin>/<destination>
+   GET /api/layover_route/<origin>/<destination>/<num_of_stops>
    Fetch multi-stop (layover) flight route
 ------------------------------------------------------- */
-export async function fetchLayoverRoute(origin, destination) {
+export async function fetchLayoverRoute(origin, destination, num_of_stops=0) {
     try {
-        const res = await fetch(`${API_BASE}/layover_route/${origin}/${destination}`);
+        const res = await fetch(`${API_BASE}/layover_route/${origin}/${destination}/${num_of_stops}`);
 
         if (!res.ok) {
             throw new Error(`Route fetch failed: ${res.status}`);
@@ -65,7 +65,7 @@ export async function fetchStage() {
 export async function resetGame() {
     try {
         const res = await fetch(`${API_BASE}/reset`, {
-            method: "POST"
+            method: "GET"
         });
 
         if (!res.ok) {
