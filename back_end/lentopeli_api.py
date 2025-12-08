@@ -250,19 +250,23 @@ def create_app():
     # -----------------------------
     @app.route("/api/result", methods=["GET"])
     def get_results():
-        """
-            Retrieve the current game results for a player.
-        """
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
         
-        try:   
-            data = {
-                "levels_passed": 5,
-                "total_distance_km": 20000,
-                "countries_visited": 9,
-                "total_co2_kg": 2500,
-                "game_status": "Win"
-            }
-            return jsonify(data), 200
+        try:
+            cursor.execute("""
+                SELECT levels, km_amount, cities, co2_amount, efficiency, status
+                FROM results
+                ORDER BY id DESC LIMIT 1
+            """)
+            row = cursor.fetchone()
+            conn.close()
+
+            if row:
+                row["km_amount"] = round(float(row["km_amount"]))
+                row["co2_amount"] = round(float(row["co2_amount"]))
+                row["efficiency"] = round(float(row["efficiency"]))
+                return jsonify(row), 200
 
         except Exception as e:
             logger.error(f"Error fetching game results: {e}")
