@@ -262,6 +262,7 @@ button:hover {
 }
 
 .modal-buttons button {
+  width: 100px;
   padding: 10px;
   border-radius: 6px;
   border: none;
