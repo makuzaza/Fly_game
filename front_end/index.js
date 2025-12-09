@@ -212,11 +212,7 @@ async function showGameScreen() {
     <!-- LEFT SIDE: MAP -->
     <div id="map-container">
         <!-- FOOTER: 3 tips -->
-        <footer id="tips-footer" aria-label="Tips">
-            <div class="tip" id="tip1"><span class="tip-label">Tip 1:</span> unguessed</div>
-            <div class="tip highlighted" id="tip2"><span class="tip-label">Tip 2:</span> guessed</div>
-            <div class="tip" id="tip3"><span class="tip-label">Tip 3:</span> unguessed</div>
-        </footer>
+        <footer id="tips-footer" aria-label="Tips"></footer>
     </div>
 
     <div class="side-panel">
@@ -259,6 +255,8 @@ async function showGameScreen() {
   `;
 
   app.appendChild(screen);
+
+  renderTips(session);
 
   const quitModal = document.getElementById("quit-modal");
 
