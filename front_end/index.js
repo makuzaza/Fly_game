@@ -24,6 +24,27 @@ function renderHeaderWithQuit() {
   };
   return header;
 }
+
+// ---- Rendering tips to the main screen ----
+function renderTips(session) {
+  const footer = document.getElementById("tips-footer");
+  footer.innerHTML = "";
+
+  session.orderCountries.forEach((code, index) => {
+    const tipDiv = document.createElement("div");
+    tipDiv.className = "tip";
+    tipDiv.id = `tip${index+1}`;
+
+    // if country guessed
+    if (session.clueGuesses.includes(code)) {
+      tipDiv.classList.add("highlighted");
+    }
+
+    tipDiv.innerHTML = `<span class="tip-label">Tip ${index+1}:</span> ${session.clues[code] || "No clue for this country"}`;
+    footer.appendChild(tipDiv);
+  });
+}
+
 // ---- Load Stage data and store it in the sessionStorage ---- 
 async function loadStage() {
   const stage = await fetchStage();
@@ -197,6 +218,7 @@ async function showGameScreen() {
     session.initialCo2      ??= stage.co2_available;
     session.co2Available    ??= stage.co2_available;
     session.places          ??= stage.places;
+    session.clues           ??= stage.clues;
 
     setSession(session);
     console.log('session: ', session);
@@ -211,11 +233,7 @@ async function showGameScreen() {
     <!-- LEFT SIDE: MAP -->
     <div id="map-container">
         <!-- FOOTER: 3 tips -->
-        <footer id="tips-footer" aria-label="Tips">
-            <div class="tip" id="tip1"><span class="tip-label">Tip 1:</span> unguessed</div>
-            <div class="tip highlighted" id="tip2"><span class="tip-label">Tip 2:</span> guessed</div>
-            <div class="tip" id="tip3"><span class="tip-label">Tip 3:</span> unguessed</div>
-        </footer>
+        <footer id="tips-footer" aria-label="Tips"></footer>
     </div>
 
     <div class="side-panel">
@@ -258,6 +276,8 @@ async function showGameScreen() {
   `;
 
   app.appendChild(screen);
+
+  renderTips(session);
 
   const quitModal = document.getElementById("quit-modal");
 
