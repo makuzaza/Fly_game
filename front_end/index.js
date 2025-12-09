@@ -1,6 +1,6 @@
 import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
 import { initMap } from "./mapScreen.js";
-import { get_game_status, introStage1, addSystemMsg } from "./chatHelpers.js";
+import { get_game_status, validateCountryInput, introStage1, correctGuess, failedGame, winGame, addUserMsg, addSystemMsg } from "./chatHelpers.js";
 
 ("use strict");
 
@@ -24,19 +24,16 @@ function renderHeaderWithQuit() {
   };
   return header;
 }
-// ---- Load Stage data and store it in the sessionStorage ---- 
+// --- Load Stage data and store it in the sessionStorage ---
 async function loadStage() {
   const stage = await fetchStage();
   sessionStorage.setItem("stage", JSON.stringify(stage));
   console.log("Loaded Stage:", stage);
   console.log('places: ', stage.places);
-  return;
+  return stage;
 };
-loadStage();
 
-// =============================
-// Game Session State Manager
-// =============================
+// --- Game Session State Manager ---
 function getSession() {
   return JSON.parse(sessionStorage.getItem("gameSession")) || {};
 }
@@ -170,36 +167,40 @@ async function showGameScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  // ------------------------------------
-  // Load Stage + Session
-  // ------------------------------------
+  // --- Load Stage + Session ---
   let stage = get_game_status();  
-  let session = getSession() || {};
-    console.log(session);
+  let session = getSession();
+  console.log(session);
 
-    // if no session or stage exists, or user wants fresh start
-    if (!session || !stage) {
-      sessionStorage.removeItem("session");
-      sessionStorage.removeItem("stage");
-      stage = await loadStage();   // create new stage
-      session = {};
+  // --- fresh start ---
+  if (!session || !stage) {
+    sessionStorage.removeItem("session");
+    sessionStorage.removeItem("stage");
+    stage = await loadStage(); // create new stage
+    console.log(stage)
+    console.log(stage.places)
+    session = {};
+    if (!stage) {
+      console.error("Couldnt load the stage. Please reload te page!");
+      return; // stop execution
     }
     console.log("No session or stage found. Starting fresh.");
+  }
 
-    // Initialize session fields
-    session.playerName      ??= sessionStorage.getItem("playerName");
-    session.currentStage    ??= stage.current_stage;    // 1–3
-    session.orderCountries  ??= stage.order_countries;  // [ISO1, ISO2, ISO3]
-    session.clueGuesses     ??= [];                     // per stage guesses
-    session.origin          ??= stage.origin;
-    session.startOrigin     ??= stage.origin;
-    session.wrongGuessCount ??= 0;
-    session.initialCo2      ??= stage.co2_available;
-    session.co2Available    ??= stage.co2_available;
-    session.places          ??= stage.places;
+  // --- Initialize session fields ---
+  session.playerName      ??= sessionStorage.getItem("playerName");
+  session.currentStage    ??= stage.current_stage;    // 1–3
+  session.orderCountries  ??= stage.order_countries;  // [ISO1, ISO2, ISO3]
+  session.clueGuesses     ??= [];                     // per stage guesses
+  session.origin          ??= stage.origin;
+  session.startOrigin     ??= stage.origin;
+  session.wrongGuessCount ??= 0;
+  session.initialCo2      ??= stage.co2_available;
+  session.co2Available    ??= stage.co2_available;
+  session.places          ??= stage.places;
 
-    setSession(session);
-    console.log('session: ', session);
+  setSession(session);
+  console.log('session: ', session);
 
   // ---- Build UI ----
   app.appendChild(renderHeaderWithQuit());
@@ -270,22 +271,124 @@ async function showGameScreen() {
     quitModal.style.display = "none";
   };
 
-  // Close by clicking outside modal
+  // --- Close by clicking outside modal ---
   quitModal.onclick = (event) => {
     if (event.target === quitModal) quitModal.style.display = "none";
   };
 
   initMap("map-container", "http://localhost:5000");
 
-  // ---- Submit btn logc ----
   const output = document.getElementById("chatMessages");
-  // ------------------------------------
-  // Intro for Stage 1
-  // ------------------------------------
+  // --- Stage introduction messages ---
   if (session.currentStage === 1 && session.clueGuesses.length === 0) {
-      introStage1(output, session.playerName);
-      console.log("IntroStage1 triggered for player:", session.playerName);
+    introStage1(output, session.playerName);
+    console.log("IntroStage1 triggered for player:", session.playerName);
   }
+  if (session.currentStage >= 2 && session.clueGuesses.length === 0) {
+    addSystemMsg(output, `Welcome to ${session.currentStage} level, ${session.playerName}!!,`);
+    addSystemMsg(output, `What is your guess now?`);
+  }
+
+  // ---- CORRECT GUESS HANDLER ----
+  async function handleCorrectGuess(output, code, validation) {
+    let session = getSession();
+    console.log('session: ', session);
+          
+    // Ensure user does not guess the same clue twice
+    if (session.clueGuesses.includes(code)) {
+      return addSystemMsg(output, `${code} was already guessed, try again!`);
+    }
+    const destICAO = validation.icao;
+    const origin   = session.origin;
+    // Normal route CO₂ consumption
+    const route = await fetchLayoverRoute(origin, destICAO, 0);
+    session.co2Available -= route.co2_needed;
+    console.log('route: ', route)
+  
+    if (session.co2Available < 0) {
+      resetGame();
+      failedGame(output);
+      // Clear session storage for stage and session keys
+      sessionStorage.removeItem("session");
+      sessionStorage.removeItem("stage");
+      showResultsScreen();
+      return;
+    }
+  
+    // Add this guess to the stage
+    session.clueGuesses.push(code);
+    session.origin = destICAO;
+    session.wrongGuessCount = 0;
+  
+    correctGuess(output, code);
+    setSession(session);
+    console.log('session in winhandler: ', session)
+  
+    // ---- Stage Completed? ----
+    if (session.clueGuesses.length === 3) {
+      const success = JSON.stringify(session.clueGuesses) === JSON.stringify(session.orderCountries);
+      console.log('Clues success: ', success)
+  
+      if (!success) {
+        resetGame();
+        failedGame(output);
+        // Clear session storage for stage and session keys
+        sessionStorage.removeItem("session");
+        sessionStorage.removeItem("stage");
+        showResultsScreen();
+        return;
+      }
+  
+      // WIN if last stage
+      if (session.currentStage === 3) { 
+        resetGame();
+        winGame(output);
+        // Clear session storage for stage and session keys
+        sessionStorage.removeItem("session");
+        sessionStorage.removeItem("stage");
+        showResultsScreen();
+        return;
+      }
+  
+      // Otherwise, PASS STAGE → load new stage
+      addSystemMsg(output, "Great job! Loading the next stage...")
+      const newStage = await loadStage();  // fetch from API and replace old stage
+      console.log('newStage: ', newStage)
+      if (!newStage) {
+        console.error("Couldnt load the stage. Start again.");
+      }         
+      session.currentStage    = newStage.current_stage;
+      session.orderCountries  = newStage.order_countries;
+      session.places          = newStage.places;
+      session.origin          = newStage.origin;
+      session.clueGuesses     = [];
+      session.wrongGuessCount = 0;
+      session.co2Available    = newStage.co2_available;
+      session.penaltyApplied  = false;
+  
+      setSession(session);
+      console.log("New stage loaded:", session);
+  
+      //  SHOW TASKPAGE
+      showGameScreen();  // reload UI with new stage
+      console.log(`Stage ${session.currentStage} begins with countries: ${session.orderCountries}`);
+    }
+  }
+
+  // ---- USER INPUT LOGIC ----
+  document.getElementById("btnSubmit").onclick = async () => {
+    const code = document.getElementById("countryInput").value.trim().toUpperCase();
+    addUserMsg(output, code);
+  
+    const validation = validateCountryInput(code, session.places);
+    console.log('code: ', code);
+    console.log("validation:", validation);
+  
+    if (!validation.valid) {
+      return console.log('wrong answer: ', validation);
+    }
+    await handleCorrectGuess(output, code, validation);
+  };
 
   // ---- Toggle btn logic ----
   const btnMore = document.getElementById("btnMoreOptions");
