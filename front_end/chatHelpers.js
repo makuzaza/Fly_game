@@ -2,10 +2,7 @@
 export function get_game_status() {
   return JSON.parse(sessionStorage.getItem("stage"));
 }
-// ---- store stage data ----
-export function save_game_status(stage) {
-  sessionStorage.setItem("stage", JSON.stringify(stage));
-}
+
 // -----------------------------------
 // USER MSG INPUT VALIDATOR
 // -----------------------------------
@@ -51,7 +48,7 @@ export function validateCountryInput(code, places) {
 export function addSystemMsg(outputEl, text) {
   const div = document.createElement("div");
   div.className = "msg system";
-  div.textContent = text; 
+  div.textContent = text; // safer than innerHTML
   outputEl.appendChild(div);
 
   outputEl.scrollTop = outputEl.scrollHeight;
@@ -88,8 +85,16 @@ export function introStage1(outputEl, playerName) {
 //------------------------------------
 
 //------------------------------------
-// FAIL
+// FAIL (ORDER OR CO2)
 //------------------------------------
+export function failedGame(outputEl) {
+  // ANNIMATION STOPS IN THE MEEDLE OF THE PLANE FLIGHT
+  addSystemMsg(outputEl, `You did not choose the most optimal route .`);
+  addSystemMsg(outputEl, `That is why you runned out of CO2.`);
+  addSystemMsg(outputEl, `To get to your final destination this would be the most ideal route:`);
+  console.log('Working on how to show the most ideal rout in a nice way.');
+  // SHOW MOST IDEAL ROUTE IN A NICE WAY
+}
 
 //------------------------------------
 // RETRY
@@ -98,5 +103,20 @@ export function introStage1(outputEl, playerName) {
 //------------------------------------
 // VALID GUESS
 //------------------------------------
+export function correctGuess(outputEl, nextCountry) {
+  addSystemMsg(outputEl, `🎉 Congratulations! That is correct.`);
+  addSystemMsg(outputEl, `Next, we travel to ${nextCountry}.`);
+  //    FLIGH ANNIMATION
+  addSystemMsg(outputEl, `What is your next guess?`);
+}
 
+//------------------------------------
+// WIN GAME
+//------------------------------------
+export function winGame(outputEl ) {
+  addSystemMsg(outputEl, `🎉 Congratulations!`);
+  addSystemMsg(outputEl, `You completed the entire mission successfully!`);
+  addSystemMsg(outputEl, `You optimized CO₂ and followed all clues correctly.`);  
+  //    WIN GAME CELEBRATION/ANIMATION
+}
 
