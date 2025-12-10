@@ -109,7 +109,7 @@ export function showGameScreen() {
   screen.innerHTML = `
     <div id="map-container">
       <div class="clues-overlay">
-        <h3>🕵️ Your mission (guess the country):</h3>
+        <h3>🕵️ Guess the country in the correct order:</h3>
         <div id="clues-list"></div>
       </div>
     </div>
