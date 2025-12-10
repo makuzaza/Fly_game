@@ -1,3 +1,4 @@
+
 import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
 import { initMap } from "./mapScreen.js";
 import { get_game_status, validateCountryInput, introStage1, correctGuess, failedGame, winGame, addUserMsg, addSystemMsg, wrongGuess1, wrongGuessPenalty } from "./chatHelpers.js";
@@ -62,6 +63,31 @@ function renderTips(session) {
   });
 }
 
+// --- Update trip info display ---
+function updateTripInfo(session) {
+  const tripUpdate = document.querySelector(".trip-update");
+  if (!tripUpdate) return;
+
+  const currentAirport = session.origin || "EFHK";
+  const co2Available = session.co2Available?.toFixed(2) || 0;
+  const initialCo2 = session.initialCo2?.toFixed(2) || 0;
+
+  tripUpdate.innerHTML = `
+    <div class="trip-info-item">
+      <strong>Current Location:</strong> ${currentAirport}
+    </div>
+    <div class="trip-info-item">
+      <strong>CO₂ Available:</strong> ${co2Available} / ${initialCo2} kg
+    </div>
+    <div class="trip-info-item">
+      <strong>Stage:</strong> ${session.currentStage || 1}
+    </div>
+    <div class="trip-info-item">
+      <strong>Countries Visited:</strong> ${session.clueGuesses?.length || 0} / 3
+    </div>
+  `;
+}
+
 // --- Load Stage data and store it in the sessionStorage ---
 async function loadStage() {
   const stage = await fetchStage();
@@ -101,7 +127,7 @@ function setSession(updates) {
 function resetHandler(delay = 6000, finalScreenFn = showResultsScreen) {
   setTimeout(() => {
     resetGame();
-    sessionStorage.removeItem("session");
+    sessionStorage.removeItem("gameSession");
     sessionStorage.removeItem("stage");
     finalScreenFn();
   }, delay);
@@ -134,6 +160,33 @@ function resetHandler(delay = 6000, finalScreenFn = showResultsScreen) {
 //     setTimeout(() => intro.remove(), 1200);
 //   };
 // }
+
+// --- Save session backup before attempting stage ---
+function backupSession(session) {
+  const backup = {
+    clueGuesses: [...session.clueGuesses],
+    origin: session.origin,
+    co2Available: session.co2Available,
+    wrongGuessCount: session.wrongGuessCount
+  };
+  sessionStorage.setItem("sessionBackup", JSON.stringify(backup));
+  return backup;
+}
+
+// --- Restore session from backup ---
+function restoreSession() {
+  const backup = JSON.parse(sessionStorage.getItem("sessionBackup"));
+  if (backup) {
+    let session = getSession();
+    session.clueGuesses = backup.clueGuesses;
+    session.origin = backup.origin;
+    session.co2Available = backup.co2Available;
+    session.wrongGuessCount = backup.wrongGuessCount;
+    setSession(session);
+    return session;
+  }
+  return null;
+}
 
 // ----------------------------------------------
 // START SCREEN
@@ -169,7 +222,7 @@ function showStartScreen() {
 // ----------------------------------------------
 function drawQuestionBox(questionText, yesCallback, noCallback) {
   const app = document.getElementById("app");
-  app.innerHTML = ""; // clear previous screen
+  app.innerHTML = "";
 
   app.appendChild(renderHeader());
 
@@ -206,7 +259,6 @@ function drawQuestionBox(questionText, yesCallback, noCallback) {
 }
 
 function showRulesQuestion() {
-  app.appendChild(renderHeader());
   drawQuestionBox(
     "Do you want to read the rules?",
     showRulesScreen,
@@ -231,17 +283,17 @@ function showRulesScreen() {
     <p>Hello, my friend!</p>
     <p>Welcome to the exciting world of global travel!</p>
     <div>In this game, you will embark on flights to distant countries, solve intriguing puzzles, and experience unforgettable adventures.</div>
-    <div>Of course, it is important to keep the environment in mind — so plan your route carefully to reduce CO₂ emissions.</div>
-    <p>Here’s how it works:</p>
-    <div>You’ll start Level 1 from Helsinki, and always progress from previous destination.</div>
+    <div>Of course, it is important to keep the environment in mind – so plan your route carefully to reduce CO₂ emissions.</div>
+    <p>Here's how it works:</p>
+    <div>You'll start Level 1 from Helsinki, and always progress from previous destination.</div>
     <div>Your task is to visit 3 countries by guessing their names.</div>
-    <div>Don’t worry - plenty of hints will guide you along the way.</div>
+    <div>Don't worry - plenty of hints will guide you along the way.</div>
     <div>Each level has a CO₂ budget, so plan your flights wisely!</div>
     <div>We recommend using the map to choose the most optimal route.</div><br/>
     <div>Each country may have several airports, so choose wisely, always considering the environmental impact.</div>
-    <div>If you don’t succeed, each level can be replayed up to 3 times.</div>
-    <div>You can also exit the game at any time by typing “quit” or “X” on your keyboard.</div>
-    <div>At the end of the game, you’ll see your results, which will also be automatically saved to the database for future viewing.</div>
+    <div>If you don't succeed, each level can be replayed up to 3 times.</div>
+    <div>You can also exit the game at any time by clicking the exit button.</div>
+    <div>At the end of the game, you'll see your results, which will also be automatically saved to the database for future viewing.</div>
     <p>Good luck! 🌍✈️</p>
     <button id="btnContinue">Continue</button>
   `;
@@ -261,37 +313,42 @@ async function showGameScreen() {
   // --- Load Stage + Session ---
   let stage = get_game_status();
   let session = getSession();
-  console.log(session);
+  console.log("Current session:", session);
 
   // --- fresh start ---
   if (!session || !stage) {
-    sessionStorage.removeItem("session");
+    sessionStorage.removeItem("gameSession");
     sessionStorage.removeItem("stage");
-    stage = await loadStage(); // create new stage
-    console.log(stage)
-    console.log(stage.places)
+    stage = await loadStage();
     session = {};
     if (!stage) {
-      console.error("Couldn't load the stage. Please reload te page!");
-      return; // stop execution
+      console.error("Couldn't load the stage. Please reload the page!");
+      return;
     }
     console.log("No session or stage found. Starting fresh.");
   }
 
   // --- Initialize session fields ---
   session.playerName ??= sessionStorage.getItem("playerName");
-  session.currentStage ??= stage.current_stage;    // 1–3
-  session.orderCountries ??= stage.order_countries;  // [ISO1, ISO2, ISO3]
-  session.clueGuesses ??= [];                     // per stage guesses
+  session.currentStage ??= stage.current_stage;
+  session.orderCountries ??= stage.order_countries;
+  session.clueGuesses ??= [];
   session.origin ??= stage.origin;
   session.startOrigin ??= stage.origin;
   session.wrongGuessCount ??= 0;
-  session.initialCo2      ??= stage.co2_available;
-  session.co2Available    ??= stage.co2_available;
-  session.places          ??= stage.places;
+  session.initialCo2 ??= stage.co2_available;
+  session.co2Available ??= stage.co2_available;
+  session.places ??= stage.places;
+  session.replayCount ??= 0; // Track replays per stage
+  session.totalFlights ??= 0; // Track total flights
 
   setSession(session);
-  console.log('session: ', session);
+  console.log('Initialized session: ', session);
+
+  // Backup session at stage start (only if no guesses yet)
+  if (session.clueGuesses.length === 0) {
+    backupSession(session);
+  }
 
   // ---- Build UI ----
   app.appendChild(renderHeaderWithQuit());
@@ -308,7 +365,7 @@ async function showGameScreen() {
 
     <div class="side-panel">
       <!-- RIGHT SIDE: TRIP-UPDATE SECTION -->
-      <div class="trip-update"> </div>
+      <div class="trip-update"></div>
 
       <!-- RIGHT SIDE: INTERACTIVE-BOX SECTION -->
       <div class="interactive-box">
@@ -327,9 +384,7 @@ async function showGameScreen() {
           <button id="btnResults">Results</button>
           <button id="btnRules">Rules</button>
         </div>
-
       </div>
-
     </div>
   `;
 
@@ -347,6 +402,9 @@ async function showGameScreen() {
 
   app.appendChild(screen);
 
+  // Update trip info display
+  updateTripInfo(session);
+
   session.shuffledCountries = null;
   renderTips(session);
 
@@ -361,7 +419,6 @@ async function showGameScreen() {
     quitModal.style.display = "none";
   };
 
-  // --- Close by clicking outside modal ---
   quitModal.onclick = (event) => {
     if (event.target === quitModal) quitModal.style.display = "none";
   };
@@ -369,14 +426,17 @@ async function showGameScreen() {
   // --- Initialize map ---
   initMap("map-container", "http://localhost:5000");
   const output = document.getElementById("chatMessages");
+  
   // --- Stage introduction messages ---
-  if (session.currentStage === 1 && session.clueGuesses.length === 0) {
+  if (session.currentStage === 1 && session.clueGuesses.length === 0 && session.replayCount === 0) {
     introStage1(output, session.playerName);
     console.log("IntroStage1 triggered for player:", session.playerName);
-  }
-  if (session.currentStage >= 2 && session.clueGuesses.length === 0) {
-    addSystemMsg(output, `Welcome to level ${session.currentStage}, ${session.playerName}!!,`);
+  } else if (session.currentStage >= 2 && session.clueGuesses.length === 0 && session.replayCount === 0) {
+    addSystemMsg(output, `Welcome to level ${session.currentStage}, ${session.playerName}!`);
     addSystemMsg(output, `What will you guess?`);
+  } else if (session.replayCount > 0 && session.clueGuesses.length === 0) {
+    addSystemMsg(output, `This is replay attempt ${session.replayCount} of 3 for Stage ${session.currentStage}.`);
+    addSystemMsg(output, `You have fresh clues. Let's try again!`);
   }
 
   // ---- WRONG GUESS HANDLER ----
@@ -388,51 +448,104 @@ async function showGameScreen() {
 
     const n = session.wrongGuessCount;
 
-    // 1st wrong guess -> no penalty yet
     if (n === 1) {
       return wrongGuess1(output, validation.message);
     }
-    // From 2nd wrong guess onwards -> penalty count shows
+    
+    // After 3 wrong guesses, show a hint with correct country
+    if (n >= 3) {
+      const remainingCountries = session.orderCountries.filter(
+        code => !session.clueGuesses.includes(code)
+      );
+      
+      if (remainingCountries.length > 0) {
+        const correctCountry = remainingCountries[0]; // Next country in order
+        const countryName = session.places[correctCountry]?.name || correctCountry;
+        addSystemMsg(output, `❌ Incorrect again.`);
+        addSystemMsg(output, validation.message);
+        addSystemMsg(output, `🤖 Hint: The correct country is ${correctCountry} (${countryName})`);
+        
+        // Reset wrong guess count after showing hint
+        session.wrongGuessCount = 0;
+        setSession(session);
+        return;
+      }
+    }
+    
     const penaltyStops = n - 1;
-
     return wrongGuessPenalty(output, validation.message, penaltyStops);
   }
 
   // ---- CORRECT GUESS HANDLER ----
   async function handleCorrectGuess(output, validation) {
     let session = getSession();
-    console.log('session: ', session);
+    console.log('Processing correct guess for:', validation.iso);
 
     // Ensure user does not guess the same clue twice
     if (session.clueGuesses.includes(validation.iso)) {
       return addSystemMsg(output, `${validation.name} was already guessed, try again!`);
     }
+
     const destICAO = validation.icao;
-    console.log('destICAO: ', destICAO);
     const origin = session.origin;
 
     let route;
 
     if (session.wrongGuessCount > 1) {
-      // Apply penalty route only
       const penaltyStops = session.wrongGuessCount - 1;
       addSystemMsg(output, `You made mistakes earlier, applying ${penaltyStops} extra stops.`);
       route = await fetchLayoverRoute(origin, destICAO, penaltyStops);
-
     } else {
-      // No mistakes -> normal route
       route = await fetchLayoverRoute(origin, destICAO, 0);
     }
 
-    // Deduct CO₂ once
-    session.co2Available -= route.co2_needed;
-    console.log('route: ', route)
-
-    if (session.co2Available < 0) {
-      failedGame(output);
-      resetHandler();
+    if (!route) {
+      addSystemMsg(output, "❌ Unable to calculate route. Please try again.");
       return;
     }
+
+    // Check CO₂ BEFORE deducting
+    if (route.co2_needed > session.co2Available) {
+      addSystemMsg(output, `❌ Not enough CO₂! Required: ${route.co2_needed.toFixed(2)} kg, Available: ${session.co2Available.toFixed(2)} kg`);
+      
+      // Offer replay (max 3 times per stage)
+      if (session.replayCount < 3) {
+        const remaining = 3 - session.replayCount;
+        addSystemMsg(output, `You have ${remaining} replay attempts left for this stage.`);
+        
+        setTimeout(() => {
+          const retry = confirm(`Do you want to replay Stage ${session.currentStage}? (${remaining} tries remaining)`);
+          if (retry) {
+            // Restore backup and reload stage with new clues
+            session.replayCount += 1;
+            const restored = restoreSession();
+            if (restored) {
+              session = restored;
+              session.replayCount = session.replayCount += 1
+              sessionStorage.setItem("replayCount", session.replayCount);
+              setSession(session);
+              
+              // Reload stage to get new clues
+              loadStage().then(() => {
+                showGameScreen();
+              });
+            }
+          } else {
+            failedGame(output);
+            resetHandler();
+          }
+        }, 1000);
+      } else {
+        addSystemMsg(output, "No more replay attempts. Game Over.");
+        failedGame(output);
+        resetHandler();
+      }
+      return;
+    }
+
+    // Deduct CO₂
+    session.co2Available -= route.co2_needed;
+    session.totalFlights += 1;
 
     // Add this guess to the stage
     session.clueGuesses.push(validation.iso);
@@ -440,17 +553,21 @@ async function showGameScreen() {
     session.wrongGuessCount = 0;
 
     correctGuess(output, validation.iso);
+    addSystemMsg(output, `✈️ Flight completed! CO₂ used: ${route.co2_needed.toFixed(2)} kg`);
+    addSystemMsg(output, `Remaining CO₂: ${session.co2Available.toFixed(2)} kg`);
+    
     setSession(session);
+    updateTripInfo(session); // Update display
     session.shuffledCountries = null;
-    renderTips(session); // rewrite tips with the highlight
-    console.log('session in winhandler: ', session)
+    renderTips(session);
 
     // ---- Stage Completed? ----
     if (session.clueGuesses.length === 3) {
       const success = JSON.stringify(session.clueGuesses) === JSON.stringify(session.orderCountries);
-      console.log('Clues success: ', success)
+      console.log('Order check - Guesses:', session.clueGuesses, 'Expected:', session.orderCountries);
 
       if (!success) {
+        addSystemMsg(output, "❌ Wrong order! The correct sequence was: " + session.orderCountries.join(" → "));
         failedGame(output);
         resetHandler();
         return;
@@ -464,46 +581,46 @@ async function showGameScreen() {
       }
 
       // Otherwise, PASS STAGE → load new stage
-      addSystemMsg(output, "Great job! Loading the next stage...")
-      const newStage = await loadStage();  // fetch from API and replace old stage
-      console.log('newStage: ', newStage)
-      if (!newStage) {
-        console.error("Couldnt load the stage. Start again.");
-      }         
-      session.currentStage    = newStage.current_stage;
-      session.orderCountries  = newStage.order_countries;
-      session.places          = newStage.places;
-      session.origin          = newStage.origin;
-      session.clueGuesses     = [];
-      session.wrongGuessCount = 0;
-      session.co2Available = newStage.co2_available;
-      session.penaltyApplied = false;
+      addSystemMsg(output, "🎉 Stage complete! Loading next stage...");
+      
+      setTimeout(async () => {
+        const newStage = await loadStage();
+        if (!newStage) {
+          console.error("Couldn't load the stage. Start again.");
+          return;
+        }
+        
+        session.currentStage = newStage.current_stage;
+        session.orderCountries = newStage.order_countries;
+        session.places = newStage.places;
+        session.origin = newStage.origin;
+        session.clueGuesses = [];
+        session.wrongGuessCount = 0;
+        session.co2Available = newStage.co2_available;
+        session.initialCo2 = newStage.co2_available;
+        session.replayCount = 0; // Reset replay count for new stage
+        sessionStorage.removeItem("replayCount");
 
-      setSession(session);
-      console.log("New stage loaded:", session);
+        setSession(session);
+        backupSession(session); // Backup new stage
+        console.log("New stage loaded:", session);
 
-      //  SHOW TASKPAGE
-      showTaskScreen();  // reload UI with new stage
-      session.shuffledCountries = null;
-      renderTips(session); // rewrite tips with the highlight
-      console.log(`Stage ${session.currentStage} begins with countries: ${session.orderCountries}`);
+        showTaskScreen();
+      }, 2000);
     }
   }
 
   // --- Listen for airport selection from map ---
   window.addEventListener("airport-selected", async (event) => {
     const airport = event.detail;
-    console.log('airport: ', airport);
     const isoDest = airport.country;
     const identDest = airport.ident;
     const session = getSession();
 
     console.log("Airport chosen on map:", identDest, isoDest);
 
-    // Validate the airport -> finds the country ISO from places
     const validation = validateCountryInput(isoDest, session.places, identDest);
-
-    addUserMsg(output, isoDest);
+    addUserMsg(output, `Selected: ${identDest} (${isoDest})`);
 
     if (!validation.valid) {
       return handleWrongGuess(output, validation);
@@ -516,19 +633,29 @@ async function showGameScreen() {
   document.getElementById("btnSubmit").onclick = async () => {
     const inputEl = document.getElementById("countryInput");
     const code = inputEl.value.trim();
+    
+    if (!code) return;
+    
     addUserMsg(output, code);
 
     const validation = validateCountryInput(code, session.places);
-    console.log('code: ', code);
-    console.log("validation:", validation);
+    console.log("User input validation:", validation);
 
     if (!validation.valid) {
       inputEl.value = "";
       return handleWrongGuess(output, validation);
     }
+    
     await handleCorrectGuess(output, validation);
     inputEl.value = "";
   };
+
+  // Allow Enter key to submit
+  document.getElementById("countryInput").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      document.getElementById("btnSubmit").click();
+    }
+  });
 
   // ---- Toggle btn logic ----
   const btnMore = document.getElementById("btnMoreOptions");
@@ -539,14 +666,12 @@ async function showGameScreen() {
     menu.classList.toggle("hidden");
   };
 
-  // Close popup when clicking outside
   document.addEventListener("click", (e) => {
     if (!menu.contains(e.target) && e.target !== btnMore) {
       menu.classList.add("hidden");
     }
   });
 
-  // Button actions
   document.getElementById("btnResults").onclick = () => {
     console.log("Results clicked");
     showResultsScreen();
@@ -554,50 +679,48 @@ async function showGameScreen() {
 
   document.getElementById("btnRules").onclick = () => {
     console.log("Rules clicked");
+    showRulesScreen();
   };
 }
+
 //------------------
 //   TASK SCREEN
 //------------------
 async function showTaskScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
-  // --- Load Stage + Session ---
+  
   let stage = get_game_status();
   let session = getSession();
-  console.log(session);
+  console.log("Task screen session:", session);
 
-  // --- fresh start ---
   if (!session || !stage) {
-    sessionStorage.removeItem("session");
+    sessionStorage.removeItem("gameSession");
     sessionStorage.removeItem("stage");
-    stage = await loadStage(); // create new stage
-    console.log(stage)
-    console.log(stage.places)
+    stage = await loadStage();
     session = {};
     if (!stage) {
-      console.error("Couldnt load the stage. Please reload te page!");
-      return; // stop execution
+      console.error("Couldn't load the stage. Please reload the page!");
+      return;
     }
     console.log("No session or stage found. Starting fresh.");
   }
-  // ---- Build UI ----
-  app.appendChild(renderHeader())
+  
+  app.appendChild(renderHeader());
   const screen = document.createElement("div");
-  screen.className = "screen tasks-screen"
+  screen.className = "screen tasks-screen";
   const round = stage.current_stage;
   const budget = stage.co2_available;
   const visitCount = stage.order_countries?.length;
 
-  screen.innerHTML = `<h2 class="task-item" id="round"></h2>
-  <p class="task-item" id="budget"></p>
-    <p class="task-item" id="countries"></p>
-  <button class="task-btn" id="Start-btn">Start</button>
+  screen.innerHTML = `
+    <h2 class="task-item" id="round">Stage ${round}</h2>
+    <p class="task-item" id="budget">CO₂ Budget: ${budget.toFixed(2)} kg</p>
+    <p class="task-item" id="countries">Countries to visit: ${visitCount}</p>
+    <button class="task-btn" id="Start-btn">Start</button>
   `;
-  app.appendChild(screen)
-  document.getElementById("round").innerText = `Stage ${round}`
-  document.getElementById("budget").innerText = `CO2 Budget: ${budget}`;
-  document.getElementById("countries").innerText = `Countries to visit: ${visitCount}`
+  
+  app.appendChild(screen);
   document.getElementById("Start-btn").onclick = () => showGameScreen();
 }
 
@@ -620,9 +743,9 @@ async function showResultsScreen() {
       <h2>Results</h2>
       <p>Error loading results. Please try again.</p>
       <div class="result_buttons">
-            <button id="result_again">Play Again</button>
-            <button id="result_best">Best results</button>
-            <button id="result_quit">Quit</button>
+        <button id="result_again">Play Again</button>
+        <button id="result_best">Best results</button>
+        <button id="result_quit">Quit</button>
       </div>
     `;
   } else {
@@ -636,88 +759,92 @@ async function showResultsScreen() {
     }
 
     screen.innerHTML = `
-        <h1 id="result_status">${statusMessage}</h1> <!-- This should be Win/Lose/Quit -->
-        <h2>Your game results:</h2>
-        <div id="result_table">
+      <h1 id="result_status">${statusMessage}</h1>
+      <h2>Your game results:</h2>
+      <div id="result_table">
+        <table>
+          <tr>
+            <td>Levels passed</td>
+            <td id="result_levels">${data.levels || 0}</td>
+          </tr>
+          <tr>
+            <td>Total distance, km</td>
+            <td id="result_distance">${data.km_amount || 0}</td>
+          </tr>
+          <tr>
+            <td>Countries visited</td>
+            <td id="result_countries">${data.cities || 0}</td>
+          </tr>
+          <tr>
+            <td>Total CO₂, kg</td>
+            <td id="result_co2">${data.co2_amount || 0}</td>
+          </tr>
+          <tr>
+            <td>Efficiency, %</td>
+            <td id="efficiency">${data.efficiency || 0}</td>
+          </tr>
+          <tr>
+            <td>Game status</td>
+            <td id="game_status">${data.status}</td>
+          </tr>
+        </table>
+      </div>
+      <div class="result_buttons">
+        <button id="result_again">Play Again</button>
+        <button id="result_best">Best results</button>
+        <button id="result_quit">Quit</button>
+      </div>
+      
+      <div id="leaderboard" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2>Leaderboard</h2>
+          <div id="leaderboard_table">
             <table>
+              <thead>
                 <tr>
-                    <td>Levels passed</td>
-                    <td id="result_levels">${data.levels || 0}</td>
+                  <th>Place</th>
+                  <th>Name</th>
+                  <th>Distance, km</th>
+                  <th>CO₂, kg</th>
+                  <th>Efficiency</th>
+                  <th>Status</th>
                 </tr>
-                <tr>
-                    <td>Total distance, km</td>
-                    <td id="result_distance">${data.km_amount || 0}</td>
-                </tr>
-                <tr>
-                    <td>Countries visited</td>
-                    <td id="result_countries">${data.cities || 0}</td>
-                </tr>
-                <tr>
-                    <td>Total CO2, kg</td>
-                    <td id="result_co2">${data.co2_amount || 0}</td>
-                </tr>
-                <tr>
-                    <td>Efficiency, %</td>
-                    <td id="efficiency">${data.efficiency || 0}</td>
-                </tr>
-                <tr>
-                    <td>Game status</td>
-                    <td id="game_status">${data.status}</td>
-                </tr>
+              </thead>
+              <tbody id="leaderboard-body"></tbody>
             </table>
+          </div>
         </div>
-        <div class="result_buttons">
-            <button id="result_again">Play Again</button>
-            <button id="result_best">Best results</button>
-            <button id="result_quit">Quit</button>
-        </div>
-        
-        <!-- Modal window -->
-        <div id="leaderboard" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>Leaderboard</h2>
-                <div id="leaderboard_table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Place</th>
-                                <th>Name</th>
-                                <th>Distance, km</th>
-                                <th>CO2, kg</th>
-                                <th>Efficiency</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboard-body"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-  `;
-
-    app.appendChild(screen);
-
-    document.getElementById("result_again").onclick = () => showTaskScreen();
-    const modal = document.getElementById("leaderboard");
-    const btnLeaderboard = document.getElementById("result_best");
-    const btnClose = modal.querySelector(".close");
-    document.getElementById("result_quit").onclick = () => showByeScreen();
-
-    btnLeaderboard.onclick = async () => {
-      await loadLeaderboard();
-      modal.style.display = "block";
-    };
-    btnClose.onclick = () => {
-      modal.style.display = "none";
-    };
-    window.onclick = (event) => {
-      if (event.target === modal) {
-        modal.style.display = "none";
-      }
-    };
-
+      </div>
+    `;
   }
+
+  app.appendChild(screen);
+
+  document.getElementById("result_again").onclick = () => {
+    sessionStorage.clear();
+    showStartScreen();
+  };
+  
+  const modal = document.getElementById("leaderboard");
+  const btnLeaderboard = document.getElementById("result_best");
+  const btnClose = modal.querySelector(".close");
+  document.getElementById("result_quit").onclick = () => showByeScreen();
+
+  btnLeaderboard.onclick = async () => {
+    await loadLeaderboard();
+    modal.style.display = "block";
+  };
+  
+  btnClose.onclick = () => {
+    modal.style.display = "none";
+  };
+  
+  window.onclick = (event) => {
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
+  };
 }
 
 // Leaderboard loading
@@ -751,7 +878,6 @@ async function loadLeaderboard() {
 // ----------------------------------------------
 // BYE SCREEN
 // ----------------------------------------------
-
 async function showByeScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
@@ -762,14 +888,14 @@ async function showByeScreen() {
   screen.className = "bye-container";
 
   screen.innerHTML = `
-      <div class="bye-message">
-        <h2>Session complete. Aircraft secured.</h2>
-        <p>Thank you for your service, Pilot!</p>
-        <p>The sky await your return!</p>
-        <p>---------------</p>
-        <p>Goodbye!</p>
-      </div>
-    `;
+    <div class="bye-message">
+      <h2>Session complete. Aircraft secured.</h2>
+      <p>Thank you for your service, Pilot!</p>
+      <p>The sky awaits your return!</p>
+      <p>---------------</p>
+      <p>Goodbye!</p>
+    </div>
+  `;
 
   app.appendChild(screen);
 }

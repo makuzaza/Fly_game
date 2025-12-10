@@ -32,12 +32,12 @@ export function validateCountryInput(input, places, ident = 0) {
   const iso = normalizeCountryInput(input, places);
 
   if (!iso) {
-    return { valid: false, message: "Type a country code." };
+    return { valid: false, message: "Type a valid country code or name." };
   }
 
   // ISO must be a key in places
   if (!Object.keys(places).includes(iso)) {
-    return { valid: false, message: `X ${iso} is not one of the target countries for this stage.` };
+    return { valid: false, message: `❌ ${iso} is not one of the target countries for this stage.` };
   }
 
   const data = places[iso];
@@ -48,7 +48,7 @@ export function validateCountryInput(input, places, ident = 0) {
     iso,
     icao,
     name: data.name,
-    message: `Correct guess: ${iso} -> Airport ${icao}`
+    message: `✅ Correct guess: ${iso} -> Airport ${icao}`
   };
 }
 
@@ -58,9 +58,8 @@ export function validateCountryInput(input, places, ident = 0) {
 export function addSystemMsg(outputEl, text) {
   const div = document.createElement("div");
   div.className = "msg system";
-  div.textContent = text; // safer than innerHTML
+  div.textContent = text;
   outputEl.appendChild(div);
-
   outputEl.scrollTop = outputEl.scrollHeight;
 }
 
@@ -69,7 +68,6 @@ export function addUserMsg(outputEl, text) {
   div.className = "msg user";
   div.textContent = text;
   outputEl.appendChild(div);
-
   outputEl.scrollTop = outputEl.scrollHeight;
 }
 
@@ -77,62 +75,55 @@ export function addUserMsg(outputEl, text) {
 //  FIRST STAGE INTRO MESSAGES
 // -----------------------------------
 export function introStage1(outputEl, playerName) {
-  addSystemMsg(outputEl, `Hello ${playerName}, welcome to your central station. I'll be your assistant.`);
-  addSystemMsg(outputEl, `Important: the order of your guesses matters, and running out of CO₂ during a mission means failure.`);
-  addSystemMsg(outputEl, `You've got your clues—let’s begin! Guess a country or select an airport from the map in your starting country.`);
-  //    VIDEO EXAMPLE - USER CAN PLAY OR NOT - EXPAND/CONTRACT OR NOT
+  addSystemMsg(outputEl, `🛫 Hello ${playerName}, welcome to your central station. I'll be your assistant.`);
+  addSystemMsg(outputEl, `⚠️ Important: the order of your guesses matters, and running out of CO₂ during a mission means failure.`);
+  addSystemMsg(outputEl, `💡 You've got your clues—let's begin! Guess a country or select an airport from the map.`);
 }
+
 //------------------------------------
 // FIRST INVALID GUESS
 //------------------------------------
 export function wrongGuess1(outputEl, validationMsg) {
-  addSystemMsg(outputEl, `Oh no! That’s not correct.`);
+  addSystemMsg(outputEl, `❌ Oh no! That's not correct.`);
   addSystemMsg(outputEl, validationMsg);
-  addSystemMsg(outputEl, `Be careful! One more mistake and penalties start applying.`);
-  addSystemMsg(outputEl, `Try again!`);
+  addSystemMsg(outputEl, `⚠️ Be careful! One more mistake and penalties start applying.`);
+  addSystemMsg(outputEl, `🔄 Try again!`);
 }
+
 //------------------------------------
 // SECOND+ INVALID GUESS
 //------------------------------------
 export function wrongGuessPenalty(outputEl, validationMsg, penaltyStops) {
-  addSystemMsg(outputEl, `Incorrect again.`);
+  addSystemMsg(outputEl, `❌ Incorrect again.`);
   addSystemMsg(outputEl, validationMsg);
-  addSystemMsg(outputEl, `Penalty accumulating: +${penaltyStops} layovers will apply on your next correct flight.`);
+  addSystemMsg(outputEl, `⚠️ Penalty accumulating: +${penaltyStops} layover(s) will apply on your next correct flight.`);
+  addSystemMsg(outputEl, `🔄 Try again!`);
 }
-//------------------------------------
-// LIMIT OF INVALID GUESS 
-// (runned out of co2)
-//------------------------------------
 
 //------------------------------------
 // FAIL (ORDER OR CO2)
 //------------------------------------
 export function failedGame(outputEl) {
-  // ANNIMATION STOPS IN THE MEEDLE OF THE PLANE FLIGHT
-  addSystemMsg(outputEl, `You did not choose the most optimal route .`);
-  addSystemMsg(outputEl, `That is why you runned out of CO2.`);
-  addSystemMsg(outputEl, `To get to your final destination this would be the most ideal route:`);
-  console.log('Working on how to show the most ideal rout in a nice way.');
-  // SHOW MOST IDEAL ROUTE IN A NICE WAY
+  addSystemMsg(outputEl, `❌ Mission Failed!`);
+  addSystemMsg(outputEl, `Your plane was unable to reach its destination due to insufficient CO₂ or wrong route order.`);
+  addSystemMsg(outputEl, `Better planning next time will help you succeed!`);
+  addSystemMsg(outputEl, `📊 Redirecting to results...`);
 }
 
 //------------------------------------
 // VALID GUESS
 //------------------------------------
-export function correctGuess(outputEl, nextCountry) {
-  addSystemMsg(outputEl, `🎉 Congratulations! That is correct.`);
-  addSystemMsg(outputEl, `Next, we travel to ${nextCountry}.`);
-  //    FLIGH ANNIMATION
-  addSystemMsg(outputEl, `What is your next guess?`);
+export function correctGuess(outputEl, countryIso) {
+  addSystemMsg(outputEl, `🎉 Congratulations! That is correct: ${countryIso}`);
 }
 
 //------------------------------------
 // WIN GAME
 //------------------------------------
-export function winGame(outputEl ) {
-  addSystemMsg(outputEl, `🎉 Congratulations!`);
+export function winGame(outputEl) {
+  addSystemMsg(outputEl, `🎉🎊 CONGRATULATIONS! 🎊🎉`);
   addSystemMsg(outputEl, `You completed the entire mission successfully!`);
-  addSystemMsg(outputEl, `You optimized CO₂ and followed all clues correctly.`);  
-  //    WIN GAME CELEBRATION/ANIMATION
+  addSystemMsg(outputEl, `You optimized CO₂ and followed all clues correctly.`);
+  addSystemMsg(outputEl, `✈️ You are a master pilot!`);
+  addSystemMsg(outputEl, `📊 Redirecting to results...`);
 }
-
