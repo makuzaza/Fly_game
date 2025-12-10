@@ -1,6 +1,6 @@
 import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
 import { initMap } from "./mapScreen.js";
-import { get_game_status, validateCountryInput, introStage1, correctGuess, failedGame, winGame, addUserMsg, addSystemMsg } from "./chatHelpers.js";
+import { get_game_status, validateCountryInput, introStage1, correctGuess, failedGame, winGame, addUserMsg, addSystemMsg, wrongGuess1, wrongGuessPenalty } from "./chatHelpers.js";
 
 ("use strict");
 
@@ -76,7 +76,7 @@ function setSession(updates) {
   return updated;
 }
 // --- reset handler ---
-function resetHandler(delay = 7000, finalScreenFn = showResultsScreen)  {
+function resetHandler(delay = 6000, finalScreenFn = showResultsScreen)  {
   setTimeout(() => {
     resetGame();
     sessionStorage.removeItem("session");
@@ -330,6 +330,23 @@ async function showGameScreen() {
   }
 
   // ---- WRONG GUESS HANDLER ----
+  async function handleWrongGuess(output, validation) {
+    let session = getSession();
+  
+    session.wrongGuessCount += 1;
+    setSession(session);
+  
+    const n = session.wrongGuessCount;
+    
+    // 1st wrong guess -> no penalty yet
+    if (n === 1) {
+      return wrongGuess1(output, validation.message);
+    }
+    // From 2nd wrong guess onwards -> penalty count shows
+    const penaltyStops = n - 1;
+
+    return wrongGuessPenalty(output, validation.message, penaltyStops);
+  }
 
   // ---- CORRECT GUESS HANDLER ----
   async function handleCorrectGuess(output, validation) {
@@ -344,8 +361,20 @@ async function showGameScreen() {
     console.log('destICAO: ', destICAO);
     const origin   = session.origin;
 
-    // Normal route CO₂ consumption
-    const route = await fetchLayoverRoute(origin, destICAO, 0);
+    let route;
+    
+    if (session.wrongGuessCount > 1) {
+      // Apply penalty route only
+      const penaltyStops = session.wrongGuessCount - 1;
+      addSystemMsg(output, `You made mistakes earlier, applying ${penaltyStops} extra stops.`);
+      route = await fetchLayoverRoute(origin, destICAO, penaltyStops);
+    
+    } else {
+      // No mistakes -> normal route
+      route = await fetchLayoverRoute(origin, destICAO, 0);
+    }
+    
+    // Deduct CO₂ once
     session.co2Available -= route.co2_needed;
     console.log('route: ', route)
   
@@ -426,7 +455,7 @@ async function showGameScreen() {
     addUserMsg(output, isoDest);
 
     if (!validation.valid) {
-        console.log("wrong airport selected:", validation);
+        return handleWrongGuess(output, validation);
     }
 
     await handleCorrectGuess(output, validation);
@@ -443,8 +472,7 @@ async function showGameScreen() {
     console.log("validation:", validation);
   
     if (!validation.valid) {
-      inputEl.value = "";
-      return console.log('wrong answer: ', validation);
+      return handleWrongGuess(output, validation);
     }
     await handleCorrectGuess(output, validation);
     inputEl.value = "";
