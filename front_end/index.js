@@ -94,7 +94,7 @@ function showIntroVideo() {
 
     // Set video source
     const source = document.createElement("source");
-    source.src = "./video/airplane2.mp4";
+    source.src = "./video/airplane.mp4";
     source.type = "video/mp4";
 
     video.appendChild(source);
