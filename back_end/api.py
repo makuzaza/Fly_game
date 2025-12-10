@@ -7,6 +7,7 @@ from airport import AirportManager
 from game import Game
 from stage import Stage
 from tips_countries import tips_countries
+import os
 
 # Store active games by session
 active_games = {}
