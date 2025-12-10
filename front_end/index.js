@@ -472,6 +472,7 @@ async function showGameScreen() {
     console.log("validation:", validation);
   
     if (!validation.valid) {
+      inputEl.value = "";
       return handleWrongGuess(output, validation);
     }
     await handleCorrectGuess(output, validation);
