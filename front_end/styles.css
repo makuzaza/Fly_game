@@ -34,6 +34,7 @@ header {
     backdrop-filter: blur(10px);
     border-radius: 0 0 15px 0;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    filter: saturate(2);
     transition: all 0.3s ease;
 }
 
@@ -45,6 +46,7 @@ header {
     width: auto;
     height: 6rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    filter: saturate(2);
     transition: all 0.4s ease;
 }
 
@@ -261,7 +263,7 @@ input {
 
 /* === Stage Progress Indicator === */
 #game-info {
-    padding: 1.5rem;
+    padding: 0 1rem;
     background: linear-gradient(135deg, #374c4c 0%, #2530c5 100%);
     color: white;
     flex-shrink: 0;
@@ -496,6 +498,12 @@ input {
 .route-path p {
     margin: 0.3rem 0;
     font-size: 0.9rem;
+}
+
+.flight-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
 }
 
 #btn-confirm-flight,

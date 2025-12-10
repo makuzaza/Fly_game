@@ -173,8 +173,10 @@ export function showGameScreen() {
         <div id="route-info" style="display: none;">
             <h3>📋 Route Summary:</h3>
             <div id="route-details"></div>
-            <button id="btn-confirm-flight">Confirm Flight</button>
-            <button id="btn-cancel-flight">Choose Different Airport</button>
+            <div class="flight-buttons">
+              <button id="btn-confirm-flight">Confirm Flight</button>
+              <button id="btn-cancel-flight">Choose Different Airport</button>
+            </div>
         </div>
 
         <div id="airport-selection" style="display: none;">

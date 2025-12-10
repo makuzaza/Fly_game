@@ -28,7 +28,7 @@ let gameState = {
   backupTotal: null,
 };
 
-const API_URL = "https://flygame-production.up.railway.app";
+const API_URL = "http://localhost:5000";
 let mapInitialized = false;
 
 function getAirportInfo(ident) {
