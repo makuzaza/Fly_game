@@ -159,9 +159,13 @@ def create_app():
                     "airports": airports_data
                 }), 200
             else:
+                correct_country_code = countries_to_visit[0] if countries_to_visit else ""
+                correct_country_name = game.get_country_name(correct_country_code) if correct_country_code else ""
                 return jsonify({
                     "correct": False,
-                    "message": "Wrong guess. Try again!"
+                    "message": "Wrong guess. Try again!",
+                    "country_code": correct_country_code,
+                    "country_name": correct_country_name
                 }), 200
                 
         except Exception as e:
@@ -445,7 +449,7 @@ def create_app():
                 "total_distance_km": round(game.total["total_distance"], 1),
                 "countries_visited": len(game.total["flight_history"]),
                 "total_co2_kg": round(game.total["total_co2"], 2),
-                "game_status": game.session["game_status"] or "In Progress"
+                "game_status": game.session["game_status"]
             }
             return jsonify(data), 200
 

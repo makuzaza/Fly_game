@@ -164,6 +164,24 @@ input {
     width: 200px;
 }
 
+#player-name {
+    margin-top: 5px;
+}
+
+.input-error {
+  border: 2px solid #e74c3c !important;
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 14px;
+
+}
+
+#btn-start {
+    margin-top: 10px;
+}
+
 #intro-screen {
     position: fixed;
     inset: 0;
@@ -350,7 +368,7 @@ input {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 1rem;
+    padding: 0 0.5rem;
     overflow-y: auto;
     background: #f8f9fa;
 }
@@ -465,8 +483,8 @@ input {
 #route-info {
     background: white;
     border-radius: 15px;
-    padding: 1rem;
-    margin-bottom: 1rem;
+    padding: 0.8rem 0.5rem;
+    margin-bottom: 0.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -475,7 +493,7 @@ input {
     border-left: 4px solid #667eea;
     padding: 1rem;
     border-radius: 8px;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 #route-details p {
@@ -499,6 +517,93 @@ input {
     font-size: 0.9rem;
 }
 
+.route-airports {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 12px;
+}
+
+.airport-box {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    padding: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: all 0.3s ease;
+    min-height: 100%;
+}
+
+.airport-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.airport-box.start {
+    border-left: 4px solid #4CAF50;
+}
+
+.airport-box.end {
+    border-right: 4px solid #2196F3;
+}
+
+.airport-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.airport-code {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #667eea;
+    margin: 0.3rem 0;
+}
+
+.airport-name {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 0.3rem;
+    line-height: 1.3;
+}
+
+.arrow-head {
+    font-size: 2rem;
+    color: #2196F3;
+    animation: arrowPulse 2s infinite;
+}
+
+@keyframes arrowPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+}
+
+.route-path {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    border-left: 3px solid #667eea;
+}
+
+.route-path p {
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .flight-buttons {
     display: flex;
     justify-content: space-between;
@@ -508,7 +613,8 @@ input {
 #btn-confirm-flight,
 #btn-cancel-flight {
     width: calc(50% - 5px);
-    padding: 0.8rem;
+    padding: 0.5rem;
+    margin: 0;
     border: none;
     border-radius: 8px;
     font-size: 1rem;

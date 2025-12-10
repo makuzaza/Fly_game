@@ -39,19 +39,41 @@ function showStartScreen() {
   screen.className = "screen start-screen";
   screen.innerHTML = `
     <img src="assets/logo.png" class="logo_main" alt="EcoTrip Logo" />
-    <input id="player-name" type="text" placeholder="Enter your name" />
+        <input id="player-name" type="text" placeholder="Enter your name" />
+        <div id="name-error" class="error-message"></div>
     <button id="btn-start">Start Game</button>
   `;
   app.appendChild(screen);
 
-  document.getElementById("btn-start").onclick = () => {
-    const playerName = document.getElementById("player-name").value.trim();
+  const input = document.getElementById("player-name");
+  const errorBox = document.getElementById("name-error");
+
+  function validateName() {
+    const playerName = input.value.trim();
+
     if (!playerName) {
-      alert("Please enter your name!");
-      return;
+      errorBox.textContent = "Please enter your name!";
+      input.classList.add("input-error");
+      return false;
     }
-    gameState.playerName = playerName;
+
+    errorBox.textContent = "";
+    input.classList.remove("input-error");
+    return true;
+  }
+
+  document.getElementById("btn-start").onclick = () => {
+    if (!validateName()) return;
+
+    gameState.playerName = input.value.trim();
     showRulesChoiceScreen();
+  };
+
+  // ENTER key
+  input.onkeypress = (event) => {
+    if (event.key === "Enter") {
+      document.getElementById("btn-start").onclick();
+    }
   };
 }
 

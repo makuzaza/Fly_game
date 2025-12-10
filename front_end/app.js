@@ -15,11 +15,13 @@ let gameState = {
   playerName: "",
   stage: 0,
   co2Available: 0,
+  co2Initial: 0,
   countries: [],
   tips: [],
   origin: "",
   originName: "",
   originCountry: "",
+  correctCountryName: "",
   selectedCountry: null,
   selectedAirport: null,
   wrongAttempts: 0,
@@ -80,6 +82,7 @@ async function startNewGame(playerName) {
     gameState.playerName = playerName;
     gameState.stage = data.stage;
     gameState.co2Available = data.co2_available;
+    gameState.co2Initial = data.co2_available;
     gameState.countries = data.countries;
     gameState.tips = data.tips;
     gameState.origin = data.origin;
@@ -229,9 +232,9 @@ async function replayStage() {
     if (data.replayed) {
       gameState.stage = data.stage;
       gameState.co2Available = data.co2_available;
+      gameState.co2Initial = data.co2_available; 
       gameState.countries = data.countries;
       gameState.tips = data.tips;
-      gameState.origin = data.origin;
       gameState.wrongAttempts = 0;
       gameState.replayCount++;
 
@@ -298,8 +301,8 @@ function updateGameDisplay() {
     const co2Display = document.getElementById("co2-display");
     const co2Progress = document.getElementById("co2-progress");
     const co2Value = gameState.co2Available || 0;
-    const maxCO2 = gameState.co2Available; 
-    const percentage = (co2Value / maxCO2) * 100;
+    const maxCO2 = gameState.co2Initial || co2Value;
+    const percentage = maxCO2 > 0 ? (co2Value / maxCO2) * 100 : 0;
     
     co2Display.textContent = co2Value.toFixed(2);
     co2Progress.style.width = `${percentage}%`;
@@ -370,9 +373,21 @@ function displayRoute(routeData) {
         <p><strong>Distance:</strong> ${routeData.distance} km</p>
         <p><strong>CO2 Required:</strong> ${routeData.co2_required} kg</p>
         <p><strong>CO2 Available:</strong> ${routeData.co2_available} kg</p>
-        <p>Planning your route from ${startAirport.ident} - ${
-    startAirport.name
-  } to ${endAirport.ident} - ${endAirport.name}</p>
+        <div class="route-airports">
+            <div class="airport-box start">
+                <div class="airport-code">${startAirport.ident}</div>
+                <div class="airport-name">${startAirport.name}</div>
+            </div>
+            
+            <div class="route-arrow">
+                <div class="arrow-head">→</div>
+            </div>
+            
+            <div class="airport-box end">
+                <div class="airport-code">${endAirport.ident}</div>
+                <div class="airport-name">${endAirport.name}</div>
+            </div>
+        </div>
         <div class="route-path">
             ${routeData.route
               .map(
@@ -470,11 +485,18 @@ async function handleCountrySubmit() {
     document.getElementById("guess-section").style.display = "none";
     gameState.wrongAttempts = 0;
   } else {
+    if (result.country_name) {
+      gameState.correctCountryName = result.country_name;
+    }
+
     gameState.wrongAttempts += 1;
     if (gameState.wrongAttempts >= 3) {
-      document.getElementById(
-        "guess-feedback"
-      ).textContent = `❌ Wrong! Tip: The correct country is ${gameState.countries[0]}`;
+      const correctCountryCode = gameState.countries[0];
+      const countryNameDisplay = gameState.correctCountryName 
+        ? ` (${gameState.correctCountryName})` 
+        : "";
+
+      document.getElementById("guess-feedback").textContent = `❌ Wrong! Tip: The correct country is ${correctCountryCode}${countryNameDisplay}`;
       document.getElementById("attempts-info").textContent =
         "You can now type it to continue.";
     } else {
@@ -535,6 +557,7 @@ async function handleConfirmFlight() {
     );
     gameState.stage = result.next_stage;
     gameState.co2Available = result.co2_available;
+    gameState.co2Initial = result.co2_available; 
     gameState.countries = result.countries;
     gameState.tips = result.tips;
     gameState.replayCount = 0;
