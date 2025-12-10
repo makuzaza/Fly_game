@@ -521,7 +521,7 @@ async function showGameScreen() {
             const restored = restoreSession();
             if (restored) {
               session = restored;
-              session.replayCount = session.replayCount += 1
+              session.replayCount = session.replayCount += 1;
               sessionStorage.setItem("replayCount", session.replayCount);
               setSession(session);
               
