@@ -670,7 +670,7 @@ async function showResultsScreen() {
 
     app.appendChild(screen);
 
-    document.getElementById("result_again").onclick = () => showGameScreen();
+    document.getElementById("result_again").onclick = () => showTaskScreen();
     const modal = document.getElementById("leaderboard");
     const btnLeaderboard = document.getElementById("result_best");
     const btnClose = modal.querySelector(".close");
