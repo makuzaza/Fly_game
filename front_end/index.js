@@ -536,9 +536,12 @@ async function showTaskScreen() {
   app.innerHTML = "";
   // --- Load Stage + Session ---
   let stage = get_game_status();
+  let session = getSession();
+  console.log(session);
 
   // --- fresh start ---
-  if (!stage) {
+  if (!session || !stage) {
+    sessionStorage.removeItem("session");
     sessionStorage.removeItem("stage");
     stage = await loadStage(); // create new stage
     console.log(stage)
