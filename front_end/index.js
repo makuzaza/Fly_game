@@ -24,6 +24,31 @@ function renderHeaderWithQuit() {
   };
   return header;
 }
+
+// --- Render tips to the game screen---
+function renderTips(session) {
+  const footer = document.getElementById("tips-footer");
+  footer.innerHTML = "";
+
+  if (!Array.isArray(session.orderCountries)) {
+    console.error("session.orderCountries is missing or not an array", session);
+    return;
+  }
+
+  session.orderCountries.forEach((code, index) => {
+    const tipDiv = document.createElement("div");
+    tipDiv.className = "tip";
+    tipDiv.id = `tip${index+1}`;
+
+    if (session.clueGuesses.includes(code)) {
+      tipDiv.classList.add("highlighted");
+    }
+
+    tipDiv.innerHTML = `<span class="tip-label">Tip ${index+1}:</span> ${session.clues?.[code] || "No clue for this country"}`;
+    footer.appendChild(tipDiv);
+  });
+}
+
 // --- Load Stage data and store it in the sessionStorage ---
 async function loadStage() {
   const stage = await fetchStage();
@@ -207,6 +232,7 @@ async function showGameScreen() {
   session.initialCo2      ??= stage.co2_available;
   session.co2Available    ??= stage.co2_available;
   session.places          ??= stage.places;
+  session.clues           ??= stage.clues;
 
   setSession(session);
   console.log('session: ', session);
@@ -265,7 +291,7 @@ async function showGameScreen() {
 
   app.appendChild(screen);
 
-  //renderTips(session);
+  renderTips(session);
 
   const quitModal = document.getElementById("quit-modal");
 
@@ -359,6 +385,7 @@ async function showGameScreen() {
       session.currentStage    = newStage.current_stage;
       session.orderCountries  = newStage.order_countries;
       session.places          = newStage.places;
+      session.clues           = newStage.clues;
       session.origin          = newStage.origin;
       session.clueGuesses     = [];
       session.wrongGuessCount = 0;
