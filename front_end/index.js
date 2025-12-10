@@ -43,6 +43,15 @@ function setSession(updates) {
   sessionStorage.setItem("gameSession", JSON.stringify(updated));
   return updated;
 }
+// --- reset handler ---
+function resetHandler(delay = 7000, finalScreenFn = showResultsScreen)  {
+  setTimeout(() => {
+    resetGame();
+    sessionStorage.removeItem("session");
+    sessionStorage.removeItem("stage");
+    finalScreenFn();
+  }, delay);
+}
 
 // ----------------------------------------------
 // START SCREEN
@@ -308,12 +317,8 @@ async function showGameScreen() {
     console.log('route: ', route)
   
     if (session.co2Available < 0) {
-      resetGame();
       failedGame(output);
-      // Clear session storage for stage and session keys
-      sessionStorage.removeItem("session");
-      sessionStorage.removeItem("stage");
-      showResultsScreen();
+      resetHandler();
       return;
     }
   
@@ -332,23 +337,15 @@ async function showGameScreen() {
       console.log('Clues success: ', success)
   
       if (!success) {
-        resetGame();
         failedGame(output);
-        // Clear session storage for stage and session keys
-        sessionStorage.removeItem("session");
-        sessionStorage.removeItem("stage");
-        showResultsScreen();
+        resetHandler();
         return;
       }
   
       // WIN if last stage
       if (session.currentStage === 3) { 
-        resetGame();
         winGame(output);
-        // Clear session storage for stage and session keys
-        sessionStorage.removeItem("session");
-        sessionStorage.removeItem("stage");
-        showResultsScreen();
+        resetHandler();
         return;
       }
   
