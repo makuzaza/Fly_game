@@ -43,6 +43,15 @@ function setSession(updates) {
   sessionStorage.setItem("gameSession", JSON.stringify(updated));
   return updated;
 }
+// --- reset handler ---
+function resetHandler(delay = 7000, finalScreenFn = showResultsScreen)  {
+  setTimeout(() => {
+    resetGame();
+    sessionStorage.removeItem("session");
+    sessionStorage.removeItem("stage");
+    finalScreenFn();
+  }, delay);
+}
 
 // ----------------------------------------------
 // START SCREEN
@@ -256,7 +265,7 @@ async function showGameScreen() {
 
   app.appendChild(screen);
 
-  renderTips(session);
+  //renderTips(session);
 
   const quitModal = document.getElementById("quit-modal");
 
@@ -274,8 +283,8 @@ async function showGameScreen() {
     if (event.target === quitModal) quitModal.style.display = "none";
   };
 
+  // --- Initialize map ---
   initMap("map-container", "http://localhost:5000");
-
   const output = document.getElementById("chatMessages");
   // --- Stage introduction messages ---
   if (session.currentStage === 1 && session.clueGuesses.length === 0) {
@@ -287,38 +296,38 @@ async function showGameScreen() {
     addSystemMsg(output, `What is your guess now?`);
   }
 
+  // ---- WRONG GUESS HANDLER ----
+
   // ---- CORRECT GUESS HANDLER ----
-  async function handleCorrectGuess(output, code, validation) {
+  async function handleCorrectGuess(output, validation) {
     let session = getSession();
     console.log('session: ', session);
           
     // Ensure user does not guess the same clue twice
-    if (session.clueGuesses.includes(code)) {
-      return addSystemMsg(output, `${code} was already guessed, try again!`);
+    if (session.clueGuesses.includes(validation.iso)) {
+      return addSystemMsg(output, `${validation.iso} was already guessed, try again!`);
     }
     const destICAO = validation.icao;
+    console.log('destICAO: ', destICAO);
     const origin   = session.origin;
+
     // Normal route CO₂ consumption
     const route = await fetchLayoverRoute(origin, destICAO, 0);
     session.co2Available -= route.co2_needed;
     console.log('route: ', route)
   
     if (session.co2Available < 0) {
-      resetGame();
       failedGame(output);
-      // Clear session storage for stage and session keys
-      sessionStorage.removeItem("session");
-      sessionStorage.removeItem("stage");
-      showResultsScreen();
+      resetHandler();
       return;
     }
   
     // Add this guess to the stage
-    session.clueGuesses.push(code);
+    session.clueGuesses.push(validation.iso);
     session.origin = destICAO;
     session.wrongGuessCount = 0;
   
-    correctGuess(output, code);
+    correctGuess(output, validation.iso);
     setSession(session);
     console.log('session in winhandler: ', session)
   
@@ -328,23 +337,15 @@ async function showGameScreen() {
       console.log('Clues success: ', success)
   
       if (!success) {
-        resetGame();
         failedGame(output);
-        // Clear session storage for stage and session keys
-        sessionStorage.removeItem("session");
-        sessionStorage.removeItem("stage");
-        showResultsScreen();
+        resetHandler();
         return;
       }
   
       // WIN if last stage
       if (session.currentStage === 3) { 
-        resetGame();
         winGame(output);
-        // Clear session storage for stage and session keys
-        sessionStorage.removeItem("session");
-        sessionStorage.removeItem("stage");
-        showResultsScreen();
+        resetHandler();
         return;
       }
   
@@ -373,6 +374,28 @@ async function showGameScreen() {
     }
   }
 
+  // --- Listen for airport selection from map ---
+  window.addEventListener("airport-selected", async (event) => {
+    const airport = event.detail;
+    console.log('airport: ', airport);
+    const isoDest = airport.country;   
+    const identDest = airport.ident; 
+    const session = getSession();
+
+    console.log("Airport chosen on map:", identDest, isoDest);
+
+    // Validate the airport -> finds the country ISO from places
+    const validation = validateCountryInput(isoDest, session.places, identDest);
+
+    addUserMsg(output, isoDest);
+
+    if (!validation.valid) {
+        console.log("wrong airport selected:", validation);
+    }
+
+    await handleCorrectGuess(output, validation);
+  });
+
   // ---- USER INPUT LOGIC ----
   document.getElementById("btnSubmit").onclick = async () => {
     const code = document.getElementById("countryInput").value.trim().toUpperCase();
@@ -385,7 +408,7 @@ async function showGameScreen() {
     if (!validation.valid) {
       return console.log('wrong answer: ', validation);
     }
-    await handleCorrectGuess(output, code, validation);
+    await handleCorrectGuess(output, validation);
   };
 
   // ---- Toggle btn logic ----

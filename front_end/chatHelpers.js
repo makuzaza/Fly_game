@@ -6,40 +6,47 @@ export function get_game_status() {
 // -----------------------------------
 // USER MSG INPUT VALIDATOR
 // -----------------------------------
-export function validateCountryInput(code, places) {
-    //const stage = get_game_status();
-    if (!places) {
-      return { valid: false, message: "Game data missing. Reload the game." };
-    }
-    //Must not be empty
-    if (!code) {
-      return{ valid: false, message: "Type a country code." };
-    }
-    // Must be exactly 2 characters (ISO country code)
-    if (code.length !== 2) {
-      return { valid: false, message: "Country code must be 2 letters (e.g. FI, US, JP)." };
-    }
+export function validateCountryInput(iso, places, ident = 0) {
+  if (!places) {
+    return { valid: false, message: "Game data missing. Reload the game." };
+  }
 
-    // Must be alphabetic
-    if (!/^[A-Z]{2}$/.test(code)) {
-      return { valid: false, message: "Country code must contain only letters." };
-    }
-    
-    console.log('places[code]: ', places[code]);
-    if (!Object.keys(places).includes(code)) { //   GET THE KEY       
-        return { valid: false, message: `X ${code} is not one of the target countries for this stage.` };
-    }
+  if (!iso) {
+    return { valid: false, message: "Type a country code." };
+  }
 
-    // Lookup ICAO code for this country
-    const icao = places[code];
-    console.log('icao: ', icao);
+  iso = iso.toUpperCase();
 
-    return {
-        valid: true,
-        iso: code,
-        icao: icao,
-        message: `Correct guess: ${code} -> Airport ${icao}`
-    };
+  // Must be exactly 2 characters (ISO)
+  if (iso.length !== 2) {
+    return { valid: false, message: "Country code must be 2 letters (e.g. FI, US, JP)." };
+  }
+
+  // Must be alphabetic
+  if (!/^[A-Z]{2}$/.test(iso)) {
+    return { valid: false, message: "Country code must contain only letters." };
+  }
+
+  // ISO must be a key in places
+  if (!Object.keys(places).includes(iso)) {
+    return { valid: false, message: `X ${iso} is not one of the target countries for this stage.` };
+  }
+
+  let icao;
+  if (ident && ident.length === 4) {
+    // Use ident directly if provided
+    icao = ident.toUpperCase();
+  } else {
+    // Lookup ICAO from places
+    icao = places[iso];
+  }
+
+  return {
+    valid: true,
+    iso,
+    icao,
+    message: `Correct guess: ${iso} -> Airport ${icao}`
+  };
 }
 
 // -----------------------------------
