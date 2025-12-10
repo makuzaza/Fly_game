@@ -98,7 +98,7 @@ function setSession(updates) {
 }
 
 // --- reset handler ---
-function resetHandler(delay = 6000, finalScreenFn = showResultsScreen)  {
+function resetHandler(delay = 6000, finalScreenFn = showResultsScreen) {
   setTimeout(() => {
     resetGame();
     sessionStorage.removeItem("session");
@@ -354,12 +354,12 @@ async function showGameScreen() {
   // ---- WRONG GUESS HANDLER ----
   async function handleWrongGuess(output, validation) {
     let session = getSession();
-  
+
     session.wrongGuessCount += 1;
     setSession(session);
-  
+
     const n = session.wrongGuessCount;
-    
+
     // 1st wrong guess -> no penalty yet
     if (n === 1) {
       return wrongGuess1(output, validation.message);
@@ -381,21 +381,21 @@ async function showGameScreen() {
     }
     const destICAO = validation.icao;
     console.log('destICAO: ', destICAO);
-    const origin   = session.origin;
+    const origin = session.origin;
 
     let route;
-    
+
     if (session.wrongGuessCount > 1) {
       // Apply penalty route only
       const penaltyStops = session.wrongGuessCount - 1;
       addSystemMsg(output, `You made mistakes earlier, applying ${penaltyStops} extra stops.`);
       route = await fetchLayoverRoute(origin, destICAO, penaltyStops);
-    
+
     } else {
       // No mistakes -> normal route
       route = await fetchLayoverRoute(origin, destICAO, 0);
     }
-    
+
     // Deduct CO₂ once
     session.co2Available -= route.co2_needed;
     console.log('route: ', route)
@@ -478,7 +478,7 @@ async function showGameScreen() {
     addUserMsg(output, isoDest);
 
     if (!validation.valid) {
-        return handleWrongGuess(output, validation);
+      return handleWrongGuess(output, validation);
     }
 
     await handleCorrectGuess(output, validation);
@@ -536,12 +536,9 @@ async function showTaskScreen() {
   app.innerHTML = "";
   // --- Load Stage + Session ---
   let stage = get_game_status();
-  let session = getSession();
-  console.log(session);
 
   // --- fresh start ---
-  if (!session || !stage) {
-    sessionStorage.removeItem("session");
+  if (!stage) {
     sessionStorage.removeItem("stage");
     stage = await loadStage(); // create new stage
     console.log(stage)
@@ -553,29 +550,13 @@ async function showTaskScreen() {
     }
     console.log("No session or stage found. Starting fresh.");
   }
-  // --- Initialize session fields ---
-  session.playerName ??= sessionStorage.getItem("playerName");
-  session.currentStage ??= stage.current_stage;    // 1–3
-  session.orderCountries ??= stage.order_countries;  // [ISO1, ISO2, ISO3]
-  session.clueGuesses ??= [];                     // per stage guesses
-  session.origin ??= stage.origin;
-  session.startOrigin ??= stage.origin;
-  session.wrongGuessCount ??= 0;
-  session.initialCo2 ??= stage.co2_available;
-  session.co2Available ??= stage.co2_available;
-  session.places ??= stage.places;
-  session.clues ??= stage.clues;
-
-  setSession(session);
-  console.log('session: ', session);
-
   // ---- Build UI ----
   app.appendChild(renderHeader())
   const screen = document.createElement("div");
   screen.className = "screen tasks-screen"
-  const round = session.current_stage;
-  const budget = session.co2_available;
-  const visitCount = session.order_countries?.length;
+  const round = stage.current_stage;
+  const budget = stage.co2_available;
+  const visitCount = stage.order_countries?.length;
 
   screen.innerHTML = `<h2 class="task-item" id="round"></h2>
   <p class="task-item" id="budget"></p>
