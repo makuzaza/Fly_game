@@ -7,6 +7,7 @@ from airport import AirportManager
 from game import Game
 from stage import Stage
 from tips_countries import tips_countries
+import os
 
 # Store active games by session
 active_games = {}
@@ -18,7 +19,13 @@ def create_app():
     airport_manager = AirportManager()
 
     # --- Headers ---
-    CORS(app) 
+    CORS(app, resources={
+    r"/*": {
+        "origins": "https://lentopeli.netlify.app",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
     # --- Logging ---
     logging.basicConfig(level=logging.INFO)
@@ -501,4 +508,5 @@ def create_app():
 # Run
 if __name__ == "__main__":
     app = create_app()
-    app.run(host="localhost", port=5000, debug=True)
+    PORT = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=PORT)
