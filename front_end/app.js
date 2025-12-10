@@ -7,7 +7,7 @@ import {
   getAirports,
 } from "./mapScreen.js";
 
-import { showGameScreen, showResultsScreen } from "./index.js";
+import { showGameScreen, showResultsScreen, showGameModal } from "./index.js";
 // -----------------------------
 // Game State
 // -----------------------------
@@ -445,23 +445,33 @@ export function showResults(results) {
 // -----------------------------
 function handleCO2Failure() {
   if (gameState.replayCount >= 3) {
-    alert("You've used all 3 replay attempts. Game Over!");
-    endGameWithLose();
+    showGameModal("❌ You've used all 3 replay attempts. Game Over!", [
+      {
+        text: "OK",
+        class: "btn-danger",
+        onClick: () => endGameWithLose()
+      }
+    ]);
     return;
   }
 
-  const remainingAttempts = 3 - gameState.replayCount;
-  const replay = confirm(
-    `❌ Your plane was unable to reach its destination.\n\n` +
-      `You still have ${remainingAttempts} tries to replay.\n\n` +
-      `Do you want to replay this stage?`
-  );
+  const remaining = 3 - gameState.replayCount;
 
-  if (replay) {
-    replayStage();
-  } else {
-    endGameWithLose();
-  }
+  showGameModal(
+    `❌ Your plane couldn't reach the destination.\nYou have ${remaining} replay attempts left.\nReplay this stage?`,
+    [
+      {
+        text: "Replay",
+        class: "btn-primary",
+        onClick: () => replayStage()
+      },
+      {
+        text: "Quit",
+        class: "btn-danger",
+        onClick: () => endGameWithLose()
+      }
+    ]
+  );
 }
 
 async function handleCountrySubmit() {
@@ -524,7 +534,12 @@ async function handleConfirmFlight() {
   );
 
   if (!routeData || !routeData.enough_co2) {
-    alert("Not enough CO2 for this flight!");
+    showGameModal("❌ Not enough CO2 for this flight!", [
+      {
+        text: "OK",
+        class: "btn-danger"
+      }
+    ]);
     return;
   }
 
@@ -548,25 +563,28 @@ async function handleConfirmFlight() {
   }
 
   if (result.game_complete) {
-    alert("🎉 Congratulations! You completed all stages!");
     const finalResults = await getGameResults();
     showResults(finalResults);
   } else if (result.stage_complete) {
-    alert(
-      `🎉 Stage ${gameState.stage} complete! Moving to Stage ${result.next_stage}`
+    showGameModal(`🎉 Stage ${gameState.stage} complete!\nMoving to Stage ${result.next_stage}`,
+      [
+        {
+          text: "Continue",
+          class: "btn-primary",
+          onClick: () => {
+            gameState.stage = result.next_stage;
+            gameState.co2Available = result.co2_available;
+            gameState.co2Initial = result.co2_available;
+            gameState.countries = result.countries;
+            gameState.tips = result.tips;
+            gameState.replayCount = 0;
+            saveBackup();
+            updateGameDisplay();
+            document.getElementById("guess-section").style.display = "block";
+          }
+        }
+      ]
     );
-    gameState.stage = result.next_stage;
-    gameState.co2Available = result.co2_available;
-    gameState.co2Initial = result.co2_available; 
-    gameState.countries = result.countries;
-    gameState.tips = result.tips;
-    gameState.replayCount = 0;
-
-    // Save new backup for next stage
-    await saveBackup();
-
-    updateGameDisplay();
-    document.getElementById("guess-section").style.display = "block";
   } else {
     gameState.co2Available = result.co2_available;
     gameState.countries = result.countries_remaining;

@@ -30,6 +30,55 @@ function renderHeaderWithQuit() {
 }
 
 // -----------------------------
+// UNIVERSAL GAME MODAL
+// -----------------------------
+function createGameModal() {
+  if (document.getElementById("generic-modal")) return;
+
+  const modal = document.createElement("div");
+  modal.id = "generic-modal";
+  modal.className = "modal hidden";
+
+  modal.innerHTML = `
+    <div class="modal-content-generic">
+      <p id="generic-modal-message"></p>
+      <div id="generic-modal-buttons"></div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Close when clicking outside content
+  modal.onclick = (e) => {
+    if (e.target === modal) modal.classList.add("hidden");
+  };
+}
+
+createGameModal();
+
+export function showGameModal(message, buttons) {
+  const modal = document.getElementById("generic-modal");
+  const msg = document.getElementById("generic-modal-message");
+  const btnBox = document.getElementById("generic-modal-buttons");
+
+  msg.textContent = message;
+  btnBox.innerHTML = "";
+
+  buttons.forEach(btn => {
+    const b = document.createElement("button");
+    b.textContent = btn.text;
+    b.className = btn.class || "";
+    b.onclick = () => {
+      modal.classList.add("hidden");
+      btn.onClick && btn.onClick();
+    };
+    btnBox.appendChild(b);
+  });
+
+  modal.classList.remove("hidden");
+}
+
+// -----------------------------
 // Show Start Screen
 // -----------------------------
 function showStartScreen() {
