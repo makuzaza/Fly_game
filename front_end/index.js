@@ -81,32 +81,30 @@ function resetHandler(delay = 7000, finalScreenFn = showResultsScreen)  {
 // ----------------------------------------------
 // ANIMATION SCREEN
 // ----------------------------------------------
-function showIntroVideo() {
-  showStartScreen();
+// function showIntroVideo() {
+//   showStartScreen();
   
-  const intro = document.createElement("div");
-  intro.id = "intro-screen";
+//   const intro = document.createElement("div");
+//   intro.id = "intro-screen";
 
-  const video = document.createElement("video");
-  video.autoplay = true;
-  video.muted = true;
-  video.playsInline = true;
+//   const video = document.createElement("video");
+//   video.autoplay = true;
+//   video.muted = true;
+//   video.playsInline = true;
 
-  const source = document.createElement("source");
-  source.src = "./video/airplane.mp4";
-  source.type = "video/mp4";
+//   const source = document.createElement("source");
+//   source.src = "./video/airplane.mp4";
+//   source.type = "video/mp4";
 
-  video.appendChild(source);
-  intro.appendChild(video);
-  document.body.appendChild(intro);
+//   video.appendChild(source);
+//   intro.appendChild(video);
+//   document.body.appendChild(intro);
 
-  video.onended = () => {
-    intro.classList.add("fade-to-transparent");
-
-    // Remove after fade completes
-    setTimeout(() => intro.remove(), 1200);
-  };
-}
+//   video.onended = () => {
+//     intro.classList.add("fade-to-transparent");
+//     setTimeout(() => intro.remove(), 1200);
+//   };
+// }
 
 // ----------------------------------------------
 // START SCREEN
@@ -670,5 +668,5 @@ async function showByeScreen() {
   app.appendChild(screen);
 }
 
-// showStartScreen();
-showIntroVideo();
+showStartScreen();
+// showIntroVideo();
