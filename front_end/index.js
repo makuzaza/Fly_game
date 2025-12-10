@@ -35,7 +35,14 @@ function renderTips(session) {
     return;
   }
 
-  session.orderCountries.forEach((code, index) => {
+  // Create array's copy for shuffling
+  const shuffledCountries = [...session.orderCountries];
+  for (let i = shuffledCountries.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledCountries[i], shuffledCountries[j]] = [shuffledCountries[j], shuffledCountries[i]];
+  }
+
+  shuffledCountries.forEach((code, index) => {
     const tipDiv = document.createElement("div");
     tipDiv.className = "tip";
     tipDiv.id = `tip${index+1}`;
@@ -215,7 +222,7 @@ async function showGameScreen() {
     console.log(stage.places)
     session = {};
     if (!stage) {
-      console.error("Couldnt load the stage. Please reload te page!");
+      console.error("Couldn't load the stage. Please reload te page!");
       return; // stop execution
     }
     console.log("No session or stage found. Starting fresh.");
@@ -456,7 +463,8 @@ async function showGameScreen() {
 
   // ---- USER INPUT LOGIC ----
   document.getElementById("btnSubmit").onclick = async () => {
-    const code = document.getElementById("countryInput").value.trim().toUpperCase();
+    const inputEl = document.getElementById("countryInput");
+    const code = inputEl.value.trim().toUpperCase();
     addUserMsg(output, code);
   
     const validation = validateCountryInput(code, session.places);
@@ -467,6 +475,7 @@ async function showGameScreen() {
       return handleWrongGuess(output, validation);
     }
     await handleCorrectGuess(output, validation);
+    inputEl.value = "";
   };
 
   // ---- Toggle btn logic ----
