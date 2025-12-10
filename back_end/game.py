@@ -80,7 +80,8 @@ class Game:
             while countries_to_visit:
                 print("\n🕵️ Clues:")
                 for c in countries_to_visit:
-                    print(f"{c}: {tips_countries.get(c, 'No clue.')}")
+                    clue = self.session["places"][c].get("clue", "No clue.")
+                    print(f"{c} ({self.session['places'][c]['name']}): {clue}")
 
                 matched_country = None
                 attempts = 0
@@ -192,7 +193,8 @@ class Game:
                     "co2": co2
                 })
 
-                print(f"🎯 Arrived at {matched_country}! CO2 left: {self.session['co2_available']:.2f}")
+                cname = self.session["places"][matched_country]["name"]
+                print(f"🎯 Arrived at {cname}! CO2 left: {self.session['co2_available']:.2f}")
                 self.session["game_status"] = "Win"
 
             if self.session["game_status"] == "Quit":

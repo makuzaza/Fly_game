@@ -3,28 +3,36 @@ export function get_game_status() {
   return JSON.parse(sessionStorage.getItem("stage"));
 }
 
+//-------------------------------------------------------------
+// Function to get 2-letter code if input is a name of country
+//-------------------------------------------------------------
+function normalizeCountryInput(input, places) {
+  const guess = input.trim();
+
+  // ISO-code
+  if (/^[A-Za-z]{2}$/.test(guess)) {
+    return guess.toUpperCase();
+  }
+
+  // Country name
+  const match = Object.entries(places).find(
+    ([code, data]) => data.name.toUpperCase() === guess.toUpperCase()
+  );
+  return match ? match[0] : null;
+}
+
 // -----------------------------------
 // USER MSG INPUT VALIDATOR
 // -----------------------------------
-export function validateCountryInput(iso, places, ident = 0) {
+export function validateCountryInput(input, places, ident = 0) {
   if (!places) {
-    return { valid: false, message: "Game data missing. Reload the game." };
+    return {valid: false, message: "Game data missing. Reload the game."};
   }
+
+  const iso = normalizeCountryInput(input, places);
 
   if (!iso) {
     return { valid: false, message: "Type a country code." };
-  }
-
-  iso = iso.toUpperCase();
-
-  // Must be exactly 2 characters (ISO)
-  if (iso.length !== 2) {
-    return { valid: false, message: "Country code must be 2 letters (e.g. FI, US, JP)." };
-  }
-
-  // Must be alphabetic
-  if (!/^[A-Z]{2}$/.test(iso)) {
-    return { valid: false, message: "Country code must contain only letters." };
   }
 
   // ISO must be a key in places
@@ -32,19 +40,14 @@ export function validateCountryInput(iso, places, ident = 0) {
     return { valid: false, message: `X ${iso} is not one of the target countries for this stage.` };
   }
 
-  let icao;
-  if (ident && ident.length === 4) {
-    // Use ident directly if provided
-    icao = ident.toUpperCase();
-  } else {
-    // Lookup ICAO from places
-    icao = places[iso];
-  }
+  const data = places[iso];
+  const icao = ident && ident.length === 4 ? ident.toUpperCase() : data.icao;
 
   return {
     valid: true,
     iso,
     icao,
+    name: data.name,
     message: `Correct guess: ${iso} -> Airport ${icao}`
   };
 }

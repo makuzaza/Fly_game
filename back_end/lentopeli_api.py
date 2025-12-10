@@ -204,18 +204,20 @@ def create_app():
                 airport_manager=airport_manager
             )
 
-            # Add clues based on selected countries
-            task["clues"] = {
-                country: tips_countries.get(country, "No clue available")
-                for country in task.get("places", {}).keys()
-            }
-
             # Update origin
             if task["order_countries"]:
                 last_country = task["order_countries"][-1]
-                # Convert country → airport IATA
-                last_airport = task["places"][last_country]
-                stage_state["origin"] = last_airport
+                # Convert country → airport ICAO
+                if last_country in task.get("places", {}):
+                    data = task["places"][last_country]
+                    if isinstance(data, dict):
+                        stage_state["origin"] = data.get("icao")
+                    else:
+                        stage_state["origin"] = None
+                        logger.error(f"Invalid data format for {last_country}: {data}")
+                else:
+                    stage_state["origin"] = None
+                    logger.error(f"{last_country} not found in places")
  
             return jsonify(task), 200
 

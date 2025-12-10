@@ -28,7 +28,12 @@ class Stage:
             result = cursor.fetchone()
             if result:
                 icao = result[0]
-                places[country_code] = icao
+                info = tips_countries.get(country_code, {"name": "Unknown", "clue": "No clue"})
+                places[country_code] = {
+                    "icao": icao,
+                    "name": info["name"],
+                    "clue": info["clue"]
+                }
             else:
                 print(f"⚠️ No large airport found for {country_code}. Skipping.")
         session_state['places'] = places
@@ -57,7 +62,8 @@ class Stage:
 
         # === Get airport objects for destinations ===
         dest_airports = []
-        for country, icao in places.items():
+        for country, data in places.items():  # data = {"icao": ..., "name": ..., "clue": ...}
+            icao = data.get("icao")
             airport = airport_manager.find_airport(icao)
             if airport:
                 dest_airports.append((country, airport))

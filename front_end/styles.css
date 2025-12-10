@@ -73,7 +73,7 @@ header {
     opacity: 0.7;
 }
 
-.question-screen, .rules-screen, .results-screen {  
+.question-screen, .rules-screen, .results-screen, .tasks-screen {  
   flex: 1;  
   display: flex;           
   justify-content: center;
@@ -606,6 +606,23 @@ button:hover {
     border-radius: 20px;
     display: grid;
     place-items: center;
+}
+.tasks-screen{
+  background-color :white;
+    border: 1px solid;
+  border-radius: 20px;
+  width: 30%;
+  margin-top: 17%;
+  margin-bottom: 20%;
+  justify-content: flex-start;
+}
+.task-item{
+  margin-left: 5px;
+}
+.task-btn {
+  margin: 1%;
+  margin-left: 3%;
+  margin-right: 3%;
 }
 
 /* === media === */
