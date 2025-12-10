@@ -38,8 +38,19 @@ header {
 }
 
 .logo_main {
+    background-color: white;
+    border-radius: 10px;
+    padding: 0 1rem;
+    margin-bottom: 10px;
     width: auto;
     height: 6rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.4s ease;
+}
+
+.logo_main:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .quit-icon {
