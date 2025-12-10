@@ -215,7 +215,7 @@ async function showGameScreen() {
     console.log(stage.places)
     session = {};
     if (!stage) {
-      console.error("Couldnt load the stage. Please reload te page!");
+      console.error("Couldn't load the stage. Please reload te page!");
       return; // stop execution
     }
     console.log("No session or stage found. Starting fresh.");
@@ -427,7 +427,8 @@ async function showGameScreen() {
 
   // ---- USER INPUT LOGIC ----
   document.getElementById("btnSubmit").onclick = async () => {
-    const code = document.getElementById("countryInput").value.trim().toUpperCase();
+    const inputEl = document.getElementById("countryInput");
+    const code = inputEl.value.trim().toUpperCase();
     addUserMsg(output, code);
   
     const validation = validateCountryInput(code, session.places);
@@ -435,9 +436,11 @@ async function showGameScreen() {
     console.log("validation:", validation);
   
     if (!validation.valid) {
+      inputEl.value = "";
       return console.log('wrong answer: ', validation);
     }
     await handleCorrectGuess(output, validation);
+    inputEl.value = "";
   };
 
   // ---- Toggle btn logic ----
