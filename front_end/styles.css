@@ -152,6 +152,34 @@ input {
     width: 200px;
 }
 
+#intro-screen {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    z-index: 9999;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#intro-screen video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.fade-to-transparent {
+    animation: fadeOutOverlay 1.2s ease-out forwards;
+}
+
+@keyframes fadeOutOverlay {
+    0%   { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+}
+
 .start-screen, .rules-screen, .results-screen {
     min-height: 100%;
     flex: 1;

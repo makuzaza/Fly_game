@@ -97,6 +97,31 @@ function showRulesScreen() {
     startNewGame(gameState.playerName);
 }
 
+// function showIntroVideo() {
+//   showStartScreen();
+  
+//   const intro = document.createElement("div");
+//   intro.id = "intro-screen";
+
+//   const video = document.createElement("video");
+//   video.autoplay = true;
+//   video.muted = true;
+//   video.playsInline = true;
+
+//   const source = document.createElement("source");
+//   source.src = "./assets/airplane.mp4";
+//   source.type = "video/mp4";
+
+//   video.appendChild(source);
+//   intro.appendChild(video);
+//   document.body.appendChild(intro);
+
+//   video.onended = () => {
+//     intro.classList.add("fade-to-transparent");
+//     setTimeout(() => intro.remove(), 1200);
+//   };
+// }
+
 // -----------------------------
 // Show Game Screen
 // -----------------------------
@@ -229,3 +254,4 @@ export function showResultsScreen() {
 
 // Start the app by showing the start screen
 showStartScreen();
+// showIntroVideo();
