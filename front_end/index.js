@@ -86,6 +86,34 @@ function resetHandler(delay = 6000, finalScreenFn = showResultsScreen)  {
 }
 
 // ----------------------------------------------
+// ANIMATION SCREEN
+// ----------------------------------------------
+// function showIntroVideo() {
+//   showStartScreen();
+  
+//   const intro = document.createElement("div");
+//   intro.id = "intro-screen";
+
+//   const video = document.createElement("video");
+//   video.autoplay = true;
+//   video.muted = true;
+//   video.playsInline = true;
+
+//   const source = document.createElement("source");
+//   source.src = "./video/airplane.mp4";
+//   source.type = "video/mp4";
+
+//   video.appendChild(source);
+//   intro.appendChild(video);
+//   document.body.appendChild(intro);
+
+//   video.onended = () => {
+//     intro.classList.add("fade-to-transparent");
+//     setTimeout(() => intro.remove(), 1200);
+//   };
+// }
+
+// ----------------------------------------------
 // START SCREEN
 // ----------------------------------------------
 function showStartScreen() {
@@ -680,3 +708,4 @@ async function showByeScreen() {
 }
 
 showStartScreen();
+// showIntroVideo();
