@@ -35,14 +35,18 @@ function renderTips(session) {
     return;
   }
 
-  // Create array's copy for shuffling
-  const shuffledCountries = [...session.orderCountries];
-  for (let i = shuffledCountries.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledCountries[i], shuffledCountries[j]] = [shuffledCountries[j], shuffledCountries[i]];
+  // If tips are not shuffled
+  if (!session.shuffledCountries) {
+    const countries = [...session.orderCountries];
+    for (let i = countries.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [countries[i], countries[j]] = [countries[j], countries[i]];
+    }
+    session.shuffledCountries = countries;
   }
 
-  shuffledCountries.forEach((code, index) => {
+  // Use shuffled order
+  session.shuffledCountries.forEach((code, index) => {
     const tipDiv = document.createElement("div");
     tipDiv.className = "tip";
     tipDiv.id = `tip${index+1}`;
@@ -51,7 +55,9 @@ function renderTips(session) {
       tipDiv.classList.add("highlighted");
     }
 
-    tipDiv.innerHTML = `<span class="tip-label">Tip ${index+1}:</span> ${session.clues?.[code] || "No clue for this country"}`;
+    const clue = session.places?.[code]?.clue || "No clue for this country";
+
+    tipDiv.innerHTML = `<span class="tip-label">Tip ${index+1}:</span> ${clue}`;
     footer.appendChild(tipDiv);
   });
 }
@@ -59,9 +65,23 @@ function renderTips(session) {
 // --- Load Stage data and store it in the sessionStorage ---
 async function loadStage() {
   const stage = await fetchStage();
+
+  if (!stage) {
+    console.error("Couldn't load stage from API");
+    return null;
+  }
+
   sessionStorage.setItem("stage", JSON.stringify(stage));
   console.log("Loaded Stage:", stage);
-  console.log('places: ', stage.places);
+
+  if (stage.places) {
+    Object.entries(stage.places).forEach(([code, data]) => {
+      console.log(`${code}: ${data.name}`);
+    });
+  } else {
+    console.warn("Stage has no places field");
+  }
+
   return stage;
 };
 
@@ -69,12 +89,14 @@ async function loadStage() {
 function getSession() {
   return JSON.parse(sessionStorage.getItem("gameSession")) || {};
 }
+
 function setSession(updates) {
   const current = getSession();
   const updated = { ...current, ...updates };
   sessionStorage.setItem("gameSession", JSON.stringify(updated));
   return updated;
 }
+
 // --- reset handler ---
 function resetHandler(delay = 6000, finalScreenFn = showResultsScreen)  {
   setTimeout(() => {
@@ -239,7 +261,6 @@ async function showGameScreen() {
   session.initialCo2      ??= stage.co2_available;
   session.co2Available    ??= stage.co2_available;
   session.places          ??= stage.places;
-  session.clues           ??= stage.clues;
 
   setSession(session);
   console.log('session: ', session);
@@ -298,6 +319,7 @@ async function showGameScreen() {
 
   app.appendChild(screen);
 
+  session.shuffledCountries = null;
   renderTips(session);
 
   const quitModal = document.getElementById("quit-modal");
@@ -355,7 +377,7 @@ async function showGameScreen() {
           
     // Ensure user does not guess the same clue twice
     if (session.clueGuesses.includes(validation.iso)) {
-      return addSystemMsg(output, `${validation.iso} was already guessed, try again!`);
+      return addSystemMsg(output, `${validation.name} was already guessed, try again!`);
     }
     const destICAO = validation.icao;
     console.log('destICAO: ', destICAO);
@@ -391,6 +413,7 @@ async function showGameScreen() {
   
     correctGuess(output, validation.iso);
     setSession(session);
+    session.shuffledCountries = null;
     renderTips(session); // rewrite tips with the highlight
     console.log('session in winhandler: ', session)
   
@@ -422,7 +445,6 @@ async function showGameScreen() {
       session.currentStage    = newStage.current_stage;
       session.orderCountries  = newStage.order_countries;
       session.places          = newStage.places;
-      session.clues           = newStage.clues;
       session.origin          = newStage.origin;
       session.clueGuesses     = [];
       session.wrongGuessCount = 0;
@@ -434,6 +456,7 @@ async function showGameScreen() {
   
       //  SHOW TASKPAGE
       showGameScreen();  // reload UI with new stage
+      session.shuffledCountries = null;
       renderTips(session); // rewrite tips with the highlight
       console.log(`Stage ${session.currentStage} begins with countries: ${session.orderCountries}`);
     }
@@ -464,7 +487,7 @@ async function showGameScreen() {
   // ---- USER INPUT LOGIC ----
   document.getElementById("btnSubmit").onclick = async () => {
     const inputEl = document.getElementById("countryInput");
-    const code = inputEl.value.trim().toUpperCase();
+    const code = inputEl.value.trim();
     addUserMsg(output, code);
   
     const validation = validateCountryInput(code, session.places);
