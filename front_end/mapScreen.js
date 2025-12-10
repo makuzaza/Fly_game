@@ -72,6 +72,8 @@ function displayAirportMarkers() {
                     btn.textContent = "Chosen";
                     btn.disabled = true;
                     btn.style.backgroundColor = "#4CAF50";
+
+                    window.dispatchEvent(new CustomEvent("airport-selected", { detail: airport }));
                 };
             }
         });
