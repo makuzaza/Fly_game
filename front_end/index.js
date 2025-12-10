@@ -1,6 +1,6 @@
 import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
 import { initMap } from "./mapScreen.js";
-import { get_game_status, validateCountryInput, introStage1, correctGuess, failedGame, winGame, addUserMsg, addSystemMsg } from "./chatHelpers.js";
+import { get_game_status, validateCountryInput, introStage1, correctGuess, failedGame, winGame, addUserMsg, addSystemMsg, wrongGuess1, wrongGuessPenalty } from "./chatHelpers.js";
 
 ("use strict");
 
@@ -35,7 +35,14 @@ function renderTips(session) {
     return;
   }
 
-  session.orderCountries.forEach((code, index) => {
+  // Create array's copy for shuffling
+  const shuffledCountries = [...session.orderCountries];
+  for (let i = shuffledCountries.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledCountries[i], shuffledCountries[j]] = [shuffledCountries[j], shuffledCountries[i]];
+  }
+
+  shuffledCountries.forEach((code, index) => {
     const tipDiv = document.createElement("div");
     tipDiv.className = "tip";
     tipDiv.id = `tip${index+1}`;
@@ -69,7 +76,7 @@ function setSession(updates) {
   return updated;
 }
 // --- reset handler ---
-function resetHandler(delay = 7000, finalScreenFn = showResultsScreen)  {
+function resetHandler(delay = 6000, finalScreenFn = showResultsScreen)  {
   setTimeout(() => {
     resetGame();
     sessionStorage.removeItem("session");
@@ -243,7 +250,7 @@ async function showGameScreen() {
     console.log(stage.places)
     session = {};
     if (!stage) {
-      console.error("Couldnt load the stage. Please reload te page!");
+      console.error("Couldn't load the stage. Please reload te page!");
       return; // stop execution
     }
     console.log("No session or stage found. Starting fresh.");
@@ -351,6 +358,23 @@ async function showGameScreen() {
   }
 
   // ---- WRONG GUESS HANDLER ----
+  async function handleWrongGuess(output, validation) {
+    let session = getSession();
+  
+    session.wrongGuessCount += 1;
+    setSession(session);
+  
+    const n = session.wrongGuessCount;
+    
+    // 1st wrong guess -> no penalty yet
+    if (n === 1) {
+      return wrongGuess1(output, validation.message);
+    }
+    // From 2nd wrong guess onwards -> penalty count shows
+    const penaltyStops = n - 1;
+
+    return wrongGuessPenalty(output, validation.message, penaltyStops);
+  }
 
   // ---- CORRECT GUESS HANDLER ----
   async function handleCorrectGuess(output, validation) {
@@ -365,8 +389,20 @@ async function showGameScreen() {
     console.log('destICAO: ', destICAO);
     const origin   = session.origin;
 
-    // Normal route CO₂ consumption
-    const route = await fetchLayoverRoute(origin, destICAO, 0);
+    let route;
+    
+    if (session.wrongGuessCount > 1) {
+      // Apply penalty route only
+      const penaltyStops = session.wrongGuessCount - 1;
+      addSystemMsg(output, `You made mistakes earlier, applying ${penaltyStops} extra stops.`);
+      route = await fetchLayoverRoute(origin, destICAO, penaltyStops);
+    
+    } else {
+      // No mistakes -> normal route
+      route = await fetchLayoverRoute(origin, destICAO, 0);
+    }
+    
+    // Deduct CO₂ once
     session.co2Available -= route.co2_needed;
     console.log('route: ', route)
   
@@ -447,7 +483,7 @@ async function showGameScreen() {
     addUserMsg(output, isoDest);
 
     if (!validation.valid) {
-        console.log("wrong airport selected:", validation);
+        return handleWrongGuess(output, validation);
     }
 
     await handleCorrectGuess(output, validation);
@@ -455,7 +491,8 @@ async function showGameScreen() {
 
   // ---- USER INPUT LOGIC ----
   document.getElementById("btnSubmit").onclick = async () => {
-    const code = document.getElementById("countryInput").value.trim().toUpperCase();
+    const inputEl = document.getElementById("countryInput");
+    const code = inputEl.value.trim().toUpperCase();
     addUserMsg(output, code);
   
     const validation = validateCountryInput(code, session.places);
@@ -463,9 +500,11 @@ async function showGameScreen() {
     console.log("validation:", validation);
   
     if (!validation.valid) {
-      return console.log('wrong answer: ', validation);
+      inputEl.value = "";
+      return handleWrongGuess(output, validation);
     }
     await handleCorrectGuess(output, validation);
+    inputEl.value = "";
   };
 
   // ---- Toggle btn logic ----

@@ -82,13 +82,23 @@ export function introStage1(outputEl, playerName) {
 //------------------------------------
 // FIRST INVALID GUESS
 //------------------------------------
-
+export function wrongGuess1(outputEl, validationMsg) {
+  addSystemMsg(outputEl, `Oh no! That’s not correct.`);
+  addSystemMsg(outputEl, validationMsg);
+  addSystemMsg(outputEl, `Be careful! One more mistake and penalties start applying.`);
+  addSystemMsg(outputEl, `Try again!`);
+}
 //------------------------------------
-// SECOND INVALID GUESS
+// SECOND+ INVALID GUESS
 //------------------------------------
-
+export function wrongGuessPenalty(outputEl, validationMsg, penaltyStops) {
+  addSystemMsg(outputEl, `Incorrect again.`);
+  addSystemMsg(outputEl, validationMsg);
+  addSystemMsg(outputEl, `Penalty accumulating: +${penaltyStops} layovers will apply on your next correct flight.`);
+}
 //------------------------------------
-// THIRD INVALID GUESS
+// LIMIT OF INVALID GUESS 
+// (runned out of co2)
 //------------------------------------
 
 //------------------------------------
@@ -102,10 +112,6 @@ export function failedGame(outputEl) {
   console.log('Working on how to show the most ideal rout in a nice way.');
   // SHOW MOST IDEAL ROUTE IN A NICE WAY
 }
-
-//------------------------------------
-// RETRY
-//------------------------------------
 
 //------------------------------------
 // VALID GUESS
