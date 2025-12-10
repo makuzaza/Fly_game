@@ -35,7 +35,14 @@ function renderTips(session) {
     return;
   }
 
-  session.orderCountries.forEach((code, index) => {
+  // Create array's copy for shuffling
+  const shuffledCountries = [...session.orderCountries];
+  for (let i = shuffledCountries.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledCountries[i], shuffledCountries[j]] = [shuffledCountries[j], shuffledCountries[i]];
+  }
+
+  shuffledCountries.forEach((code, index) => {
     const tipDiv = document.createElement("div");
     tipDiv.className = "tip";
     tipDiv.id = `tip${index+1}`;
