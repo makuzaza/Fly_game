@@ -355,6 +355,7 @@ async function showGameScreen() {
   
     correctGuess(output, validation.iso);
     setSession(session);
+    renderTips(session); // rewrite tips with the highlight
     console.log('session in winhandler: ', session)
   
     // ---- Stage Completed? ----
@@ -397,6 +398,7 @@ async function showGameScreen() {
   
       //  SHOW TASKPAGE
       showGameScreen();  // reload UI with new stage
+      renderTips(session); // rewrite tips with the highlight
       console.log(`Stage ${session.currentStage} begins with countries: ${session.orderCountries}`);
     }
   }
