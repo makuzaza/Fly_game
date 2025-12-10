@@ -19,13 +19,7 @@ def create_app():
     airport_manager = AirportManager()
 
     # --- Headers ---
-    CORS(app, resources={
-    r"/*": {
-        "origins": "https://lentopeli.netlify.app",
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
-    }
-})
+    CORS(app)
 
     # --- Logging ---
     logging.basicConfig(level=logging.INFO)
