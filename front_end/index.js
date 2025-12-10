@@ -81,35 +81,28 @@ function resetHandler(delay = 7000, finalScreenFn = showResultsScreen)  {
 // ----------------------------------------------
 // ANIMATION SCREEN
 // ----------------------------------------------
-function showIntroVideo() {
-    // Create container
-    const intro = document.createElement("div");
-    intro.id = "intro-screen";
+// function showIntroVideo() {
+//     const intro = document.createElement("div");
+//     intro.id = "intro-screen";
 
-    // Create video element
-    const video = document.createElement("video");
-    video.autoplay = true;
-    video.muted = true;
-    video.playsInline = true;
+//     const video = document.createElement("video");
+//     video.autoplay = true;
+//     video.muted = true;
+//     video.playsInline = true;
 
-    // Set video source
-    const source = document.createElement("source");
-    source.src = "./video/airplane.mp4";
-    source.type = "video/mp4";
+//     const source = document.createElement("source");
+//     source.src = "./video/airplane.mp4";
+//     source.type = "video/mp4";
 
-    video.appendChild(source);
-    intro.appendChild(video);
-    document.body.appendChild(intro);
+//     video.appendChild(source);
+//     intro.appendChild(video);
+//     document.body.appendChild(intro);
 
-    // Fade out when video finishes
-    video.onended = () => {
-        intro.classList.add("fade-out");
-        setTimeout(() => {
-            intro.remove();     // remove intro from DOM
-            showStartScreen();  // your existing function
-        }, 1200);
-    };
-}
+//     video.onended = () => {
+//             intro.remove();
+//             showStartScreen();
+//     };
+// }
 
 // ----------------------------------------------
 // START SCREEN
@@ -673,5 +666,5 @@ async function showByeScreen() {
   app.appendChild(screen);
 }
 
-// showStartScreen();
-showIntroVideo();
+showStartScreen();
+// showIntroVideo();
