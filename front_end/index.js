@@ -107,38 +107,56 @@ export function showGameScreen() {
   const screen = document.createElement("div");
   screen.className = "screen game-screen";
   screen.innerHTML = `
-    <div id="map-container"></div>
-    
+    <div id="map-container">
+      <div class="clues-overlay">
+        <h3>🕵️ Your mission (guess the country):</h3>
+        <div id="clues-list"></div>
+      </div>
+    </div>
+
     <div class="game-info-container">
     
     <div id="game-info">
-        <p>Stage <span id="current-stage">1</span>/5</p>
-        <p>💨 CO2 Available: <span id="co2-display">0</span> kg</p>
-        <p>📍 Current Location: <span id="current-origin"></span></p>
+      <div class="stage-progress">
+        <div class="stage-circle completed">1</div>
+        <div class="stage-circle current">2</div>
+        <div class="stage-circle">3</div>
+        <div class="stage-circle">4</div>
+        <div class="stage-circle">5</div>
+      </div>
+
+      <div class="co2-bar-container">
+        <p>
+          <span>💨 CO2 Budget</span>
+          <span><span id="co2-display">0</span> kg</span>
+        </p>
+        <div class="co2-progress-bar">
+          <div class="co2-progress-fill" id="co2-progress" style="width: 100%;"></div>
+        </div>
+      </div>
+      <p>📍 Current Location: <span id="current-origin"></span></p>
     </div>
 
     <div id="mission-container">
-        <h3>🕵️ Country Clues:</h3>
-        <div id="clues-list"></div>
-        
         <div id="guess-section">
             <input id="country-input" placeholder="Enter country code (e.g., US, FI)" maxlength="2"/>
             <button id="btn-submit-country">Submit Guess</button>
             <p id="guess-feedback"></p>
             <p id="attempts-info"></p>
         </div>
-        
-        <div id="airport-selection" style="display: none;">
-            <h3>🛬 Select Destination Airport:</h3>
-            <div id="airports-list"></div>
-        </div>
-        
+
         <div id="route-info" style="display: none;">
             <h3>📋 Route Summary:</h3>
             <div id="route-details"></div>
             <button id="btn-confirm-flight">Confirm Flight</button>
             <button id="btn-cancel-flight">Choose Different Airport</button>
         </div>
+
+        <div id="airport-selection" style="display: none;">
+            <h3>🛬 Select Destination Airport:</h3>
+            <div id="airports-list"></div>
+        </div>
+           
     </div></div>
   `;
 

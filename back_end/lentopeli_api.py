@@ -1,7 +1,7 @@
 import logging
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-
+import requests 
 # --- Game Logic ---
 from airport import AirportManager
 from game import Game
@@ -452,6 +452,37 @@ def create_app():
         except Exception as e:
             logger.error(f"Error fetching game results: {e}")
             return jsonify({"error": "Failed to fetch game results"}), 500
+
+    # -----------------------------
+    # Weather API
+    # -----------------------------
+    @app.route("/api/weather/<icao>", methods=["GET"])
+    def get_weather(icao):
+
+        # Find airport using airport_manager
+        airport = airport_manager.find_airport(icao)
+        
+        if not airport:
+            return jsonify({"error": "Airport not found"}), 404
+        
+        lat, lon = airport.lat, airport.lng
+
+        weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid=94c7555a5514b269f255445ba98c6e57"
+        try:
+            result = requests.get(weather_url)
+            if result.status_code == 200:
+                json_result = result.json()
+                return jsonify({
+                    "weather": json_result["weather"][0]["main"],
+                    "wind": json_result["wind"]["speed"],
+                    "description": json_result["weather"][0]["description"],
+                    "temperature": round(json_result["main"]["temp"] - 273.15),
+                    "icon": f"http://openweathermap.org/img/wn/{json_result['weather'][0]['icon']}@2x.png"
+                })
+            else:
+                return jsonify({"error": "Failed to fetch weather"}), result.status_code
+        except requests.exceptions.RequestException as e:
+            return jsonify({"error": "Search failed"}), 500
 
     # -----------------------------
     # Error handling

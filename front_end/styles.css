@@ -3,6 +3,9 @@ body {
     padding: 0;
     font-family: 'Roboto', sans-serif;
     background: #f8f5f5;
+    background: url("assets/background.jpg") no-repeat center center fixed;
+    background-size: cover;
+    backdrop-filter: blur(2px); 
 }
 
 #app {
@@ -11,7 +14,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: stretch;
+    align-items: center ;
 }
 
 header {
@@ -26,7 +29,12 @@ header {
 .logo {
     width: auto;
     height: 3rem;
-    padding: 0.5rem 0 0 0.5rem;
+    padding: 0.3rem 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 0 0 15px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
 }
 
 .logo_main {
@@ -136,15 +144,6 @@ button:hover {
     background: #2b82b4;
 }
 
-.screen {
-    min-height: 100%;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
 input {
     padding: 0.5rem;
     font-size: 1rem;
@@ -153,11 +152,48 @@ input {
     width: 200px;
 }
 
+.start-screen, .rules-screen, .results-screen {
+    min-height: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.rules-choice-screen {
+    min-height: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.rules-screen, .results-screen {
+    max-width: 800px;
+    margin: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 .game-screen {
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
   width: 100%;
   height: auto;
+}
+
+#results-container table {
+  min-width: 300px;
+  border: 1px solid #ddd;
+}
+
+#results-container th, #results-container td {
+  padding: 10px;
 }
 
 #map-container { 
@@ -166,16 +202,364 @@ input {
   min-height: calc(100vh - 80px);
   margin: 10px 0 10px 10px;
   border-radius: 10px;
+  position: relative;
 }
 
 .game-info-container {
   flex: 1.3;
   display: flex;
   flex-direction: column;
-  padding: 10px;
+  padding: 0;
   gap: 10px;
   height: auto;
+  background: white;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border-radius: 10px;
+  min-height: 100%;
+  margin: 10px;
 }
+
+/* === Stage Progress Indicator === */
+#game-info {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #374c4c 0%, #2530c5 100%);
+    color: white;
+    flex-shrink: 0;
+    border-radius: 10px 10px 0 0;
+}
+
+#game-info p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+}
+
+.stage-progress {
+    display: flex;
+    gap: 10px;
+    margin: 1rem 0;
+    align-items: center;
+}
+
+.stage-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.stage-circle.completed {
+    background: #4CAF50;
+    border-color: #4CAF50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+.stage-circle.current {
+    background: white;
+    color: #667eea;
+    border-color: white;
+    transform: scale(1.2);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+}
+
+.clues-overlay {
+    width: 90%;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 0.5rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+.clues-overlay h3 {
+    margin: 0;
+    color: #667eea;
+}
+
+#clues-list p {
+    margin: 0;
+    padding: 0.5rem 0.8rem;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe9a0 100%);
+    border-left: 4px solid #ffc107;
+    border-radius: 5px;
+    color: #856404;
+    font-size: 0.95rem;
+}
+
+#clues-list {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    flex-direction: row;
+    gap: 0.5rem;
+}
+
+#mission-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    overflow-y: auto;
+    background: #f8f9fa;
+}
+
+#mission-container h3 {
+    font-size: 1.2rem;
+    color: #333;
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#country-input {
+    width: 90%;
+    padding: 0.8rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+/* CO2 Progress Bar */
+.co2-bar-container {
+    margin: 1rem 0;
+}
+
+.co2-bar-container p {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.co2-progress-bar {
+    width: 100%;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.co2-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.co2-progress-fill.low {
+    background: linear-gradient(90deg, #FF9800 0%, #FFC107 100%);
+}
+
+.co2-progress-fill.critical {
+    background: linear-gradient(90deg, #F44336 0%, #E91E63 100%);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Airport Selection - Dropdown Style */
+#airport-selection {
+    background: white;
+    border-radius: 15px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#airports-list {
+    max-height: 210px;
+    overflow-y: auto;
+}
+
+#airports-list p {
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+    color: #555;
+}
+
+.airport-btn {
+    width: 80%;
+    padding: 0.8rem;
+    margin-bottom: 0.5rem;
+    text-align: left;
+    background: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.airport-btn:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    transform: translateX(5px);
+}
+
+/* Route Info - Chat Bubble Style */
+#route-info {
+    background: white;
+    border-radius: 15px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#route-details {
+    background: #e8f4f8;
+    border-left: 4px solid #667eea;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+#route-details p {
+    margin: 0.5rem 0;
+    color: #333;
+}
+
+#route-details strong {
+    color: #667eea;
+}
+
+.route-path {
+    background: white;
+    padding: 0.8rem;
+    border-radius: 5px;
+    margin-top: 0.8rem;
+}
+
+.route-path p {
+    margin: 0.3rem 0;
+    font-size: 0.9rem;
+}
+
+#btn-confirm-flight,
+#btn-cancel-flight {
+    width: calc(50% - 5px);
+    padding: 0.8rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#btn-confirm-flight {
+    background: #4CAF50;
+    color: white;
+}
+
+#btn-confirm-flight:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+}
+
+#btn-cancel-flight {
+    background: #f44336;
+    color: white;
+    margin-left: 10px;
+}
+
+#btn-cancel-flight:hover {
+    background: #da190b;
+}
+
+/* Scrollbar Styling */
+#mission-container::-webkit-scrollbar,
+#airports-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+#mission-container::-webkit-scrollbar-track,
+#airports-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#mission-container::-webkit-scrollbar-thumb,
+#airports-list::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 10px;
+}
+
+#mission-container::-webkit-scrollbar-thumb:hover,
+#airports-list::-webkit-scrollbar-thumb:hover {
+    background: #5568d3;
+}
+
+.leaflet-popup-content {
+    margin: 10px;
+    width: 180px;
+}
+
+.weather-info {
+    background: linear-gradient(135deg, #df63b4 0%, #5022c4 100%);
+    border-radius: 10px;
+    padding: 12px;
+    margin: 8px 0;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.weather-description {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+.weather-description img {
+    width: 40px;
+    height: 40px;
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    padding: 2px;
+}
+
+.choose-airport-btn {
+    width: 100%;
+    padding: 10px;
+    background: #38a1db;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 0;
+}
+
 
 @media screen and (max-width: 768px) {
   .game-screen {

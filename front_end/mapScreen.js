@@ -51,6 +51,18 @@ async function loadAirports() {
     }
 }
 
+// Fetch weather for a specific airport
+async function fetchWeather(airportIdent) {
+    try {
+        const response = await fetch(`${apiUrl}/api/weather/${airportIdent}`);
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching weather:", error);
+        return null;
+    }
+}
+
 // Display all airports as markers
 function displayAirportMarkers() {
     // Clear existing markers
@@ -72,8 +84,35 @@ function displayAirportMarkers() {
         marker.bindPopup(`
             <strong>${airport.name}</strong><br>
             ${airport.ident}<br>
-            ${airport.city}, ${airport.country}
+            ${airport.city}, ${airport.country}<br><br>
+            <div class="weather-container">Loading weather...</div>
         `);
+
+        // Load weather when popup opens
+        marker.on("popupopen", async () => {
+            const popupEl = marker.getPopup().getElement();
+            if (!popupEl) return;
+
+            const weatherContainer = popupEl.querySelector(".weather-container");
+            if (!weatherContainer) return;
+
+            // Fetch weather data
+            const weather = await fetchWeather(airport.ident);
+
+            let weatherHTML = "<em>Weather unavailable</em>";
+            if (weather) {
+                weatherHTML = `
+                <div class="weather-info">
+                    <div class="weather-description"><img style="width: 30px; height: 30px;" src="${weather.icon}" alt="${weather.description}">${weather.weather}</div>
+                    🌡️ Temp: ${weather.temperature}°C<br>
+                    💨 Wind: ${weather.wind} m/s<br>
+                </div>
+                `;
+            }
+
+            // Update weather container
+            weatherContainer.innerHTML = weatherHTML;
+        });
 
         marker.addTo(map);
         markers.push(marker);
@@ -103,30 +142,55 @@ function highlightAirports(airportCodes) {
             ? `
                 <strong>${airport.name}</strong><br>
                 ${airport.ident}<br>
-                ${airport.city}, ${airport.country}<br>
+                ${airport.city}, ${airport.country}<br><br>
+                <div class="weather-container">Loading weather...</div>
                 <button class="choose-airport-btn" data-ident="${airport.ident}">Choose</button>
               `
             : `
                 <strong>${airport.name}</strong><br>
                 ${airport.ident}<br>
-                ${airport.city}, ${airport.country}
+                ${airport.city}, ${airport.country}<br><br>
+                <div class="weather-container">Loading weather...</div>
               `;
 
         marker.bindPopup(popupHTML);
 
-        // Only add click handler for highlighted airports
-        if (isHighlighted) {
-            marker.on("popupopen", () => {
-                const btn = document.querySelector(".choose-airport-btn");
-                if (btn) {
-                    btn.onclick = () => {
-                        if (onAirportClickCallback) {
-                            onAirportClickCallback(airport);
-                        }
-                    };
-                }
-            });
-        }
+        // Load weather when popup opens
+        marker.on("popupopen", async () => {
+            const popupEl = marker.getPopup().getElement();
+            if (!popupEl) return;
+
+            const weatherContainer = popupEl.querySelector(".weather-container");
+            const btn = popupEl.querySelector(".choose-airport-btn");
+
+            // Fetch weather data
+            const weather = await fetchWeather(airport.ident);
+
+            let weatherHTML = "<em>Weather unavailable</em>";
+            if (weather) {
+                weatherHTML = `
+                <div class="weather-info">
+                    <div class="weather-description"><img style="width: 30px; height: 30px;" src="${weather.icon}" alt="${weather.description}">${weather.weather}</div>
+                    🌡️ Temp: ${weather.temperature}°C<br>
+                    💨 Wind: ${weather.wind} m/s<br>
+                </div>
+                `;
+            }
+
+            // Update weather container
+            if (weatherContainer) {
+                weatherContainer.innerHTML = weatherHTML;
+            }
+
+            // Setup button handler for highlighted airports
+            if (btn && isHighlighted) {
+                btn.onclick = () => {
+                    if (onAirportClickCallback) {
+                        onAirportClickCallback(airport);
+                    }
+                };
+            }
+        });
 
         marker.addTo(map);
         markers.push(marker);
@@ -211,34 +275,59 @@ function highlightRoute(routeData) {
         let popupText = `
             <strong>${airport.name}</strong><br>
             ${airport.ident}<br>
-            ${airport.city}, ${airport.country}
+            ${airport.city}, ${airport.country}<br><br>
         `;
         
         if (isInRoute) {
             const stop = routeData.route[routeIndex];
-            popupText += `<br><em>${stop.type || 'Stop'}</em>`;
+            popupText += `<em>${stop.type || 'Stop'}</em><br>`;
         }
+
+        popupText += `<div class="weather-container">Loading weather...</div>`;
 
         // Add "Choose" button for available airports
         if (isAvailable) {
-            popupText += `<br><button class="choose-airport-btn" data-ident="${airport.ident}">Choose</button>`;
+            popupText += `<button class="choose-airport-btn" data-ident="${airport.ident}">Choose</button>`;
         }
 
         marker.bindPopup(popupText);
         
-        // Add click handler for available airports
-        if (isAvailable) {
-            marker.on("popupopen", () => {
-                const btn = document.querySelector(".choose-airport-btn");
-                if (btn) {
-                    btn.onclick = () => {
-                        if (onAirportClickCallback) {
-                            onAirportClickCallback(airport);
-                        }
-                    };
-                }
-            });
-        }
+        // Load weather when popup opens
+        marker.on("popupopen", async () => {
+            const popupEl = marker.getPopup().getElement();
+            if (!popupEl) return;
+
+            const weatherContainer = popupEl.querySelector(".weather-container");
+            const btn = popupEl.querySelector(".choose-airport-btn");
+
+            // Fetch weather data
+            const weather = await fetchWeather(airport.ident);
+
+            let weatherHTML = "<em>Weather unavailable</em>";
+            if (weather) {
+                weatherHTML = `
+                <div class="weather-info">
+                    <div class="weather-description"><img style="width: 30px; height: 30px;" src="${weather.icon}" alt="${weather.description}">${weather.weather}</div>
+                    🌡️ Temp: ${weather.temperature}°C<br>
+                    💨 Wind: ${weather.wind} m/s<br>
+                </div>
+                `;
+            }
+
+            // Update weather container
+            if (weatherContainer) {
+                weatherContainer.innerHTML = weatherHTML;
+            }
+
+            // Setup button handler for available airports
+            if (btn && isAvailable) {
+                btn.onclick = () => {
+                    if (onAirportClickCallback) {
+                        onAirportClickCallback(airport);
+                    }
+                };
+            }
+        });
         
         marker.addTo(map);
         markers.push(marker);

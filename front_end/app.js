@@ -283,32 +283,58 @@ async function endGameWithLose() {
 // Display Functions
 // -----------------------------
 function updateGameDisplay() {
-  document.getElementById("current-stage").textContent = gameState.stage;
-  document.getElementById("co2-display").textContent = (
-    gameState.co2Available || 0
-  ).toFixed(2);
-
-  let originText = "EFHK - Helsinki-Vantaa (FI)";
-  if (gameState.originName)
-    originText = `${gameState.origin} - ${gameState.originName} (${gameState.originCountry})`;
-  document.getElementById("current-origin").textContent = originText;
-
-  // Display clues
-  const cluesList = document.getElementById("clues-list");
-  cluesList.innerHTML = "";
-  gameState.tips.forEach((tip, index) => {
-    const clueItem = document.createElement("p");
-    clueItem.textContent = `${index + 1}. ${tip}`;
-    cluesList.appendChild(clueItem);
-  });
-
-  // Reset guess section
-  document.getElementById("country-input").value = "";
-  document.getElementById("guess-feedback").textContent = "";
-  document.getElementById("attempts-info").textContent = "";
-  document.getElementById("airport-selection").style.display = "none";
-  document.getElementById("route-info").style.display = "none";
-  gameState.wrongAttempts = 0;
+    // Update stage circles
+    document.querySelectorAll('.stage-circle').forEach((circle, index) => {
+        circle.classList.remove('completed', 'current');
+        const stageNum = index + 1;
+        if (stageNum < gameState.stage) {
+            circle.classList.add('completed');
+        } else if (stageNum === gameState.stage) {
+            circle.classList.add('current');
+        }
+    });
+    
+    // Update CO2 display and bar
+    const co2Display = document.getElementById("co2-display");
+    const co2Progress = document.getElementById("co2-progress");
+    const co2Value = gameState.co2Available || 0;
+    const maxCO2 = gameState.co2Available; 
+    const percentage = (co2Value / maxCO2) * 100;
+    
+    co2Display.textContent = co2Value.toFixed(2);
+    co2Progress.style.width = `${percentage}%`;
+    
+    // Change color based on remaining CO2
+    co2Progress.classList.remove('low', 'critical');
+    if (percentage < 30) {
+        co2Progress.classList.add('critical');
+    } else if (percentage < 50) {
+        co2Progress.classList.add('low');
+    }
+    
+    // Update current location
+    let originText = "EFHK - Helsinki-Vantaa (FI)";
+    if (gameState.originName) {
+        originText = `${gameState.origin} - ${gameState.originName} (${gameState.originCountry})`;
+    }
+    document.getElementById("current-origin").textContent = originText;
+    
+    // Display clues in overlay
+    const cluesList = document.querySelector('.clues-overlay #clues-list');
+    cluesList.innerHTML = "";
+    gameState.tips.forEach((tip, index) => {
+        const clueItem = document.createElement("p");
+        clueItem.textContent = `${tip}`;
+        cluesList.appendChild(clueItem);
+    });
+    
+    // Reset other UI elements
+    document.getElementById("country-input").value = "";
+    document.getElementById("guess-feedback").textContent = "";
+    document.getElementById("attempts-info").textContent = "";
+    document.getElementById("airport-selection").style.display = "none";
+    document.getElementById("route-info").style.display = "none";
+    gameState.wrongAttempts = 0;
 }
 
 async function displayAirports(airports, countryName, countryCode) {
@@ -316,9 +342,9 @@ async function displayAirports(airports, countryName, countryCode) {
   airportsList.innerHTML = `<p>Airports in ${countryName}:</p>`;
 
   airports.forEach((airport, index) => {
-    const airportBtn = document.createElement("button");
+    const airportBtn = document.createElement("li");
     airportBtn.className = "airport-btn";
-    airportBtn.textContent = `${index + 1}. ${airport.ident} - ${
+    airportBtn.textContent = `${airport.ident} - ${
       airport.name
     } (${airport.city})`;
     airportBtn.onclick = () => handleAirportSelect(airport.ident, countryCode);
@@ -379,6 +405,8 @@ function displayRoute(routeData) {
   }
 
   document.getElementById("route-info").style.display = "block";
+  // hide airport selection
+    document.getElementById("airport-selection").style.display = "none";
   highlightRoute(routeData);
 }
 
@@ -527,6 +555,7 @@ async function handleConfirmFlight() {
 
 function handleCancelFlight() {
   document.getElementById("route-info").style.display = "none";
+  document.getElementById("airport-selection").style.display = "block";
 }
 
 export {
