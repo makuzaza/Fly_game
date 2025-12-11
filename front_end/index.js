@@ -1,5 +1,5 @@
 
-import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
+import { fetchAirportsByCountry, fetchStage, fetchStageReplay, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
 import { initMap } from "./mapScreen.js";
 import { get_game_status, validateCountryInput, introStage1, correctGuess, failedGame, winGame, addUserMsg, addSystemMsg, wrongGuess1, wrongGuessPenalty } from "./chatHelpers.js";
 
@@ -143,8 +143,16 @@ function updateTripInfo(session) {
 }
 
 // --- Load Stage data and store it in the sessionStorage ---
-async function loadStage() {
-  const stage = await fetchStage();
+async function loadStage(isReplay = false, stageNum = null) {
+  let stage;
+  
+  if (isReplay && stageNum !== null) {
+    // Import the new function at the top of the file if not already
+    const { fetchStageReplay } = await import("./api.js");
+    stage = await fetchStageReplay(stageNum);
+  } else {
+    stage = await fetchStage();
+  }
 
   if (!stage) {
     console.error("Couldn't load stage from API");
@@ -163,7 +171,7 @@ async function loadStage() {
   }
 
   return stage;
-};
+}
 
 // --- Game Session State Manager ---
 function getSession() {
@@ -581,7 +589,7 @@ async function showGameScreen() {
             const newReplayCount = session.replayCount + 1;
             
             // Fetch NEW stage with NEW clues
-            const newStage = await loadStage();
+            const newStage = await loadStage(true, session.currentStage); 
             if (!newStage) {
               console.error("Couldn't reload stage");
               addSystemMsg(output, "Error loading new stage.");
