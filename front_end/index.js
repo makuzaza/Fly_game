@@ -1,5 +1,5 @@
 
-import { fetchAirportsByCountry, fetchStage, fetchStageReplay, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
+import { fetchAirportsByCountry, fetchAirports, fetchStage, fetchStageReplay, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
 import { initMap } from "./mapScreen.js";
 import { get_game_status, validateCountryInput, introStage1, correctGuess, failedGame, winGame, addUserMsg, addSystemMsg, wrongGuess1, wrongGuessPenalty } from "./chatHelpers.js";
 
@@ -75,12 +75,10 @@ function updateTripInfo(session) {
   
   // Get country code from places if available
   let countryInfo = "";
-  if (session.places) {
-    for (const [code, data] of Object.entries(session.places)) {
-      if (data.icao === currentAirport) {
-        countryInfo = ` (${code} - ${data.name})`;
-        break;
-      }
+  if (session.allAirports) {
+    const airport = session.allAirports.find(a => a.ident === currentAirport);
+    if (airport) {
+      countryInfo = ` (${airport.country} - ${airport.city})`;
     }
   }
 
@@ -382,6 +380,15 @@ async function showGameScreen() {
   let stage = JSON.parse(sessionStorage.getItem("stage"));
   let session = getSession();
   console.log("Current session:", session);
+
+    // Load all airports if not already loaded
+  if (!session.allAirports) {
+    const airports = await fetchAirports();
+    if (airports) {
+      session.allAirports = airports;
+      setSession(session);
+    }
+  }
 
   // --- fresh start ---
   if (!session || !stage) {

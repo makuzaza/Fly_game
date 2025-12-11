@@ -77,7 +77,7 @@ export function addUserMsg(outputEl, text) {
 export function introStage1(outputEl, playerName) {
   addSystemMsg(outputEl, `🛫 Hello ${playerName}, welcome to your central station. I'll be your assistant.`);
   addSystemMsg(outputEl, `⚠️ Important: the order of your guesses matters, and running out of CO₂ during a mission means failure.`);
-  addSystemMsg(outputEl, `💡 You've got your clues—let's begin! Guess a country or select an airport from the map.`);
+  addSystemMsg(outputEl, `💡 You've got your clues - let's begin! Guess a country or select an airport from the map.`);
 }
 
 //------------------------------------
