@@ -751,7 +751,7 @@ button:hover {
 
 #leaderboard_table table{
     border: 1px solid black;
-    width: 80%;
+    width: 100%;
     margin: 0.5rem 0;
     background-color: aliceblue;
     border-collapse: collapse;
