@@ -105,7 +105,7 @@ export async function fetchGameResults() {
 
 export async function fetchLeaderboard() {
   try {
-    const response = await fetch(`http://localhost:5000/api/leaderboard`);
+    const response = await fetch(`${API_BASE}/leaderboard`);
     if (!response.ok) {
       throw new Error("Failed to fetch leaderboard");
     }
