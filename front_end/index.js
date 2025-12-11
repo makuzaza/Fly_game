@@ -765,7 +765,7 @@ async function showTaskScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
   
-  let stage = get_game_status();
+  let stage = JSON.parse(sessionStorage.getItem("stage"));
   let session = getSession();
   console.log("Task screen session:", session);
 
