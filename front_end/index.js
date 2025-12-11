@@ -209,7 +209,7 @@ function buildResultRow(session, totals) {
 
   let efficiency;
   if (session.game_status === "Win") {
-    efficiency = 80 * (totals.optimal_co2 / totals.total_co2);
+    efficiency = 80 * (totals.optimal_co2/ 3 / totals.total_co2);
   } else {
     efficiency = (totals.flight_history.length * 100) / 9;
   }
