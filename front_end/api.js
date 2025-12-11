@@ -151,3 +151,22 @@ export async function fetchWeather(icao) {
         return null;
     }
 }
+
+/* -------------------------------------------------------
+   GET /api/stage/replay/<stage_num>
+   Replay a specific stage without incrementing level
+------------------------------------------------------- */
+export async function fetchStageReplay(stageNum) {
+    try {
+        const res = await fetch(`${API_BASE}/stage/replay/${stageNum}`);
+
+        if (!res.ok) {
+            throw new Error(`Failed to fetch stage replay: ${res.status}`);
+        }
+
+        return await res.json();
+    } catch (err) {
+        console.error("API Error:", err);
+        return null;
+    }
+}

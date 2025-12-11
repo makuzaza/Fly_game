@@ -1,5 +1,5 @@
 
-import { fetchAirportsByCountry, fetchStage, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
+import { fetchAirportsByCountry, fetchStage, fetchStageReplay, fetchLayoverRoute, fetchGameResults, fetchLeaderboard, resetGame } from "./api.js";
 import { initMap } from "./mapScreen.js";
 import { get_game_status, validateCountryInput, introStage1, correctGuess, failedGame, winGame, addUserMsg, addSystemMsg, wrongGuess1, wrongGuessPenalty } from "./chatHelpers.js";
 
@@ -143,8 +143,16 @@ function updateTripInfo(session) {
 }
 
 // --- Load Stage data and store it in the sessionStorage ---
-async function loadStage() {
-  const stage = await fetchStage();
+async function loadStage(isReplay = false, stageNum = null) {
+  let stage;
+  
+  if (isReplay && stageNum !== null) {
+    // Import the new function at the top of the file if not already
+    const { fetchStageReplay } = await import("./api.js");
+    stage = await fetchStageReplay(stageNum);
+  } else {
+    stage = await fetchStage();
+  }
 
   if (!stage) {
     console.error("Couldn't load stage from API");
@@ -163,7 +171,7 @@ async function loadStage() {
   }
 
   return stage;
-};
+}
 
 // --- Game Session State Manager ---
 function getSession() {
@@ -581,7 +589,7 @@ async function showGameScreen() {
             const newReplayCount = session.replayCount + 1;
             
             // Fetch NEW stage with NEW clues
-            const newStage = await loadStage();
+            const newStage = await loadStage(true, session.currentStage); 
             if (!newStage) {
               console.error("Couldn't reload stage");
               addSystemMsg(output, "Error loading new stage.");
@@ -590,20 +598,26 @@ async function showGameScreen() {
             }
             
             // Restore to stage start but with NEW clues
-            const restored = restoreSession();
-            if (restored) {
-              session = restored;
-              session.replayCount = newReplayCount;
-              session.places = newStage.places; // NEW clues
-              session.orderCountries = newStage.order_countries; // NEW order
-              session.shuffledCountries = null; // Reset shuffle
-              
-              setSession(session);
-              sessionStorage.setItem("replayCount", newReplayCount);
-              
-              // Reload game screen with new clues
-              showGameScreen();
-            }
+            // Reset session fully for replay
+            session = {
+              playerName: sessionStorage.getItem("playerName"),
+              currentStage: session.currentStage,
+              orderCountries: newStage.order_countries,
+              places: newStage.places,
+              clueGuesses: [],
+              wrongGuessCount: 0,
+              origin: newStage.origin,
+              startOrigin: newStage.origin,
+              co2Available: newStage.co2_available,
+              initialCo2: newStage.co2_available,
+              replayCount: newReplayCount,
+              totalFlights: session.totalFlights ?? 0
+            };
+            
+            setSession(session);
+            backupSession(session);
+            showGameScreen();
+
           } else {
             addSystemMsg(output, "You chose not to replay. Next time might be your chance!");
             resetHandler();
@@ -637,20 +651,6 @@ async function showGameScreen() {
 
     // ---- Stage Completed? ----
     if (session.clueGuesses.length === 3) {
-      const success = JSON.stringify(session.clueGuesses) === JSON.stringify(session.orderCountries);
-      console.log('Order check - Guesses:', session.clueGuesses, 'Expected:', session.orderCountries);
-
-      if (!success) {
-        addSystemMsg(output, "❌ Wrong order! The correct sequence was: " + session.orderCountries.join(" → "));
-        // Offer replay (max 3 times per stage)
-        if (session.replayCount < 3) {
-          const remaining = 3 - session.replayCount;
-          addSystemMsg(output, `You still have ${remaining} ${remaining === 1 ? 'try' : 'tries'} to replay this stage.`);
-        }
-        resetHandler();
-        return;
-      }
-
       // WIN if last stage
       if (session.currentStage === 3) {
         winGame(output);
@@ -773,7 +773,7 @@ async function showTaskScreen() {
   const app = document.getElementById("app");
   app.innerHTML = "";
   
-  let stage = get_game_status();
+  let stage = JSON.parse(sessionStorage.getItem("stage"));
   let session = getSession();
   console.log("Task screen session:", session);
 

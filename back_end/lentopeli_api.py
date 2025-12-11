@@ -45,6 +45,8 @@ def create_app():
             "available_endpoints": {
                 "GET /api/airports": "Returns all airports",
                 "GET /api/layover_route/<origin_code>/<dest_code>": "Return intermidiate aerport stops (layover) between two countries",
+                "GET /api/stage": "Get next stage (increments level)",
+                "GET /api/stage/replay/<stage_num>": "Replay specific stage without incrementing level",
                 "GET /api/result": "Retun a single game result",
             }
         }), 200
@@ -225,6 +227,54 @@ def create_app():
             logger.error(f"Error in stage criteria: {e}")
             return jsonify({"error": "Failed to generate stage"}), 500
     
+    # -----------------------------
+    # GET Stage Replay - /api/stage/replay/<stage_num>
+    # -----------------------------
+    @app.route("/api/stage/replay/<int:stage_num>", methods=["GET"])
+    def replay_stage(stage_num):
+        """
+            Replay a specific stage without incrementing the level.
+            Generates new clues for the same stage number.
+        """
+        try:
+            # Set the stage level without incrementing
+            stage_state["level"] = stage_num
+            stage.level = stage_state["level"]
+
+            session_state = {
+                "current_stage": stage_state["level"],
+                "origin": stage_state["origin"], 
+                "places": {},
+                "co2_available": 0,
+                "order_countries": [],
+                "clues": {},
+            }
+
+            # Generate the task with new clues
+            task = stage.task_criteria(
+                session_state=session_state,
+                airport_manager=airport_manager
+            )
+            # Update origin (same logic as regular stage)
+            if task["order_countries"]:
+                last_country = task["order_countries"][-1]
+                if last_country in task.get("places", {}):
+                    data = task["places"][last_country]
+                    if isinstance(data, dict):
+                        stage_state["origin"] = data.get("icao")
+                    else:
+                        stage_state["origin"] = None
+                        logger.error(f"Invalid data format for {last_country}: {data}")
+                else:
+                    stage_state["origin"] = None
+                    logger.error(f"{last_country} not found in places")
+ 
+            return jsonify(task), 200
+
+        except Exception as e:
+            logger.error(f"Error in stage replay: {e}")
+            return jsonify({"error": "Failed to replay stage"}), 500
+
     # -----------------------------
     # GET Reset - /api/reset     
     # -----------------------------
