@@ -116,7 +116,7 @@ function updateTripInfo(session) {
       
       <div class="trip-info-item stages">
         <span class="info-icon">🎯</span>
-        <div class="info-content">
+        <div class="info-content stages">
           <span class="info-label">Stage Progress</span>
           <div class="stage-circles">
             ${[1, 2, 3].map(stageNum => {
@@ -863,10 +863,12 @@ async function showTaskScreen() {
   const visitCount = stage.order_countries?.length;
 
   screen.innerHTML = `
+  <div class="task_container">
     <h2 class="task-item" id="round">Stage ${round}</h2>
     <p class="task-item" id="budget">CO₂ Budget: ${budget.toFixed(2)} kg</p>
     <p class="task-item" id="countries">Countries to visit: ${visitCount}</p>
     <button class="task-btn" id="Start-btn">Start</button>
+  </div>
   `;
   
   app.appendChild(screen);
