@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from tips_countries import tips_countries
 from db import get_connection
+from db_updating import db_table_creator, results_to_db
 
 # --- Game Logic ---
 from airport import AirportManager
@@ -246,7 +247,30 @@ def create_app():
         except Exception as e:
             logger.error(f"Error resetting game: {e}")
             return jsonify({"error": "Failed to reset game"}), 500
-        
+
+    # -----------------------------
+    # POST Result - /api/saveResult
+    # -----------------------------
+    @app.route("/api/saveResult", methods=["POST"])
+    def save_result():
+        data = request.get_json()
+
+        name = data.get("name")
+        date = data.get("date")
+        levels = data.get("levels")
+        cities = data.get("cities")
+        km = data.get("km_amount")
+        co2 = data.get("co2_amount")
+        eff = data.get("efficiency")
+        status = data.get("status")
+
+        success = results_to_db(name, date, levels, cities, km, co2, eff, status)
+
+        if success:
+            return jsonify({"message": "Result saved"}), 200
+        else:
+            return jsonify({"error": "Failed to save result"}), 500
+
     # -----------------------------
     # GET Result - /api/result     
     # -----------------------------
@@ -390,6 +414,7 @@ def create_app():
 
 # Run
 if __name__ == "__main__":
+    db_table_creator()
     app = create_app()
     # Listen ONLY on local machine
     app.run(host="localhost", port=5000, debug="1")
