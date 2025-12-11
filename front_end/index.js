@@ -71,10 +71,21 @@ function updateTripInfo(session) {
   const currentAirport = session.origin || "EFHK";
   const co2Available = session.co2Available?.toFixed(2) || 0;
   const initialCo2 = session.initialCo2?.toFixed(2) || 0;
+  
+  // Get country code from places if available
+  let countryInfo = "";
+  if (session.places) {
+    for (const [code, data] of Object.entries(session.places)) {
+      if (data.icao === currentAirport) {
+        countryInfo = ` (${code} - ${data.name})`;
+        break;
+      }
+    }
+  }
 
   tripUpdate.innerHTML = `
     <div class="trip-info-item">
-      <strong>Current Location:</strong> ${currentAirport}
+      <strong>Current Location:</strong> ${currentAirport}${countryInfo}
     </div>
     <div class="trip-info-item">
       <strong>CO₂ Available:</strong> ${co2Available} / ${initialCo2} kg
@@ -102,7 +113,7 @@ async function loadStage() {
 
   if (stage.places) {
     Object.entries(stage.places).forEach(([code, data]) => {
-      console.log(`${code}: ${data.name}`);
+      console.log(`${code} (${data.name}): ${data.clue}`);
     });
   } else {
     console.warn("Stage has no places field");
@@ -136,30 +147,36 @@ function resetHandler(delay = 6000, finalScreenFn = showResultsScreen) {
 // ----------------------------------------------
 // ANIMATION SCREEN
 // ----------------------------------------------
-// function showIntroVideo() {
-//   showStartScreen();
+function showIntroVideo() {
+  showStartScreen();
   
-//   const intro = document.createElement("div");
-//   intro.id = "intro-screen";
+  const intro = document.createElement("div");
+  intro.id = "intro-screen";
 
-//   const video = document.createElement("video");
-//   video.autoplay = true;
-//   video.muted = true;
-//   video.playsInline = true;
+  const video = document.createElement("video");
+  video.autoplay = true;
+  video.muted = true;
+  video.playsInline = true;
 
-//   const source = document.createElement("source");
-//   source.src = "./video/airplane.mp4";
-//   source.type = "video/mp4";
+  const source = document.createElement("source");
+  source.src = "./video/airplane.mp4";
+  source.type = "video/mp4";
 
-//   video.appendChild(source);
-//   intro.appendChild(video);
-//   document.body.appendChild(intro);
+  video.appendChild(source);
+  intro.appendChild(video);
+  document.body.appendChild(intro);
 
-//   video.onended = () => {
-//     intro.classList.add("fade-to-transparent");
-//     setTimeout(() => intro.remove(), 1200);
-//   };
-// }
+  // skip intro on click
+  intro.onclick = () => {
+    intro.classList.add("fade-to-transparent");
+    setTimeout(() => intro.remove(), 1200);
+  };
+
+  video.onended = () => {
+    intro.classList.add("fade-to-transparent");
+    setTimeout(() => intro.remove(), 1200);
+  };
+}
 
 // --- Save session backup before attempting stage ---
 function backupSession(session) {
@@ -435,7 +452,7 @@ async function showGameScreen() {
     addSystemMsg(output, `Welcome to level ${session.currentStage}, ${session.playerName}!`);
     addSystemMsg(output, `What will you guess?`);
   } else if (session.replayCount > 0 && session.clueGuesses.length === 0) {
-    addSystemMsg(output, `This is replay attempt ${session.replayCount} of 3 for Stage ${session.currentStage}.`);
+    addSystemMsg(output, "This is replay attempt " + session.replayCount + " of 3 for Stage " + session.currentStage + ".");
     addSystemMsg(output, `You have fresh clues. Let's try again!`);
   }
 
@@ -507,36 +524,50 @@ async function showGameScreen() {
     // Check CO₂ BEFORE deducting
     if (route.co2_needed > session.co2Available) {
       addSystemMsg(output, `❌ Not enough CO₂! Required: ${route.co2_needed.toFixed(2)} kg, Available: ${session.co2Available.toFixed(2)} kg`);
+      addSystemMsg(output, `Your plane was unable to reach its destination.`);
       
       // Offer replay (max 3 times per stage)
       if (session.replayCount < 3) {
         const remaining = 3 - session.replayCount;
-        addSystemMsg(output, `You have ${remaining} replay attempts left for this stage.`);
+        addSystemMsg(output, `You still have ${remaining} ${remaining === 1 ? 'try' : 'tries'} to replay this stage.`);
         
-        setTimeout(() => {
+        setTimeout(async () => {
           const retry = confirm(`Do you want to replay Stage ${session.currentStage}? (${remaining} tries remaining)`);
           if (retry) {
-            // Restore backup and reload stage with new clues
-            session.replayCount += 1;
+            // Increment replay count FIRST
+            const newReplayCount = session.replayCount + 1;
+            
+            // Fetch NEW stage with NEW clues
+            const newStage = await loadStage();
+            if (!newStage) {
+              console.error("Couldn't reload stage");
+              addSystemMsg(output, "Error loading new stage.");
+              resetHandler();
+              return;
+            }
+            
+            // Restore to stage start but with NEW clues
             const restored = restoreSession();
             if (restored) {
               session = restored;
-              session.replayCount = session.replayCount += 1;
-              sessionStorage.setItem("replayCount", session.replayCount);
-              setSession(session);
+              session.replayCount = newReplayCount;
+              session.places = newStage.places; // NEW clues
+              session.orderCountries = newStage.order_countries; // NEW order
+              session.shuffledCountries = null; // Reset shuffle
               
-              // Reload stage to get new clues
-              loadStage().then(() => {
-                showGameScreen();
-              });
+              setSession(session);
+              sessionStorage.setItem("replayCount", newReplayCount);
+              
+              // Reload game screen with new clues
+              showGameScreen();
             }
           } else {
-            failedGame(output);
+            addSystemMsg(output, "You chose not to replay. Next time might be your chance!");
             resetHandler();
           }
         }, 1000);
       } else {
-        addSystemMsg(output, "No more replay attempts. Game Over.");
+        addSystemMsg(output, "No more replay attempts available.");
         failedGame(output);
         resetHandler();
       }
@@ -552,7 +583,7 @@ async function showGameScreen() {
     session.origin = destICAO;
     session.wrongGuessCount = 0;
 
-    correctGuess(output, validation.iso);
+    correctGuess(output, validation.iso, validation.name);
     addSystemMsg(output, `✈️ Flight completed! CO₂ used: ${route.co2_needed.toFixed(2)} kg`);
     addSystemMsg(output, `Remaining CO₂: ${session.co2Available.toFixed(2)} kg`);
     
@@ -590,6 +621,10 @@ async function showGameScreen() {
           return;
         }
         
+        // Clear old stage data before loading new one
+        sessionStorage.removeItem("stage");
+        sessionStorage.setItem("stage", JSON.stringify(newStage));
+        
         session.currentStage = newStage.current_stage;
         session.orderCountries = newStage.order_countries;
         session.places = newStage.places;
@@ -599,6 +634,7 @@ async function showGameScreen() {
         session.co2Available = newStage.co2_available;
         session.initialCo2 = newStage.co2_available;
         session.replayCount = 0; // Reset replay count for new stage
+        session.shuffledCountries = null; // Reset shuffled countries
         sessionStorage.removeItem("replayCount");
 
         setSession(session);
@@ -900,5 +936,5 @@ async function showByeScreen() {
   app.appendChild(screen);
 }
 
-showStartScreen();
-// showIntroVideo();
+// showStartScreen();
+showIntroVideo();
