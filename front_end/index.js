@@ -906,12 +906,8 @@ async function showResultsScreen() {
 
   app.appendChild(screen);
 
-<<<<<<< HEAD
-  document.getElementById("result_again").onclick = () => {
-=======
   document.getElementById("result_again").onclick = async () => {
     await resetGame();
->>>>>>> new
     sessionStorage.clear();
     showStartScreen();
   };
