@@ -371,7 +371,7 @@ async function showGameScreen() {
   app.innerHTML = "";
 
   // --- Load Stage + Session ---
-  let stage = get_game_status();
+  let stage = JSON.parse(sessionStorage.getItem("stage"));
   let session = getSession();
   console.log("Current session:", session);
 
@@ -642,7 +642,11 @@ async function showGameScreen() {
 
       if (!success) {
         addSystemMsg(output, "❌ Wrong order! The correct sequence was: " + session.orderCountries.join(" → "));
-        failedGame(output);
+        // Offer replay (max 3 times per stage)
+        if (session.replayCount < 3) {
+          const remaining = 3 - session.replayCount;
+          addSystemMsg(output, `You still have ${remaining} ${remaining === 1 ? 'try' : 'tries'} to replay this stage.`);
+        }
         resetHandler();
         return;
       }
@@ -902,7 +906,12 @@ async function showResultsScreen() {
 
   app.appendChild(screen);
 
+<<<<<<< HEAD
   document.getElementById("result_again").onclick = () => {
+=======
+  document.getElementById("result_again").onclick = async () => {
+    await resetGame();
+>>>>>>> new
     sessionStorage.clear();
     showStartScreen();
   };
