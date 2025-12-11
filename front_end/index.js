@@ -180,43 +180,11 @@ function setSession(updates) {
 // --- reset handler ---
 function resetHandler(delay = 6000, finalScreenFn = showResultsScreen) {
   setTimeout(() => {
-    const session = getSession();
-    const total = JSON.parse(sessionStorage.getItem("total")) || {};
-
-    const resultRow = buildResultRow(session, total);
-    fetch("http://localhost:5000/api/saveResult", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(resultRow)
-    });
-
     resetGame();
     sessionStorage.removeItem("gameSession");
     sessionStorage.removeItem("stage");
     finalScreenFn();
   }, delay);
-}
-
-function buildResultRow(session, totals) {
-  // totals = { optimal_co2, total_co2, flight_history, km_amount }
-
-  let efficiency;
-  if (session.game_status === "Win") {
-    efficiency = 80 * (totals.optimal_co2 / totals.total_co2);
-  } else {
-    efficiency = (totals.flight_history.length * 100) / 9;
-  }
-
-  return {
-    name: session.playerName,
-    date: new Date().toISOString(),
-    levels: session.currentStage,
-    cities: totals.flight_history.length,
-    km_amount: totals.total_distance,
-    co2_amount: totals.total_co2,
-    efficiency: efficiency,
-    status: session.game_status
-  };
 }
 
 // ----------------------------------------------
@@ -442,17 +410,6 @@ async function showGameScreen() {
     backupSession(session);
   }
 
-  // --- Initialize totals ---
-  let total = JSON.parse(sessionStorage.getItem("total")) || {
-    total_distance: 0.0,
-    total_co2: 0.0,
-    optimal_co2: 0.0,
-    total_flights: 0,
-    flight_history: []
-  };
-
-  sessionStorage.setItem("total", JSON.stringify(total));
-
   // ---- Build UI ----
   app.appendChild(renderHeaderWithQuit());
 
@@ -515,9 +472,6 @@ async function showGameScreen() {
 
   document.getElementById("quit-yes").onclick = () => {
     quitModal.style.display = "none";
-    session.game_status = "Quit";
-    setSession(session);
-    resetHandler();
     showResultsScreen();
   };
 
@@ -587,11 +541,6 @@ async function showGameScreen() {
     let session = getSession();
     console.log('Processing correct guess for:', validation.iso);
 
-    // Ensure that the game is incomplete
-    if (session.game_status === "Win" || session.game_status === "Lose" || session.game_status === "Quit") {
-      return;
-    }
-
     // Ensure user does not guess the same clue twice
     if (session.clueGuesses.includes(validation.iso)) {
       return addSystemMsg(output, `${validation.name} was already guessed, try again!`);
@@ -609,19 +558,6 @@ async function showGameScreen() {
     } else {
       route = await fetchLayoverRoute(origin, destICAO, 0);
     }
-
-    // --- Update totals ---
-    let total = JSON.parse(sessionStorage.getItem("total")) || {};
-    total.total_distance += route.distance_km;
-    total.total_co2 += route.co2_needed;
-    total.optimal_co2 += stage.co2_available;
-    total.total_flights += (route.layover_route.length - 1);
-    total.flight_history.push({
-      route: route.layover_route.map(a => a.ident),
-      distance: route.distance_km,
-      co2: route.co2_needed
-    });
-    sessionStorage.setItem("total", JSON.stringify(total));
 
     if (!route) {
       addSystemMsg(output, "❌ Unable to calculate route. Please try again.");
@@ -676,9 +612,7 @@ async function showGameScreen() {
       } else {
         addSystemMsg(output, "No more replay attempts available.");
         failedGame(output);
-        session.game_status = "Lose";
-      setSession(session);
-      resetHandler();
+        resetHandler();
       }
       return;
     }
@@ -709,8 +643,6 @@ async function showGameScreen() {
       if (!success) {
         addSystemMsg(output, "❌ Wrong order! The correct sequence was: " + session.orderCountries.join(" → "));
         failedGame(output);
-        session.game_status = "Lose";
-        setSession(session);
         resetHandler();
         return;
       }
@@ -718,8 +650,6 @@ async function showGameScreen() {
       // WIN if last stage
       if (session.currentStage === 3) {
         winGame(output);
-        session.game_status = "Win";
-        setSession(session);
         resetHandler();
         return;
       }
