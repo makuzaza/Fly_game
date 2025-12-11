@@ -135,8 +135,7 @@ function updateTripInfo(session) {
       <div class="trip-info-item countries">
         <span class="info-icon">🌍</span>
         <div class="info-content">
-          <span class="info-label">Countries Visited</span>
-          <span class="info-value">${session.clueGuesses?.length || 0} / 3</span>
+          <span class="info-label">Countries Visited: ${session.clueGuesses?.length || 0} / 3</span>
         </div>
       </div>
     </div>
