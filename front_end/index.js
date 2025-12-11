@@ -590,20 +590,26 @@ async function showGameScreen() {
             }
             
             // Restore to stage start but with NEW clues
-            const restored = restoreSession();
-            if (restored) {
-              session = restored;
-              session.replayCount = newReplayCount;
-              session.places = newStage.places; // NEW clues
-              session.orderCountries = newStage.order_countries; // NEW order
-              session.shuffledCountries = null; // Reset shuffle
-              
-              setSession(session);
-              sessionStorage.setItem("replayCount", newReplayCount);
-              
-              // Reload game screen with new clues
-              showGameScreen();
-            }
+            // Reset session fully for replay
+            session = {
+              playerName: sessionStorage.getItem("playerName"),
+              currentStage: session.currentStage,
+              orderCountries: newStage.order_countries,
+              places: newStage.places,
+              clueGuesses: [],
+              wrongGuessCount: 0,
+              origin: newStage.origin,
+              startOrigin: newStage.origin,
+              co2Available: newStage.co2_available,
+              initialCo2: newStage.co2_available,
+              replayCount: newReplayCount,
+              totalFlights: session.totalFlights ?? 0
+            };
+            
+            setSession(session);
+            backupSession(session);
+            showGameScreen();
+
           } else {
             addSystemMsg(output, "You chose not to replay. Next time might be your chance!");
             resetHandler();
@@ -637,20 +643,6 @@ async function showGameScreen() {
 
     // ---- Stage Completed? ----
     if (session.clueGuesses.length === 3) {
-      const success = JSON.stringify(session.clueGuesses) === JSON.stringify(session.orderCountries);
-      console.log('Order check - Guesses:', session.clueGuesses, 'Expected:', session.orderCountries);
-
-      if (!success) {
-        addSystemMsg(output, "❌ Wrong order! The correct sequence was: " + session.orderCountries.join(" → "));
-        // Offer replay (max 3 times per stage)
-        if (session.replayCount < 3) {
-          const remaining = 3 - session.replayCount;
-          addSystemMsg(output, `You still have ${remaining} ${remaining === 1 ? 'try' : 'tries'} to replay this stage.`);
-        }
-        resetHandler();
-        return;
-      }
-
       // WIN if last stage
       if (session.currentStage === 3) {
         winGame(output);
