@@ -69,8 +69,9 @@ function updateTripInfo(session) {
   if (!tripUpdate) return;
 
   const currentAirport = session.origin || "EFHK";
-  const co2Available = session.co2Available?.toFixed(2) || 0;
-  const initialCo2 = session.initialCo2?.toFixed(2) || 0;
+  const co2Available = session.co2Available || 0;
+  const initialCo2 = session.initialCo2 || 0;
+  const co2Percentage = initialCo2 > 0 ? (co2Available / initialCo2) * 100 : 0;
   
   // Get country code from places if available
   let countryInfo = "";
@@ -83,18 +84,61 @@ function updateTripInfo(session) {
     }
   }
 
+  // Determine CO2 bar color class
+  let co2BarClass = "high";
+  if (co2Percentage < 30) {
+    co2BarClass = "critical";
+  } else if (co2Percentage < 50) {
+    co2BarClass = "low";
+  }
+
   tripUpdate.innerHTML = `
-    <div class="trip-info-item">
-      <strong>Current Location:</strong> ${currentAirport}${countryInfo}
-    </div>
-    <div class="trip-info-item">
-      <strong>CO₂ Available:</strong> ${co2Available} / ${initialCo2} kg
-    </div>
-    <div class="trip-info-item">
-      <strong>Stage:</strong> ${session.currentStage || 1}
-    </div>
-    <div class="trip-info-item">
-      <strong>Countries Visited:</strong> ${session.clueGuesses?.length || 0} / 3
+    <div class="trip-info-card">
+      <div class="trip-info-item location">
+        <span class="info-icon">📍</span>
+        <div class="info-content">
+          <span class="info-label">Current Location: ${currentAirport}${countryInfo}</span>
+        </div>
+      </div>
+      
+      <div class="trip-info-item co2">
+        <span class="info-icon">💨</span>
+        <div class="info-content">
+          <div class="co2-header">
+            <span class="info-label">CO₂ Available</span>
+            <span class="co2-values">${co2Available.toFixed(2)} / ${initialCo2.toFixed(2)} kg</span>
+          </div>
+          <div class="co2-progress-bar">
+            <div class="co2-progress-fill ${co2BarClass}" style="width: ${co2Percentage}%"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="trip-info-item stages">
+        <span class="info-icon">🎯</span>
+        <div class="info-content">
+          <span class="info-label">Stage Progress</span>
+          <div class="stage-circles">
+            ${[1, 2, 3].map(stageNum => {
+              let stageClass = '';
+              if (stageNum < session.currentStage) {
+                stageClass = 'completed';
+              } else if (stageNum === session.currentStage) {
+                stageClass = 'current';
+              }
+              return `<div class="stage-circle ${stageClass}">${stageNum}</div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+      
+      <div class="trip-info-item countries">
+        <span class="info-icon">🌍</span>
+        <div class="info-content">
+          <span class="info-label">Countries Visited</span>
+          <span class="info-value">${session.clueGuesses?.length || 0} / 3</span>
+        </div>
+      </div>
     </div>
   `;
 }
