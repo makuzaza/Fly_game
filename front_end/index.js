@@ -187,16 +187,26 @@ function setSession(updates) {
 
 // --- reset handler ---
 function resetHandler(delay = 6000, finalScreenFn = showResultsScreen) {
-  setTimeout(() => {
+  setTimeout(async() => {
       const session = getSession();
       const total = JSON.parse(sessionStorage.getItem("total")) || {};
 
       const resultRow = buildResultRow(session, total);
-      fetch("http://localhost:5000/api/saveResult", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(resultRow)
-    });
+
+      try {
+        const response = await fetch("http://localhost:5000/api/saveResult", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(resultRow)
+      });
+
+      if (!response.ok) {
+        console.error("Failed to save result:", response.statusText);
+      }
+    } catch (err) {
+      console.error("Error saving result:", err);
+    }
+
     resetGame();
     sessionStorage.removeItem("gameSession");
     sessionStorage.removeItem("stage");
