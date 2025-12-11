@@ -6,6 +6,8 @@ import {
   getGameResults,
   showResults,
   gameState,
+  restartGame,
+  quitGame
 } from "./app.js";
 
 function renderHeader() {
@@ -281,6 +283,7 @@ export function showGameScreen() {
 
   document.getElementById("quit-yes").onclick = async () => {
     quitModal.style.display = "none";
+    await quitGame();
     const results = await getGameResults();
     showResults(results); 
   };
@@ -327,7 +330,7 @@ export function showResultsScreen() {
   app.appendChild(screen);
 
   document.getElementById("btn-start-again").onclick = () => {
-    location.reload();
+    restartGame();
   };
 }
 

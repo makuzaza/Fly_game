@@ -5,6 +5,7 @@ import {
   highlightRoute,
   resizeMap,
   getAirports,
+  getMap,
 } from "./mapScreen.js";
 
 import { showGameScreen, showResultsScreen, showGameModal } from "./index.js";
@@ -104,6 +105,24 @@ async function startNewGame(playerName) {
   } catch (error) {
     alert("Error starting game: " + error.message);
   }
+}
+
+async function restartGame() {
+  // Allow initMap to run again
+  mapInitialized = false;
+
+  // Remove old Leaflet map instance if it exists
+  try {
+    const map = getMap();
+    if (map) {
+      map.remove();
+    }
+  } catch (e) {
+    console.warn("Could not reset map:", e);
+  }
+
+  // Start a fresh game with the same player name
+  await startNewGame(gameState.playerName);
 }
 
 async function submitGuess(guess) {
@@ -258,6 +277,18 @@ async function replayStage() {
     }
   } catch (error) {
     alert("Error replaying stage: " + error.message);
+  }
+}
+
+async function quitGame() {
+  try {
+    await fetch(`${API_URL}/api/game/quit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ player_name: gameState.playerName }),
+    });
+  } catch (error) {
+    console.error("Error quitting game:", error);
   }
 }
 
@@ -605,4 +636,6 @@ export {
   handleConfirmFlight,
   handleCancelFlight,
   gameState,
+  restartGame,
+  quitGame
 };

@@ -48,6 +48,7 @@ def create_app():
                 "POST /api/game/confirm-flight": "Confirm flight and update game state",
                 "POST /api/game/replay-stage": "Replay current stage",
                 "POST /api/game/end-lose": "End game with lose status",
+                "POST /api/game/quit": "Quit the current game",
                 "GET /api/airports": "Returns all airports",
                 "GET /api/layover_route/<origin_code>/<dest_code>": "Return intermediate airport stops",
                 "GET /api/result/<player_name>": "Return game result",
@@ -411,6 +412,37 @@ def create_app():
         except Exception as e:
             logger.error(f"Error ending game: {e}")
             return jsonify({"error": str(e)}), 500
+
+    # -----------------------------
+    # Quit game - POST /api/game/quit
+    # -----------------------------
+    @app.route("/api/game/quit", methods=["POST"])
+    def quit_game():
+        try:
+            data = request.json
+            player_name = data.get("player_name")
+
+            if player_name not in active_games:
+                return jsonify({"error": "Game not found"}), 404
+
+            game = active_games[player_name]
+
+            # Set quit status only if not already Win/Lose
+            if not game.session.get("game_status"):
+                game.session["game_status"] = "Quit"
+
+            return jsonify({
+                "game_ended": True,
+                "status": "Quit"
+            }), 200
+
+        except Exception as e:
+            logger.error(f"Error quitting game: {e}")
+            return jsonify({"error": "Failed to quit game"}), 500
+
+    # -----------------------------
+    # GET Airports - /api/airports
+    # -----------------------------
     @app.route("/api/airports", methods=["GET"])
     def get_airports():
         """Returns a list of all airports with their basic information."""
@@ -449,7 +481,7 @@ def create_app():
                 "total_distance_km": round(game.total["total_distance"], 1),
                 "countries_visited": len(game.total["flight_history"]),
                 "total_co2_kg": round(game.total["total_co2"], 2),
-                "game_status": game.session["game_status"]
+                "game_status": game.session["game_status"] or "Quit"
             }
             return jsonify(data), 200
 
