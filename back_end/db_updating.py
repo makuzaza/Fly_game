@@ -4,7 +4,7 @@ yhteys = get_connection()
 
 # === Database table creator ===
 def db_table_creator():
-    #db_table_remover()    #=== Temporary for rewriting the table ===
+    #db_table_remover()    #=== For rewriting the table, if it is old version ===
     sql = f"""
         CREATE TABLE IF NOT EXISTS results (
             ID INT NOT NULL AUTO_INCREMENT,
