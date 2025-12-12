@@ -265,6 +265,10 @@ input {
     align-items: center;
 }
 
+.rules-choice-screen h2 {
+    text-align: center;
+}
+
 .rules-screen, .results-screen {
     max-width: 800px;
     margin: 20px;
