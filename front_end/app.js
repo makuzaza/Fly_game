@@ -485,6 +485,10 @@ function handleCO2Failure() {
 }
 
 async function handleCountrySubmit() {
+  const btn = document.getElementById("btn-submit-country");
+  btn.disabled = true;
+  btn.textContent = "Checking...";
+
   const input = document
     .getElementById("country-input")
     .value.trim()
@@ -492,10 +496,16 @@ async function handleCountrySubmit() {
   if (!input) {
     document.getElementById("guess-feedback").textContent =
       "❌ Please enter a country code!";
+    btn.disabled = false;
+    btn.textContent = "Submit Guess";
     return;
   }
 
   const result = await submitGuess(input);
+
+  btn.disabled = false;
+  btn.textContent = "Submit Guess";
+  
   if (!result) return;
 
   if (result.correct) {
