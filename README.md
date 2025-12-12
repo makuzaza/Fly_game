@@ -2,81 +2,6 @@
 
 ![Project Logo](front_end/assets/screen.png)
 
-## 📌 Projektin yleiskuvaus
-CO₂ Lentopeli on Pythonilla toteutettu opetuksellinen peli, jossa pelaajan tehtävänä on tunnistaa maat vihjeiden avulla, valita lentokentät ja rakentaa optimaalinen lentoreitti pysyen annetun CO₂-budjetin sisällä.
-
----
-
-## 🎮 Säännöt
-- Peli alkaa Helsingistä (taso 1).
-- Jokaisessa tasossa on **3 maata**, joista jokaisesta annetaan **3 vihjettä**.
-- Pelaajan tulee arvata oikea maa tai valita se kartalta.
-- Tavoitteena on muodostaa **CO₂-tehokas reittijärjestys**:
-  - Ei saa lentää takaisinpäin epäoptimaalisesti
-  - Reitin kokonaispäästöjen tulee mahtua CO₂-budjettiin
-- Jokaisessa tasossa on **3 yritystä**.
-- Voit lopettaa pelin milloin tahansa `quit`-painikkeella.
-
----
-
-## 🛠️ Teknologiat
-- **Python (Flask)** – backend ja pelilogiikka
-- **SQL / MariaDB** – tulosten tallennus
-- **JavaScript** – frontend-käyttöliittymä
-- **REST API** – tiedonsiirto backendin ja frontendin välillä
-- **OpenStreetMap + Leaflet** – kartta lentokenttämarkkereilla
-
----
-
-## 🎯 Tavoitteet
-- Opettaa CO₂-päästöjen vaikutusta interaktiivisen pelin avulla
-- Harjoittaa maantietoa vihjejärjestelmän avulla
-- Tarjota strateginen reittisuunnittelupeli
-- Seuraa käyttäjien suorituskykyä SQL-tietokannan avulla
-
----
-
-## 🔄 Pelin kulku
-1. Pelaajalle annetaan CO₂-raja ja ensimmäinen vihje.
-2. Pelaaja arvaa maan tai valitsee sen kartalta.
-3. Kun kaikki kolme maata on tunnistettu, pelaaja rakentaa **optimaalisen reitin**.
-4. CO₂-kulutus lasketaan koko reitille.
-5. Jos budjetti riittää → siirrytään seuraavaan tasoon.
-6. Kierrosten välissä pelaaja voi jatkaa tai lopettaa.
-
----
-
-## ▶️ Projektin käynnistäminen
-
-### Backend
-Siirry `back_end`-kansioon ja suorita:
-
-```bash
-python lentopeli_api.py
-```
-### Frontend
-Avaa index.html → Suorita Live Serverillä.
-
-## ⭐ Ominaisuudet
-- 5 tasoa
-- 3 yritystä per taso
-- 3 vihjettä maata kohden
-- Näyttää reitit välilaskuineen ja tarkentaa kartan automaattisesti
-- Kartta korostaa lentokenttiä eri väreillä arvaustilanteesta riippuen
-- Valitse-painike näkyy vain, kun maa on arvattu oikein
-- Rangaistusjärjestelmä: 3 väärän arvauksen jälkeen +1 välilasku
-- Parannettu selkeys näyttämällä nykyinen reitti
-- Syöttö maakoodin tai kartan kautta
-- CO₂-laskuri reittioptimoinnilla
-- SQL-pohjainen tulostaulukko
-- Esittelyvideoanimaatio
-- Sää-API-integraatio
-- Informatiivinen käyttöliittymä
-- Sovelluksen vakaa toiminta
-
----
-
-## 🌍 English Version
 
 ## 📌 Project Overview
 CO₂ Flight Challenge Game is a Python-based educational game where the player identifies countries using hints, selects airports, and creates an optimal flight route while staying within a CO₂ budget.
@@ -149,3 +74,79 @@ Open index.html with Live Server.
 - Weather API integration
 - Informative UI
 - Stable work of application
+
+---
+
+## 🌍 Finnish Version
+
+## 📌 Projektin yleiskuvaus
+CO₂ Lentopeli on Pythonilla toteutettu opetuksellinen peli, jossa pelaajan tehtävänä on tunnistaa maat vihjeiden avulla, valita lentokentät ja rakentaa optimaalinen lentoreitti pysyen annetun CO₂-budjetin sisällä.
+
+---
+
+## 🎮 Säännöt
+- Peli alkaa Helsingistä (taso 1).
+- Jokaisessa tasossa on **3 maata**, joista jokaisesta annetaan **3 vihjettä**.
+- Pelaajan tulee arvata oikea maa tai valita se kartalta.
+- Tavoitteena on muodostaa **CO₂-tehokas reittijärjestys**:
+  - Ei saa lentää takaisinpäin epäoptimaalisesti
+  - Reitin kokonaispäästöjen tulee mahtua CO₂-budjettiin
+- Jokaisessa tasossa on **3 yritystä**.
+- Voit lopettaa pelin milloin tahansa `quit`-painikkeella.
+
+---
+
+## 🛠️ Teknologiat
+- **Python (Flask)** – backend ja pelilogiikka
+- **SQL / MariaDB** – tulosten tallennus
+- **JavaScript** – frontend-käyttöliittymä
+- **REST API** – tiedonsiirto backendin ja frontendin välillä
+- **OpenStreetMap + Leaflet** – kartta lentokenttämarkkereilla
+
+---
+
+## 🎯 Tavoitteet
+- Opettaa CO₂-päästöjen vaikutusta interaktiivisen pelin avulla
+- Harjoittaa maantietoa vihjejärjestelmän avulla
+- Tarjota strateginen reittisuunnittelupeli
+- Seuraa käyttäjien suorituskykyä SQL-tietokannan avulla
+
+---
+
+## 🔄 Pelin kulku
+1. Pelaajalle annetaan CO₂-raja ja ensimmäinen vihje.
+2. Pelaaja arvaa maan tai valitsee sen kartalta.
+3. Kun kaikki kolme maata on tunnistettu, pelaaja rakentaa **optimaalisen reitin**.
+4. CO₂-kulutus lasketaan koko reitille.
+5. Jos budjetti riittää → siirrytään seuraavaan tasoon.
+6. Kierrosten välissä pelaaja voi jatkaa tai lopettaa.
+
+---
+
+## ▶️ Projektin käynnistäminen
+
+### Backend
+Siirry `back_end`-kansioon ja suorita:
+
+```bash
+python lentopeli_api.py
+```
+### Frontend
+Avaa index.html → Suorita Live Serverillä.
+
+## ⭐ Ominaisuudet
+- 5 tasoa
+- 3 yritystä per taso
+- 3 vihjettä maata kohden
+- Näyttää reitit välilaskuineen ja tarkentaa kartan automaattisesti
+- Kartta korostaa lentokenttiä eri väreillä arvaustilanteesta riippuen
+- Valitse-painike näkyy vain, kun maa on arvattu oikein
+- Rangaistusjärjestelmä: 3 väärän arvauksen jälkeen +1 välilasku
+- Parannettu selkeys näyttämällä nykyinen reitti
+- Syöttö maakoodin tai kartan kautta
+- CO₂-laskuri reittioptimoinnilla
+- SQL-pohjainen tulostaulukko
+- Esittelyvideoanimaatio
+- Sää-API-integraatio
+- Informatiivinen käyttöliittymä
+- Sovelluksen vakaa toiminta
