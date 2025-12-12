@@ -161,6 +161,8 @@ def create_app():
                     "airports": airports_data
                 }), 200
             else:
+                correct_country_code = countries_to_visit[0] if countries_to_visit else ""
+                correct_country_name = game.get_country_name(correct_country_code) if correct_country_code else ""
                 return jsonify({
                     "correct": False,
                     "message": "Wrong guess. Try again!",
@@ -183,6 +185,7 @@ def create_app():
             player_name = data.get("player_name")
             dest_code = data.get("airport_code")
             country_code = data.get("country_code")
+            stops = data.get("stops", 0)
             
             if player_name not in active_games:
                 return jsonify({"error": "Game not found"}), 404
@@ -196,8 +199,8 @@ def create_app():
             if not origin or not dest:
                 return jsonify({"error": "Airport not found"}), 404
             
-            # Calculate route with 2 stops
-            route = game.airport_manager.find_route_with_stops(origin, dest, 2)
+            # Calculate route with specified stops
+            route = game.airport_manager.find_route_with_stops(origin, dest, stops)
             
             if not route:
                 return jsonify({"error": "Could not find valid route"}), 400
@@ -225,7 +228,8 @@ def create_app():
                 "distance": round(dist, 1),
                 "co2_required": round(co2, 2),
                 "co2_available": round(game.session["co2_available"], 2),
-                "enough_co2": enough_co2
+                "enough_co2": enough_co2,
+                "stops": stops
             }), 200
             
         except Exception as e:
