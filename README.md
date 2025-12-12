@@ -53,7 +53,7 @@ CO₂ Flight Challenge Game is a Python-based educational game where the player 
 Open `back_end` folder and run:
 
 ```bash
-python api.py
+python lentopeli_api.py
 ```
 ### Frontend
 Open index.html with Live Server.
