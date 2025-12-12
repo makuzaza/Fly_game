@@ -4,6 +4,8 @@ from flask_cors import CORS
 from tips_countries import tips_countries
 from db import get_connection
 from db_updating import db_table_creator, results_to_db
+from dotenv import load_dotenv
+import os
 
 # --- Game Logic ---
 from airport import AirportManager
@@ -431,7 +433,10 @@ def create_app():
             return jsonify({"error": "ICAO not found"}), 404
         lat, lon = row["latitude_deg"], row["longitude_deg"]
 
-        weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid=94c7555a5514b269f255445ba98c6e57"
+        load_dotenv()
+        api_key = os.getenv("WEATHER_API_KEY")
+
+        weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}"
         try:
             result = requests.get(weather_url)
             if result.status_code == 200:
