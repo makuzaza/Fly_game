@@ -226,7 +226,7 @@ function buildResultRow(session, totals) {
     name: session.playerName,
     date: new Date().toISOString(),
     levels: session.currentStage,
-    cities: totals.flight_history.length,
+    cities: totals.total_flights,
     km_amount: totals.total_distance,
     co2_amount: totals.total_co2,
     efficiency: efficiency,
@@ -725,12 +725,12 @@ async function showGameScreen() {
     total.total_distance += route.distance_km;
     total.total_co2 += route.co2_needed;
     total.optimal_co2 += stage.co2_available;
-    total.total_flights += (route.layover_route.length - 1);
     total.flight_history.push({
       route: route.layover_route.map(a => a.ident),
       distance: route.distance_km,
       co2: route.co2_needed
     });
+    total.total_flights = total.flight_history.length;
     sessionStorage.setItem("total", JSON.stringify(total));
 
 
@@ -936,7 +936,7 @@ async function showResultsScreen() {
       <div id="result_table">
         <table>
           <tr>
-            <td>Levels passed</td>
+            <td>Level reached</td>
             <td id="result_levels">${data.levels || 0}</td>
           </tr>
           <tr>
