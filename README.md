@@ -1,6 +1,6 @@
 # ✈️ CO₂ Lentopeli / CO₂ Flight Challenge Game
 
-![Project Logo](front_end/img/screen.png)
+![Project Logo](front_end/assets/screen.png)
 
 ## 📌 Projektin yleiskuvaus
 CO₂ Lentopeli on Pythonilla toteutettu opetuksellinen peli, jossa pelaajan tehtävänä on tunnistaa maat vihjeiden avulla, valita lentokentät ja rakentaa optimaalinen lentoreitti pysyen annetun CO₂-budjetin sisällä.
