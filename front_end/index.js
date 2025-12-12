@@ -148,6 +148,10 @@ async function loadStage(isReplay = false, stageNum = null) {
     // Import the new function at the top of the file if not already
     const { fetchStageReplay } = await import("./api.js");
     stage = await fetchStageReplay(stageNum);
+
+    // --- backup total ---
+    updateTotals(null, stageNum, true);
+
   } else {
     stage = await fetchStage();
   }
@@ -210,6 +214,35 @@ function resetHandler(delay = 6000, finalScreenFn = showResultsScreen) {
     sessionStorage.removeItem("stage");
     finalScreenFn();
   }, delay);
+}
+
+function updateTotals(newEntry = null, stageNumToRemove = null, isReplay = false) {
+  // Current state
+  let total = JSON.parse(sessionStorage.getItem("total")) || { flight_history: [] };
+
+  // If need to replay stage
+  if (isReplay && stageNumToRemove !== null) {
+    total.flight_history = total.flight_history.filter(f => f.stage !== stageNumToRemove);
+  }
+
+  // If need to update total
+  if (newEntry) {
+    if (isReplay) {
+      total.flight_history = total.flight_history.filter(f => f.stage !== newEntry.stage);
+    }
+    total.flight_history.push(newEntry);
+  }
+
+  // Count values
+  total.total_distance = total.flight_history.reduce((sum, f) => sum + f.distance, 0);
+  total.total_co2 = total.flight_history.reduce((sum, f) => sum + f.co2, 0);
+  total.optimal_co2 = total.flight_history.reduce((sum, f) => sum + (f.optimal_co2 || 0), 0);
+  total.total_flights = total.flight_history.length;
+
+  // Save
+  sessionStorage.setItem("total", JSON.stringify(total));
+
+  return total;
 }
 
 function buildResultRow(session, totals) {
@@ -720,18 +753,14 @@ async function showGameScreen() {
     session.shuffledCountries = null;
     renderTips(session);
 
-     // --- Update totals ---
-    let total = JSON.parse(sessionStorage.getItem("total")) || {};
-    total.total_distance += route.distance_km;
-    total.total_co2 += route.co2_needed;
-    total.optimal_co2 += stage.co2_available;
-    total.flight_history.push({
+    // --- Update totals ---
+    updateTotals({
+      stage: session.currentStage,
       route: route.layover_route.map(a => a.ident),
       distance: route.distance_km,
-      co2: route.co2_needed
+      co2: route.co2_needed,
+      optimal_co2: stage.co2_available
     });
-    total.total_flights = total.flight_history.length;
-    sessionStorage.setItem("total", JSON.stringify(total));
 
 
     // ---- Stage Completed? ----
