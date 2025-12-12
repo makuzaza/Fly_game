@@ -33,7 +33,7 @@ let gameState = {
   currentStops: 0, 
 };
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://flygame-production.up.railway.app";
 let mapInitialized = false;
 
 function getAirportInfo(ident) {
@@ -505,7 +505,7 @@ async function handleCountrySubmit() {
 
   btn.disabled = false;
   btn.textContent = "Submit Guess";
-  
+
   if (!result) return;
 
   if (result.correct) {
