@@ -18,40 +18,33 @@ let markers = [];
 let routeLine = null;
 let onAirportClickCallback = null;
 let apiUrl = "";
-let availableAirportCodes = []; // Track which airports can be selected
+let availableAirportCodes = [];
 
-// Initialize the map
 async function initMap(containerId = "map-container", apiBaseUrl = "") {
     apiUrl = apiBaseUrl;
     
-    // Create map centered on Europe
     map = L.map(containerId).setView([50, 10], 4);
 
-    // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 19
     }).addTo(map);
 
-    // Load airports from backend
     await loadAirports();
     displayAirportMarkers();
 }
 
-// Load all airports from backend
 async function loadAirports() {
     try {
         const response = await fetch(`${apiUrl}/api/airports`);
         if (!response.ok) throw new Error("Failed to load airports");
         airports = await response.json();
-        console.log(`Loaded ${airports.length} airports`);
     } catch (error) {
         console.error("Error loading airports:", error);
         alert("Failed to load airport data");
     }
 }
 
-// Fetch weather for a specific airport
 async function fetchWeather(airportIdent) {
     try {
         const response = await fetch(`${apiUrl}/api/weather/${airportIdent}`);
@@ -63,12 +56,10 @@ async function fetchWeather(airportIdent) {
     }
 }
 
-// Display all airports as markers
 function displayAirportMarkers() {
-    // Clear existing markers
     markers.forEach(marker => marker.remove());
     markers = [];
-    availableAirportCodes = []; // Clear available airports
+    availableAirportCodes = [];
 
     airports.forEach(airport => {
         const marker = L.circleMarker([airport.lat, airport.lng], {
@@ -80,7 +71,6 @@ function displayAirportMarkers() {
             fillOpacity: 0.6
         });
 
-        // Add popup with airport info (no button)
         marker.bindPopup(`
             <strong>${airport.name}</strong><br>
             ${airport.ident}<br>
@@ -88,7 +78,6 @@ function displayAirportMarkers() {
             <div class="weather-container">Loading weather...</div>
         `);
 
-        // Load weather when popup opens
         marker.on("popupopen", async () => {
             const popupEl = marker.getPopup().getElement();
             if (!popupEl) return;
@@ -96,7 +85,6 @@ function displayAirportMarkers() {
             const weatherContainer = popupEl.querySelector(".weather-container");
             if (!weatherContainer) return;
 
-            // Fetch weather data
             const weather = await fetchWeather(airport.ident);
 
             let weatherHTML = "<em>Weather unavailable</em>";
@@ -110,7 +98,6 @@ function displayAirportMarkers() {
                 `;
             }
 
-            // Update weather container
             weatherContainer.innerHTML = weatherHTML;
         });
 
@@ -119,11 +106,10 @@ function displayAirportMarkers() {
     });
 }
 
-// Highlight specific airports
 function highlightAirports(airportCodes) {
     markers.forEach(marker => marker.remove());
     markers = [];
-    availableAirportCodes = airportCodes; // Store which airports are selectable
+    availableAirportCodes = airportCodes;
 
     airports.forEach(airport => {
         const isHighlighted = airportCodes.includes(airport.ident);
@@ -137,7 +123,6 @@ function highlightAirports(airportCodes) {
             fillOpacity: isHighlighted ? 0.9 : 0.6
         });
 
-        // Only add "Choose" button for highlighted (red) airports
         const popupHTML = isHighlighted 
             ? `
                 <strong>${airport.name}</strong><br>
@@ -155,7 +140,6 @@ function highlightAirports(airportCodes) {
 
         marker.bindPopup(popupHTML);
 
-        // Load weather when popup opens
         marker.on("popupopen", async () => {
             const popupEl = marker.getPopup().getElement();
             if (!popupEl) return;
@@ -163,7 +147,6 @@ function highlightAirports(airportCodes) {
             const weatherContainer = popupEl.querySelector(".weather-container");
             const btn = popupEl.querySelector(".choose-airport-btn");
 
-            // Fetch weather data
             const weather = await fetchWeather(airport.ident);
 
             let weatherHTML = "<em>Weather unavailable</em>";
@@ -177,12 +160,10 @@ function highlightAirports(airportCodes) {
                 `;
             }
 
-            // Update weather container
             if (weatherContainer) {
                 weatherContainer.innerHTML = weatherHTML;
             }
 
-            // Setup button handler for highlighted airports
             if (btn && isHighlighted) {
                 btn.onclick = () => {
                     if (onAirportClickCallback) {
@@ -197,9 +178,7 @@ function highlightAirports(airportCodes) {
     });
 }
 
-// Draw route line between airports
 function drawRoute(routeAirportCodes) {
-    // Remove existing route lines
     if (routeLine) {
         routeLine.remove();
     }
@@ -220,21 +199,16 @@ function drawRoute(routeAirportCodes) {
             dashArray: '10, 10'
         }).addTo(map);
 
-        // Fit map to show entire route
         map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
     }
 }
 
-// Highlight route airports
 function highlightRoute(routeData) {
     if (!routeData || !routeData.route) return;
 
     const routeCodes = routeData.route.map(stop => stop.ident);
     drawRoute(routeCodes);
     
-    // Keep airports selectable when showing route (don't clear availableAirportCodes)
-
-    // Highlight route airports differently
     markers.forEach(marker => marker.remove());
     markers = [];
 
@@ -248,17 +222,16 @@ function highlightRoute(routeData) {
         
         if (isInRoute) {
             if (routeIndex === 0) {
-                color = "#00ff00"; // Start - green
+                color = "#00ff00";
                 radius = 10;
             } else if (routeIndex === routeCodes.length - 1) {
-                color = "#ff0000"; // End - red
+                color = "#ff0000";
                 radius = 10;
             } else {
-                color = "#ffaa00"; // Stop - orange
+                color = "#ffaa00";
                 radius = 8;
             }
         } else if (isAvailable) {
-            // Keep available airports red
             color = "#ff0000";
             radius = 8;
         }
@@ -285,14 +258,12 @@ function highlightRoute(routeData) {
 
         popupText += `<div class="weather-container">Loading weather...</div>`;
 
-        // Add "Choose" button for available airports
         if (isAvailable) {
             popupText += `<button class="choose-airport-btn" data-ident="${airport.ident}">Choose</button>`;
         }
 
         marker.bindPopup(popupText);
         
-        // Load weather when popup opens
         marker.on("popupopen", async () => {
             const popupEl = marker.getPopup().getElement();
             if (!popupEl) return;
@@ -300,7 +271,6 @@ function highlightRoute(routeData) {
             const weatherContainer = popupEl.querySelector(".weather-container");
             const btn = popupEl.querySelector(".choose-airport-btn");
 
-            // Fetch weather data
             const weather = await fetchWeather(airport.ident);
 
             let weatherHTML = "<em>Weather unavailable</em>";
@@ -314,12 +284,10 @@ function highlightRoute(routeData) {
                 `;
             }
 
-            // Update weather container
             if (weatherContainer) {
                 weatherContainer.innerHTML = weatherHTML;
             }
 
-            // Setup button handler for available airports
             if (btn && isAvailable) {
                 btn.onclick = () => {
                     if (onAirportClickCallback) {
@@ -334,7 +302,6 @@ function highlightRoute(routeData) {
     });
 }
 
-// Clear route visualization
 function clearRoute() {
     if (routeLine) {
         routeLine.remove();
@@ -343,7 +310,6 @@ function clearRoute() {
     displayAirportMarkers();
 }
 
-// Focus map on specific airport
 function focusAirport(airportCode) {
     const airport = airports.find(a => a.ident === airportCode);
     if (airport) {
@@ -351,24 +317,20 @@ function focusAirport(airportCode) {
     }
 }
 
-// Set callback for airport clicks
 function setOnAirportClick(callback) {
     onAirportClickCallback = callback;
 }
 
-// Resize map (call after container resize)
 function resizeMap() {
     if (map) {
         map.invalidateSize();
     }
 }
 
-// Get current map instance
 function getMap() {
     return map;
 }
 
-// Get all loaded airports
 function getAirports() {
     return airports;
 }

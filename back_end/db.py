@@ -2,7 +2,6 @@ import mysql.connector
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 # ===  Constants ====
@@ -22,6 +21,3 @@ def get_connection():
         password=DB_PASSWORD,
         autocommit=True
     )
-
-# === CRUD operations ====
-

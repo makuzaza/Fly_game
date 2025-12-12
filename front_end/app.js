@@ -9,6 +9,7 @@ import {
 } from "./mapScreen.js";
 
 import { showGameScreen, showResultsScreen, showGameModal } from "./index.js";
+
 // -----------------------------
 // Game State
 // -----------------------------
@@ -29,6 +30,7 @@ let gameState = {
   replayCount: 0,
   backupSession: null,
   backupTotal: null,
+  currentStops: 0, 
 };
 
 const API_URL = "http://localhost:5000";
@@ -46,14 +48,12 @@ async function initializeMap() {
   if (!mapInitialized) {
     const container = document.getElementById("map-container");
     if (!container) {
-      console.error("Map container not found");
       return;
     }
 
     await initMap("map-container", API_URL);
     mapInitialized = true;
 
-    // Set callback for airport clicks
     setOnAirportClick((airport) => {
       if (
         document.getElementById("airport-selection").style.display === "block"
@@ -90,13 +90,8 @@ async function startNewGame(playerName) {
     gameState.wrongAttempts = 0;
     gameState.replayCount = 0;
 
-    // Save backup for potential replay
     await saveBackup();
-
-    // Show game screen first
     showGameScreen();
-
-    // Then update display and initialize map
     updateGameDisplay();
 
     setTimeout(async () => {
@@ -108,10 +103,7 @@ async function startNewGame(playerName) {
 }
 
 async function restartGame() {
-  // Allow initMap to run again
   mapInitialized = false;
-
-  // Remove old Leaflet map instance if it exists
   try {
     const map = getMap();
     if (map) {
@@ -120,8 +112,6 @@ async function restartGame() {
   } catch (e) {
     console.warn("Could not reset map:", e);
   }
-
-  // Start a fresh game with the same player name
   await startNewGame(gameState.playerName);
 }
 
@@ -153,6 +143,7 @@ async function selectAirport(airportCode, countryCode) {
         player_name: gameState.playerName,
         airport_code: airportCode,
         country_code: countryCode,
+        stops: gameState.currentStops
       }),
     });
 
@@ -218,7 +209,6 @@ async function saveBackup() {
       game_status: null,
     };
 
-    // Store places as object
     data.countries.forEach((country) => {
       gameState.backupSession.places[country] = country;
     });
@@ -256,13 +246,11 @@ async function replayStage() {
       gameState.tips = data.tips;
       gameState.wrongAttempts = 0;
       gameState.replayCount++;
-
-      // Reset all selection state
+      gameState.currentStops = 0;  
       gameState.wrongAttempts = 0;
       gameState.selectedCountry = null;
       gameState.selectedAirport = null;
 
-      // Hide all sections and clear UI
       document.getElementById("airport-selection").style.display = "none";
       document.getElementById("route-info").style.display = "none";
       document.getElementById("country-input").value = "";
@@ -317,7 +305,6 @@ async function endGameWithLose() {
 // Display Functions
 // -----------------------------
 function updateGameDisplay() {
-    // Update stage circles
     document.querySelectorAll('.stage-circle').forEach((circle, index) => {
         circle.classList.remove('completed', 'current');
         const stageNum = index + 1;
@@ -328,7 +315,6 @@ function updateGameDisplay() {
         }
     });
     
-    // Update CO2 display and bar
     const co2Display = document.getElementById("co2-display");
     const co2Progress = document.getElementById("co2-progress");
     const co2Value = gameState.co2Available || 0;
@@ -338,7 +324,6 @@ function updateGameDisplay() {
     co2Display.textContent = co2Value.toFixed(2);
     co2Progress.style.width = `${percentage}%`;
     
-    // Change color based on remaining CO2
     co2Progress.classList.remove('low', 'critical');
     if (percentage < 30) {
         co2Progress.classList.add('critical');
@@ -346,14 +331,12 @@ function updateGameDisplay() {
         co2Progress.classList.add('low');
     }
     
-    // Update current location
     let originText = "EFHK - Helsinki-Vantaa (FI)";
     if (gameState.originName) {
         originText = `${gameState.origin} - ${gameState.originName} (${gameState.originCountry})`;
     }
     document.getElementById("current-origin").textContent = originText;
     
-    // Display clues in overlay
     const cluesList = document.querySelector('.clues-overlay #clues-list');
     cluesList.innerHTML = "";
     gameState.tips.forEach((tip, index) => {
@@ -362,7 +345,6 @@ function updateGameDisplay() {
         cluesList.appendChild(clueItem);
     });
     
-    // Reset other UI elements
     document.getElementById("country-input").value = "";
     document.getElementById("guess-feedback").textContent = "";
     document.getElementById("attempts-info").textContent = "";
@@ -387,7 +369,6 @@ async function displayAirports(airports, countryName, countryCode) {
 
   document.getElementById("airport-selection").style.display = "block";
 
-  // Highlight airports on map
   if (!mapInitialized) {
     await initializeMap();
   }
@@ -439,7 +420,6 @@ function displayRoute(routeData) {
     routeDetails.innerHTML += `<p style="color: red;">❌ Not enough CO2 for this route!</p>`;
     document.getElementById("btn-confirm-flight").style.display = "none";
 
-    // Add replay/quit buttons
     const replayBtn = document.createElement("button");
     replayBtn.id = "btn-ask-replay";
     replayBtn.textContent = "Options";
@@ -451,7 +431,6 @@ function displayRoute(routeData) {
   }
 
   document.getElementById("route-info").style.display = "block";
-  // hide airport selection
     document.getElementById("airport-selection").style.display = "none";
   highlightRoute(routeData);
 }
@@ -531,15 +510,28 @@ async function handleCountrySubmit() {
     }
 
     gameState.wrongAttempts += 1;
-    if (gameState.wrongAttempts >= 3) {
+    if (gameState.wrongAttempts === 3) {
       const correctCountryCode = gameState.countries[0];
       const countryNameDisplay = gameState.correctCountryName 
         ? ` (${gameState.correctCountryName})` 
         : "";
 
-      document.getElementById("guess-feedback").textContent = `❌ Wrong! Tip: The correct country is ${correctCountryCode}${countryNameDisplay}`;
+      gameState.currentStops += 1;
+
+      document.getElementById("guess-feedback").innerHTML = `❌ Wrong! Tip: The correct country is ${correctCountryCode}${countryNameDisplay}.<br><br>
+        ✈️ You get ${gameState.currentStops} additional layover${gameState.currentStops > 1 ? 's' : ''} as a penalty!`;
       document.getElementById("attempts-info").textContent =
         "You can now type it to continue.";
+    } else if (gameState.wrongAttempts > 3) {
+      const correctCountryCode = gameState.countries[0];
+      const countryNameDisplay = gameState.correctCountryName 
+        ? ` (${gameState.correctCountryName})` 
+        : "";
+      
+      document.getElementById("guess-feedback").innerHTML = 
+        `❌ Wrong! The correct country is ${correctCountryCode}${countryNameDisplay}.<br><br>
+        Please type the correct country code to continue.`;
+      document.getElementById("attempts-info").textContent = "";
     } else {
       document.getElementById(
         "guess-feedback"
@@ -609,6 +601,7 @@ async function handleConfirmFlight() {
             gameState.countries = result.countries;
             gameState.tips = result.tips;
             gameState.replayCount = 0;
+            gameState.currentStops = 0; 
             saveBackup();
             updateGameDisplay();
             document.getElementById("guess-section").style.display = "block";

@@ -17,9 +17,9 @@ def db_table_creator():
             PRIMARY KEY (ID)
         );
     """
-    cursor = yhteys.cursor()  # yhteys is a connection function
+    cursor = yhteys.cursor() 
     cursor.execute(sql)
-    yhteys.commit()   # save changes
+    yhteys.commit()   
     return
 
 # === Fill the database table 'results' ===
@@ -36,5 +36,3 @@ def results_to_db(name, date, level, city, km, co2, status):
     except Exception as e:
         print("Mistake:", e)
         return False
-
-# === If it doesn't work, read instructions from the notes ===

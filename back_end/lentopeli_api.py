@@ -2,19 +2,16 @@ import logging
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests 
-# --- Game Logic ---
 from airport import AirportManager
 from game import Game
 from stage import Stage
 from tips_countries import tips_countries
 
-# Store active games by session
 active_games = {}
 
 def create_app():
     app = Flask(__name__)
 
-    # --- Game Logic Initialization ---
     airport_manager = AirportManager()
 
     # --- Headers ---
@@ -65,24 +62,20 @@ def create_app():
             data = request.json
             player_name = data.get("player_name", "Player")
             
-            # Create new game instance
             game = Game(player_name)
             active_games[player_name] = game
             
-            # Start first stage using Stage class
-            # Set to 0 because task_criteria will increment to 1
             game.session["current_stage"] = 0
             stage = Stage(1)
             stage.task_criteria(game.session, game.airport_manager)
             
-            # Get countries and tips
             countries_to_visit = list(game.session["places"].keys())
             tips = [tips_countries.get(c, "No clue.") for c in countries_to_visit]
             
             return jsonify({
                 "status": "started",
                 "player_name": player_name,
-                "stage": game.session["current_stage"],  # Should be 1 now
+                "stage": game.session["current_stage"],
                 "co2_available": game.session["co2_available"],
                 "countries": countries_to_visit,
                 "tips": tips,
@@ -138,9 +131,7 @@ def create_app():
             game = active_games[player_name]
             countries_to_visit = list(game.session["places"].keys())
             
-            # Check if guess is correct
             if guess in countries_to_visit:
-                # Get airports for this country
                 country_name = game.get_country_name(guess)
                 airports = game.airport_manager.get_airports_by_country(guess)
                 
@@ -184,6 +175,7 @@ def create_app():
             player_name = data.get("player_name")
             dest_code = data.get("airport_code")
             country_code = data.get("country_code")
+            stops = data.get("stops", 0)
             
             if player_name not in active_games:
                 return jsonify({"error": "Game not found"}), 404
@@ -197,18 +189,15 @@ def create_app():
             if not origin or not dest:
                 return jsonify({"error": "Airport not found"}), 404
             
-            # Calculate route with 2 stops
-            route = game.airport_manager.find_route_with_stops(origin, dest, 2)
+            route = game.airport_manager.find_route_with_stops(origin, dest, stops)
             
             if not route:
                 return jsonify({"error": "Could not find valid route"}), 400
             
-            # Calculate distance and CO2 using Stage class
             stage = Stage(game.session["current_stage"])
             dist = game.airport_manager.total_route_distance(route)
             co2 = stage.calc_co2_emmission(dist)
             
-            # Format route
             route_data = [
                 {
                     "ident": a.ident,
@@ -218,7 +207,6 @@ def create_app():
                 for i, a in enumerate(route)
             ]
             
-            # Check if enough CO2
             enough_co2 = co2 <= game.session["co2_available"]
             
             return jsonify({
@@ -226,7 +214,8 @@ def create_app():
                 "distance": round(dist, 1),
                 "co2_required": round(co2, 2),
                 "co2_available": round(game.session["co2_available"], 2),
-                "enough_co2": enough_co2
+                "enough_co2": enough_co2,
+                "stops": stops
             }), 200
             
         except Exception as e:
@@ -252,7 +241,6 @@ def create_app():
             
             game = active_games[player_name]
             
-            # Check if enough CO2
             if co2 > game.session["co2_available"]:
                 return jsonify({
                     "error": "not_enough_co2",
@@ -261,15 +249,12 @@ def create_app():
                     "co2_available": game.session["co2_available"]
                 }), 400
             
-            # Update game state
             game.session["co2_available"] -= co2
             game.session["origin"] = dest_code
             
-            # Remove visited country
             if country_code in game.session["places"]:
                 del game.session["places"][country_code]
             
-            # Update totals
             game.total["total_distance"] += distance
             game.total["total_co2"] += co2
             game.total["total_flights"] += 1
@@ -279,12 +264,10 @@ def create_app():
                 "co2": co2
             })
             
-            # Check if stage complete
             countries_remaining = list(game.session["places"].keys())
             stage_complete = len(countries_remaining) == 0
             
             if stage_complete:
-                # Check if game complete (current stage is 5)
                 if game.session["current_stage"] >= 5:
                     game.session["game_status"] = "Win"
                     return jsonify({
@@ -293,20 +276,11 @@ def create_app():
                         "message": "Congratulations! You completed all stages!"
                     }), 200
                 else:
-                    # Move to next stage
-                    # current_stage is already at correct value (e.g., 1)
-                    # We want to move to stage 2, so pass current_stage + 1 to Stage constructor
                     next_stage_number = game.session["current_stage"] + 1
-                    
-                    # task_criteria will increment session["current_stage"] from current value
-                    # So if we're at stage 1 and want stage 2, we need to pass 2
-                    # But task_criteria increments, so we set it to 1 first
                     game.session["current_stage"] = next_stage_number - 1
                     
-                    # Start next stage using Stage class
                     stage = Stage(next_stage_number)
                     stage.task_criteria(game.session, game.airport_manager)
-                    # Now session["current_stage"] should be next_stage_number
                     
                     countries_to_visit = list(game.session["places"].keys())
                     tips = [tips_countries.get(c, "No clue.") for c in countries_to_visit]
@@ -320,7 +294,6 @@ def create_app():
                         "tips": tips
                     }), 200
             else:
-                # Continue current stage
                 tips = [tips_countries.get(c, "No clue.") for c in countries_remaining]
                 return jsonify({
                     "stage_complete": False,
@@ -350,24 +323,18 @@ def create_app():
             
             game = active_games[player_name]
             
-            # Restore from backup
             if backup_session and backup_total:
                 game.session = backup_session
                 game.total = backup_total
 
-            # IMPORTANT: Generate NEW countries and clues for this stage
-            # Clear the old places and regenerate
             current_stage_num = game.session["current_stage"]
         
-            # Reset places to empty
             game.session["places"] = {}
         
-            # Regenerate stage with NEW random countries
             stage = Stage(current_stage_num)
-            # Set current_stage back by 1 because task_criteria increments it
             game.session["current_stage"] = current_stage_num - 1
             stage.task_criteria(game.session, game.airport_manager)
-            # Get current stage info
+
             countries_to_visit = list(game.session["places"].keys())
             tips = [tips_countries.get(c, "No clue.") for c in countries_to_visit]
             
@@ -399,7 +366,6 @@ def create_app():
             
             game = active_games[player_name]
             
-            # Decrement stage since player didn't complete it
             game.session["current_stage"] -= 1
             game.session["game_status"] = "Lose"
             
@@ -427,7 +393,6 @@ def create_app():
 
             game = active_games[player_name]
 
-            # Set quit status only if not already Win/Lose
             if not game.session.get("game_status"):
                 game.session["game_status"] = "Quit"
 
@@ -495,7 +460,6 @@ def create_app():
     @app.route("/api/weather/<icao>", methods=["GET"])
     def get_weather(icao):
 
-        # Find airport using airport_manager
         airport = airport_manager.find_airport(icao)
         
         if not airport:
@@ -534,7 +498,6 @@ def create_app():
 
     return app
 
-# Run
 if __name__ == "__main__":
     app = create_app()
     app.run(host="localhost", port=5000, debug=True)
