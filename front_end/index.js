@@ -148,6 +148,20 @@ async function loadStage(isReplay = false, stageNum = null) {
     // Import the new function at the top of the file if not already
     const { fetchStageReplay } = await import("./api.js");
     stage = await fetchStageReplay(stageNum);
+
+    // --- backup total ---
+    /*let total = JSON.parse(sessionStorage.getItem("total")) || {};
+    if (total.flight_history) {
+      // clear all for replaying level
+      total.flight_history = total.flight_history.filter(f => f.stage !== stageNum);
+      // recount values
+      total.total_distance = total.flight_history.reduce((sum, f) => sum + f.distance, 0);
+      total.total_co2 = total.flight_history.reduce((sum, f) => sum + f.co2, 0);
+      total.total_flights = total.flight_history.length;
+    }
+    sessionStorage.setItem("total", JSON.stringify(total));*/
+    updateTotals(null, stageNum);
+
   } else {
     stage = await fetchStage();
   }
@@ -210,6 +224,32 @@ function resetHandler(delay = 6000, finalScreenFn = showResultsScreen) {
     sessionStorage.removeItem("stage");
     finalScreenFn();
   }, delay);
+}
+
+function updateTotals(newEntry = null, stageNumToRemove = null) {
+  // Current state
+  let total = JSON.parse(sessionStorage.getItem("total")) || { flight_history: [] };
+
+  // if need to replay stage
+  if (stageNumToRemove !== null) {
+    total.flight_history = total.flight_history.filter(f => f.stage !== stageNumToRemove);
+  }
+
+  // if need to update total
+  if (newEntry) {
+    total.flight_history.push(newEntry);
+  }
+
+  // Count values
+  total.total_distance = total.flight_history.reduce((sum, f) => sum + f.distance, 0);
+  total.total_co2 = total.flight_history.reduce((sum, f) => sum + f.co2, 0);
+  total.optimal_co2 = total.flight_history.reduce((sum, f) => sum + (f.optimal_co2 || 0), 0);
+  total.total_flights = total.flight_history.length;
+
+  // Save
+  sessionStorage.setItem("total", JSON.stringify(total));
+
+  return total;
 }
 
 function buildResultRow(session, totals) {
@@ -721,17 +761,25 @@ async function showGameScreen() {
     renderTips(session);
 
      // --- Update totals ---
-    let total = JSON.parse(sessionStorage.getItem("total")) || {};
+    /*let total = JSON.parse(sessionStorage.getItem("total")) || {};
     total.total_distance += route.distance_km;
     total.total_co2 += route.co2_needed;
     total.optimal_co2 += stage.co2_available;
     total.flight_history.push({
+      stage: session.currentStage,
       route: route.layover_route.map(a => a.ident),
       distance: route.distance_km,
       co2: route.co2_needed
     });
     total.total_flights = total.flight_history.length;
-    sessionStorage.setItem("total", JSON.stringify(total));
+    sessionStorage.setItem("total", JSON.stringify(total));*/
+    updateTotals({
+      stage: session.currentStage,
+      route: route.layover_route.map(a => a.ident),
+      distance: route.distance_km,
+      co2: route.co2_needed,
+      optimal_co2: stage.co2_available
+    });
 
 
     // ---- Stage Completed? ----
