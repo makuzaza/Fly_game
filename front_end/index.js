@@ -313,6 +313,21 @@ function backupSession(session) {
   return backup;
 }
 
+// --- Restore session from backup ---
+function restoreSession() {
+  const backup = JSON.parse(sessionStorage.getItem("sessionBackup"));
+  if (backup) {
+    let session = getSession();
+    session.clueGuesses = backup.clueGuesses;
+    session.origin = backup.origin;
+    session.co2Available = backup.co2Available;
+    session.wrongGuessCount = backup.wrongGuessCount;
+    setSession(session);
+    return session;
+  }
+  return null;
+}
+
 // ----------------------------------------------
 // START SCREEN
 // ----------------------------------------------
