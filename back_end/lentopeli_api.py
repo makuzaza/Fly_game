@@ -434,6 +434,8 @@ def create_app():
         lat, lon = row["latitude_deg"], row["longitude_deg"]
 
         load_dotenv()
+
+        # .env_example - add your key and rename file to .env
         api_key = os.getenv("WEATHER_API_KEY")
 
         weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}"
