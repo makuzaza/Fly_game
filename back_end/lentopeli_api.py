@@ -170,7 +170,7 @@ def create_app():
                     "city": a.city,
                     "country": a.country
                 }
-                for a in airports
+                for a in airports if a is not None
             ]
             return jsonify({
                 "country": code,
