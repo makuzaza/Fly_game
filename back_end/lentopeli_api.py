@@ -6,6 +6,7 @@ from airport import AirportManager
 from game import Game
 from stage import Stage
 from tips_countries import tips_countries
+import os
 
 active_games = {}
 
@@ -467,7 +468,8 @@ def create_app():
         
         lat, lon = airport.lat, airport.lng
 
-        weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid=94c7555a5514b269f255445ba98c6e57"
+        API_KEY = os.getenv("OPENWEATHER_API_KEY")
+        weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}"
         try:
             result = requests.get(weather_url)
             if result.status_code == 200:
