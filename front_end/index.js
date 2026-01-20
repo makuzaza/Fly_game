@@ -32,6 +32,30 @@ function renderHeaderWithQuit() {
 }
 
 // -----------------------------
+// LOADING SPINNER
+// -----------------------------
+function showLoadingSpinner() {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+  
+  const screen = document.createElement("div");
+  screen.className = "screen loading-screen";
+  screen.innerHTML = `
+    <img src="assets/logo.png" class="logo_main" alt="EcoTrip Logo" />
+    <div class="spinner"></div>
+    <p class="loading-text">Loading game, please wait...</p>
+  `;
+  app.appendChild(screen);
+}
+
+function hideLoadingSpinner() {
+  const loadingScreen = document.querySelector(".loading-screen");
+  if (loadingScreen) {
+    loadingScreen.remove();
+  }
+}
+
+// -----------------------------
 // UNIVERSAL GAME MODAL
 // -----------------------------
 function createGameModal() {
@@ -145,8 +169,11 @@ function showRulesChoiceScreen() {
   app.appendChild(screen);
 
   document.getElementById("btn-yes-rules").onclick = () => showRulesScreen();
-  document.getElementById("btn-no-rules").onclick = () =>
-    startNewGame(gameState.playerName);
+  document.getElementById("btn-no-rules").onclick = async () => {
+    showLoadingSpinner();
+    await startNewGame(gameState.playerName);
+    hideLoadingSpinner();
+  }
 }
 
 // -----------------------------
@@ -166,8 +193,11 @@ function showRulesScreen() {
   `;
   app.appendChild(screen);
 
-  document.getElementById("btn-rules-continue").onclick = () =>
-    startNewGame(gameState.playerName);
+  document.getElementById("btn-rules-continue").onclick = async () => {
+    showLoadingSpinner();
+    await startNewGame(gameState.playerName);
+    hideLoadingSpinner();
+  };
 }
 
 function showIntroVideo() {
