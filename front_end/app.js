@@ -250,6 +250,12 @@ async function replayStage() {
       gameState.co2Initial = data.co2_available; 
       gameState.countries = data.countries;
       gameState.tips = data.tips;
+
+      gameState.origin = data.origin; 
+      const info = getAirportInfo(data.origin);
+      gameState.originName = info?.name || "";
+      gameState.originCountry = info?.country || "";
+
       gameState.wrongAttempts = 0;
       gameState.replayCount++;
       gameState.currentStops = 0;  

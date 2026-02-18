@@ -41,7 +41,7 @@ class Stage:
 
     # === CO2 emission calculator ===
     def calc_co2_emmission(self, distance_km):
-        return distance_km * 0.15
+        return distance_km * 0.15 # 150g CO2 per km as a rough estimate for a flight
 
     # === Find best order between the 3 countries set as the level mission ===
     def get_shortest_route(self, session_state, airport_manager, margin=1.2):

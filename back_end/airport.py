@@ -97,6 +97,11 @@ class AirportManager:
             print(f"❌ Not enough candidate airports for {num_stops} stops. Only {len(candidates)} available.")
             return None
 
+        # === Sort candidates by closeness to direct route ===
+        def distance_key(airport):
+            return self.calc_distance(start_airport, airport) + self.calc_distance(airport, end_airport)
+        candidates.sort( key=distance_key )
+
         # === Select best stops ===
         if num_stops <= 3 and len(candidates) <= 15:
             # === Small numbers: try combinations ===
@@ -121,8 +126,10 @@ class AirportManager:
             for _ in range(num_stops):
                 if not remaining:
                     break
-                best_stop = min(remaining, 
-                              key=lambda x: self.total_route_distance([start_airport] + selected + [x] + [end_airport]))
+                # === Select the airport that minimizes total route distance ===
+                def get_total_distance(airport):
+                    return self.total_route_distance([start_airport] + selected + [airport] + [end_airport])
+                best_stop = min(remaining, key=get_total_distance)
                 selected.append(best_stop)
                 remaining.remove(best_stop)
 

@@ -28,6 +28,7 @@ class Game:
             "flight_history": []
         }
 
+    # === Get country name from code ===
     def get_country_name(self, code):
         for c, name in self.airport_manager.show_countries() or []:
             if c.upper() == code.upper():
@@ -38,11 +39,12 @@ class Game:
         if not country_code:
             return None, None, []
 
-        icao = country_code.upper()
-        display_name = self.get_country_name(icao)
-        country_airports = self.airport_manager.get_airports_by_country(icao)
+        # === Get airports for the guessed country by country code ===
+        iso_country = country_code.upper()
+        display_name = self.get_country_name(iso_country)
+        country_airports = self.airport_manager.get_airports_by_country(iso_country)
 
-        return icao, display_name, country_airports
+        return iso_country, display_name, country_airports
 
     def start(self):
         print("\n🛫 Welcome to the Flight Route Game!\n")
@@ -98,7 +100,7 @@ class Game:
                 if self.session["game_status"] == "Quit" or matched_country is None:
                     break
 
-                icao, cname, airports = self.stage_guess_country(matched_country)
+                iso_country, cname, airports = self.stage_guess_country(matched_country)
                 if not airports:
                     print("❌ No airports found.")
                     continue

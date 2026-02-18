@@ -48,7 +48,7 @@ def create_app():
                 "POST /api/game/end-lose": "End game with lose status",
                 "POST /api/game/quit": "Quit the current game",
                 "GET /api/airports": "Returns all airports",
-                "GET /api/layover_route/<origin_code>/<dest_code>": "Return intermediate airport stops",
+                "GET /api/weather/<icao>": "Get current weather for an airport",
                 "GET /api/result/<player_name>": "Return game result",
             }
         }), 200
@@ -253,6 +253,7 @@ def create_app():
             game.session["co2_available"] -= co2
             game.session["origin"] = dest_code
             
+            # Remove the country from places to visit if it was correct
             if country_code in game.session["places"]:
                 del game.session["places"][country_code]
             
