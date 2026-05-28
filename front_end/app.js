@@ -75,9 +75,22 @@ async function initializeMap() {
 // -----------------------------
 // API Calls
 // -----------------------------
+async function fetchWithRetry(url, options, retries = 2, delay = 2500) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const res = await fetch(url, options);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res;
+    } catch (err) {
+      if (i === retries) throw err;
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+}
+
 async function startNewGame(playerName) {
   try {
-    const response = await fetch(`${API_URL}/api/game/start`, {
+    const response = await fetchWithRetry(`${API_URL}/api/game/start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ player_name: playerName }),
