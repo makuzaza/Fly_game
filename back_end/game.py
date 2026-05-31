@@ -1,15 +1,11 @@
 from airport import AirportManager
 from stage import Stage
 from tips_countries import tips_countries
-from db_updating import db_table_creator, results_to_db
-from datetime import datetime
-from db import get_connection
 import copy
 
 class Game:
     def __init__(self, player_name):
         self.player_name = player_name
-        self.yhteys = get_connection()
         self.airport_manager = AirportManager()
 
         self.session = {
@@ -214,19 +210,4 @@ class Game:
         print(f"Countries visited: {len(self.total['flight_history'])}")
         print(f"Total distance: {self.total['total_distance']:.1f} km")
         print(f"Total CO2: {self.total['total_co2']:.2f} kg")
-
-        db_table_creator()
-        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        results_to_db(
-            self.player_name,
-            date,
-            self.session["current_stage"],
-            len(self.total["flight_history"]),
-            self.total["total_distance"],
-            self.total["total_co2"],
-            self.session["game_status"],
-        )
-
-        print("✅ Results saved to database.")
         print("See you next time!")
